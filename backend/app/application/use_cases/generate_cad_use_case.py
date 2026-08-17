@@ -6,7 +6,7 @@ import uuid
 import os
 
 class GenerateCadUseCase:
-    def __init__(self, llm_adapter: LlmPort, cad_adapter: CadPort, simulation_adapter: SimulationPort, output_dir: str = "./public/outputs"):
+    def __init__(self, llm_adapter: LlmPort, cad_adapter: CadPort, simulation_adapter: SimulationPort, output_dir: str = "./static/outputs"):
         self.llm_adapter = llm_adapter
         self.cad_adapter = cad_adapter
         self.simulation_adapter = simulation_adapter
