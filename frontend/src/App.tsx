@@ -11,7 +11,8 @@ function App() {
     if (!prompt) return;
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/generate', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await axios.post(`${apiUrl}/api/v1/generate`, {
         prompt
       });
       setResult(response.data);
@@ -79,8 +80,8 @@ function App() {
             <h2 className="text-xl font-semibold">3D Viewer</h2>
           </div>
           <div className="flex-grow relative min-h-[400px]">
-            {/* Assume backend serves GLB files at http://localhost:8000/static/outputs/... */}
-            <ModelViewer glbUrl={result?.glb_url ? `http://localhost:8000${result.glb_url}` : null} />
+            {/* Assume backend serves GLB files at API URL */}
+            <ModelViewer glbUrl={result?.glb_url ? `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${result.glb_url}` : null} />
           </div>
         </div>
       </main>
