@@ -5,6 +5,10 @@ RUN apt-get update && apt-get install -y \
     libgl1 \
     libglx-mesa0 \
     libegl1 \
+    libxrender1 \
+    libxext6 \
+    libsm6 \
+    libice6 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
