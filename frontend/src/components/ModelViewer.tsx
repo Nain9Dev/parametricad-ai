@@ -1,5 +1,5 @@
-import React, { Suspense } from 'react';
-from '@react-three/fiber' import { Canvas };
+import { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stage, useGLTF } from '@react-three/drei';
 
 function Model({ url }: { url: string }) {

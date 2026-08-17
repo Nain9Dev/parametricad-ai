@@ -8,7 +8,7 @@ class GroqLlmAdapter(LlmPort):
     def __init__(self):
         # Initialize the Groq client (requires GROQ_API_KEY env var)
         self.client = Groq()
-        self.model = "llama-3.1-70b-versatile"
+        self.model = "llama-3.3-70b-versatile"
 
     def extract_parameters(self, prompt: str) -> ComponentParams:
         system_prompt = """

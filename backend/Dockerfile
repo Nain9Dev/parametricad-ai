@@ -2,8 +2,9 @@ FROM python:3.10-slim
 
 # Install system dependencies required for OpenCASCADE/CadQuery and Trimesh
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libegl1-mesa \
+    libgl1 \
+    libglx-mesa0 \
+    libegl1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

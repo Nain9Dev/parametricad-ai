@@ -1,6 +1,6 @@
 # ParametriCAD AI - Autonomous CAD Engine
 
-This is a functional MVP (TRL 3-4) for the **AI-BOOST Challenge 2 (Agentic AI for Automated CAD Generation and Autonomous Simulation)**.
+This is a functional MVP (TRL 3-4) **ParametriCAD AI (Agentic AI for Automated CAD Generation and Autonomous Simulation)**.
 
 ## 🚀 Live Demo & Evaluator Quick Start
 
