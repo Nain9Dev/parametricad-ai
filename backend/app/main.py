@@ -1,8 +1,13 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI(title="ParametriCAD AI Core")
+
+os.makedirs("static/outputs", exist_ok=True)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 from app.infrastructure.api.routes import generate
 app.include_router(generate.router, prefix="/api/v1")
