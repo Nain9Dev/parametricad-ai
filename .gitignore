@@ -6,6 +6,8 @@ venv/
 env/
 ENV/
 .env
+.env.*
+!.env.production
 
 # Node
 node_modules/
@@ -22,3 +24,7 @@ yarn-error.log*
 # Build
 frontend/dist
 frontend/build
+
+# Backend Generated Files
+backend/static/outputs/*
+!backend/static/outputs/.gitkeep
