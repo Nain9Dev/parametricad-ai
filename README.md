@@ -2,7 +2,7 @@
 
 This is a functional MVP (TRL 3-4) **ParametriCAD AI (Agentic AI for Automated CAD Generation and Autonomous Simulation)**.
 
-## 🚀 Live Demo & Evaluator Quick Start
+## Live Demo & Evaluator Quick Start
 
 - **Frontend Interface:** [https://parametricad.naindev.com](https://parametricad.naindev.com)
 - **Backend API:** `https://api.parametricad.naindev.com`
