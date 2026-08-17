@@ -26,14 +26,24 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm py-4 px-6">
-        <h1 className="text-2xl font-bold text-gray-800">ParametriCAD AI</h1>
+      <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-100 py-4 px-6 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <h1 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">
+            ParametriCAD AI
+          </h1>
+          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold tracking-wide uppercase">
+            MVP Demo
+          </span>
+        </div>
       </header>
 
-      <main className="flex-grow flex flex-col md:flex-row p-6 gap-6">
+      <main className="flex-grow flex flex-col md:flex-row p-6 gap-8 max-w-7xl mx-auto w-full">
         {/* Sidebar / Controls */}
-        <div className="w-full md:w-1/3 flex flex-col gap-4 bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-xl font-semibold mb-2">Generation Settings</h2>
+        <div className="w-full md:w-1/3 flex flex-col gap-5 bg-white p-6 rounded-xl shadow-lg border border-gray-100 transition-all">
+          <div className="border-b border-gray-100 pb-4">
+            <h2 className="text-xl font-bold text-gray-800">Generation Settings</h2>
+            <p className="text-sm text-gray-500 mt-1">Describe the part in natural language</p>
+          </div>
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
