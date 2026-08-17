@@ -43,8 +43,19 @@ class CadqueryAdapter(CadPort):
                 result_shape = cq.Workplane("XY").box(diameter, diameter, diameter).faces(">Z").hole(inner_radius * 2)
             
             if result_shape:
-                # Use GLTF export
-                cq.exporters.export(result_shape, output_path, cq.exporters.ExportTypes.GLTF)
+                # Export to STL first
+                stl_path = output_path.replace('.glb', '.stl')
+                cq.exporters.export(result_shape, stl_path, 'STL')
+                
+                # Convert to GLB using trimesh
+                import trimesh
+                mesh = trimesh.load(stl_path)
+                mesh.export(output_path)
+                
+                # Clean up STL
+                if os.path.exists(stl_path):
+                    os.remove(stl_path)
+                    
                 return True
                 
             return False
