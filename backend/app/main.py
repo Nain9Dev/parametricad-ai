@@ -1,10 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
 app = FastAPI(title="ParametriCAD AI Core")
 
 from app.infrastructure.api.routes import generate
 app.include_router(generate.router, prefix="/api/v1")
+
+@app.get("/")
+def root():
+    return RedirectResponse(url="/docs")
 
 app.add_middleware(
     CORSMiddleware,
