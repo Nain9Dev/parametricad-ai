@@ -1,98 +1,142 @@
 # ParametriCAD AI
 
-Motor de generación paramétrica de componentes CAD con validación geométrica
-determinista y visor 3D web.
+Deterministic parametric CAD generation engine with domain-isolated topological mesh validation and an interactive 3D web viewer.
 
-El sistema construye sólidos exactos (B-Rep) con OpenCASCADE, los teselá a malla,
-somete esa malla a un control de calidad geométrico completo (estanqueidad,
-manifold, orientación de normales, auto-intersecciones, topología) y publica los
-artefactos en cinco formatos. Los parámetros pueden introducirse directamente o
-extraerse de una descripción en lenguaje natural.
+ParametriCAD AI builds exact boundary representation (B-Rep) solids with OpenCASCADE, tessellates them into polygon meshes, subjects the geometry to deterministic quality checks (watertightness, 2-manifold invariants, outward normal consistency, zero self-intersections), and publishes content-addressed artifacts in five engineering formats. Component specifications can be supplied via schema-driven parameter controls or extracted from natural language descriptions.
 
-## Demo
+## Live Deployment
 
-- **Frontend:** [parametricad.naindev.com](https://parametricad.naindev.com)
-- **API:** `https://api.parametricad.naindev.com`
+- **Web Application:** [parametricad.naindev.com](https://parametricad.naindev.com)
+- **API Backend:** `https://parametricad-ai.onrender.com`
 
-Prompt de ejemplo:
+Example prompt:
+> *pipe, diameter 25.5mm, wall 2mm, length 200mm*
 
-> *Generate a stainless steel pipe with a diameter of 25.5mm and a length of 200mm*
+---
 
-## Arquitectura
+## Spec-Driven Development (SDD)
 
-Arquitectura hexagonal: el núcleo geométrico no conoce HTTP, no toca disco y no
-depende del kernel CAD.
+This repository follows a strict Spec-Driven Development methodology. Every architectural decision, data model, and functional requirement is formally specified prior to implementation:
+
+| Lifecycle Phase | Specification Document | Description |
+|---|---|---|
+| **01 Charter** | [`docs/01-charter.md`](docs/01-charter.md) | Mission, value proposition, and scope boundaries |
+| **02 Requirements** | [`docs/02-requirements.md`](docs/02-requirements.md) | Functional and non-functional requirements in EARS syntax |
+| **03 Open Questions** | [`docs/03-open-questions.md`](docs/03-open-questions.md) | Technical investigation register and future extensions |
+| **04 Architecture** | [`docs/04-architecture.md`](docs/04-architecture.md) | Hexagonal architecture specification and interaction flowcharts |
+| **05 Data Model** | [`docs/05-data-model.md`](docs/05-data-model.md) | Pydantic domain models, specifications, and Mermaid ER diagram |
+| **06 Decisions** | [`docs/06-decisions/`](docs/06-decisions/) | Architecture Decision Records (ADR-0001 to ADR-0003) |
+| **07 Tasks** | [`docs/07-tasks.md`](docs/07-tasks.md) | Granular task registry with ownership tags (`[A]`, `[M]`, `[H]`) |
+| **08 Blockers** | [`docs/08-blockers.md`](docs/08-blockers.md) | External dependency risks and credential tracking |
+| **09 Traceability** | [`docs/09-traceability.md`](docs/09-traceability.md) | Bi-directional matrix connecting EARS requirements to tests |
+| **10 Runbook** | [`docs/10-runbook.md`](docs/10-runbook.md) | Local environment, container execution, and deployment operations |
+
+Operational guidelines for autonomous development agents are defined in [`AGENTS.md`](AGENTS.md).
+
+---
+
+## Architecture
+
+The system implements a strict Hexagonal Architecture (Ports and Adapters). The geometric domain core has zero knowledge of HTTP, disk persistence, or external CAD kernels.
 
 ```
 backend/app/
-  domain/          Núcleo puro: sin I/O, sin kernel, sin estado global
-    geometry/      Algoritmos de malla (topología, auto-intersección, métricas)
-    models/        Especificaciones Pydantic, artefactos, resultados
-    ports/         Protocolos que la infraestructura implementa
-    errors.py      Jerarquía de errores con códigos estables
-  application/     Orquestación del pipeline y catálogo de capacidades
-  infrastructure/  Adaptadores: CadQuery, trimesh, Groq, filesystem, FastAPI
+  domain/          Pure geometric core: no I/O, no kernel lock-in, stateless
+    geometry/      Mesh algorithms (topology, self-intersection, volume, normals)
+    models/        Pydantic specifications, artifacts, validation results
+    ports/         Abstract protocols implemented by infrastructure adapters
+    errors.py      Domain exception hierarchy with machine-readable error codes
+  application/     Pipeline orchestration, use cases, and capability catalog
+  infrastructure/  External adapters: CadQuery/OpenCASCADE, Trimesh, Groq, Filesystem, FastAPI
 ```
 
-**Decisión clave:** el análisis de malla vive en el dominio, no en un adaptador.
-Es la parte que aporta valor y la que debe ser verificable sin arrancar un kernel
-CAD; delegarla en la librería de mallas de turno haría imposible razonar sobre
-sus invariantes.
+```mermaid
+flowchart TD
+    Client["React 19 Three.js UI"] --> Router["FastAPI Routing Layer"]
+    Router --> AppLayer["Application Use Cases & Services"]
+    
+    subgraph Domain["Pure Domain Core"]
+        Specs["Component Specifications"]
+        MeshEngine["Mesh Topology & Invariant Analysis"]
+    end
 
-### Componentes soportados
+    subgraph Infrastructure["Infrastructure Adapters"]
+        Kernel["CadQuery / OpenCASCADE B-Rep"]
+        Exporter["Trimesh Multi-Format Exporter"]
+        LLM["Groq / Rule-Based Extractor"]
+        Storage["Content-Addressed Storage"]
+    end
 
-| Componente | Parámetros                                                                 |
-| ---------- | -------------------------------------------------------------------------- |
-| `pipe`     | diámetro exterior, espesor de pared, longitud                               |
-| `elbow`    | diámetro, espesor, radio de curvatura, ángulo, tramos rectos tangentes      |
-| `flange`   | diámetro exterior, paso, espesor, número/diámetro/círculo de pernos         |
-| `plate`    | ancho, fondo, espesor, radio de esquina, agujero central                    |
+    AppLayer --> Domain
+    AppLayer --> Infrastructure
+    Infrastructure --> Domain
+```
 
-Las reglas de validación cruzada codifican fabricabilidad, no solo positividad:
-una pared más gruesa que el radio, un radio de curvatura que pliega el tubo sobre
-su propio eje o un círculo de pernos que se sale del ala se rechazan **antes** de
-llegar al kernel.
+**Core Invariant**: Mesh analysis and topological verification live inside the domain layer rather than delegating to interchangeable third-party mesh libraries. This ensures invariant verification remains testable in milliseconds without starting a heavy CAD kernel.
 
-### Formatos de exportación
+---
 
-| Formato | Origen | Uso                                        |
-| ------- | ------ | ------------------------------------------ |
-| GLB     | Malla  | Visor web                                  |
-| glTF    | Malla  | Intercambio con buffers embebidos          |
-| STL     | Malla  | Fabricación aditiva                        |
-| STEP    | B-Rep  | Geometría exacta para CAD aguas abajo      |
-| DXF     | B-Rep  | Sección 2D para planos y corte             |
+## Supported Mechanical Components
 
-La distinción malla/exacto es visible en la interfaz y en la API: no son
-intercambiables.
+| Component | Parameters | Fabricability Validation Invariants |
+|---|---|---|
+| `pipe` | Outer diameter, wall thickness, length | Wall thickness must be strictly less than outer radius (`wall < diameter / 2`). |
+| `elbow` | Outer diameter, wall thickness, bend radius, angle, tangential leg lengths | Bend radius must exceed outer radius to prevent self-intersecting folds on inner sweep. |
+| `flange` | Outer diameter, bore diameter, thickness, bolt count, bolt circle diameter, hole diameter | Bolt holes must not break into the bore or project outside the outer flange perimeter. |
+| `plate` | Width, depth, thickness, corner fillet radius, center hole diameter | Center hole must fit within plate dimensions; corner fillets must not exceed half the shortest side. |
 
-## Determinismo
+Cross-validation rules enforce real-world manufacturability before invoking the solid modeling kernel: non-physical parameter combinations are rejected with HTTP 422 immediately at the API boundary.
 
-La misma especificación produce siempre la misma malla, bit a bit. Esto sostiene
-el direccionamiento por contenido: `model_id` es un digest de la especificación
-canónica, los ajustes de teselado y la revisión del motor, de modo que repetir
-unos parámetros reutiliza los artefactos en lugar de reconstruirlos.
+---
 
-Excepción documentada: los ficheros STEP incorporan una marca temporal de
-exportación y un contador de sesión propios de OpenCASCADE. La geometría es
-idéntica; las cabeceras no. Por eso la dirección del artefacto se deriva de la
-especificación y no de los bytes exportados.
+## Multi-Format Artifact Publishing
 
-## API
+| Format | Geometry Source | Primary Application |
+|---|---|---|
+| **GLB** | Tessellated Mesh | High-performance WebGL 3D preview |
+| **glTF** | Tessellated Mesh | Buffer interchange with embedded geometry |
+| **STL** | Tessellated Mesh | Additive manufacturing and 3D printing |
+| **STEP** | Exact B-Rep Solid | Downstream parametric CAD / CAM modeling (ISO 10303-21) |
+| **DXF** | Exact 2D Section | 2D technical drafting, laser cutting, and CNC machining |
 
-| Endpoint                 | Descripción                                          |
-| ------------------------ | ---------------------------------------------------- |
-| `GET  /health`           | Estado y adaptadores activos                         |
-| `GET  /api/v1/catalog`   | Componentes, parámetros, límites, materiales, formatos |
-| `POST /api/v1/models`    | Generación desde especificación explícita            |
-| `POST /api/v1/generate`  | Generación desde descripción en lenguaje natural     |
-| `GET  /static/models/...`| Artefactos generados (inmutables, cacheables)        |
+---
 
-El catálogo se deriva del esquema JSON de los modelos Pydantic. El formulario del
-frontend se construye a partir de él, así que añadir un parámetro en el backend
-lo hace aparecer en la interfaz sin tocar el frontend.
+## Determinism & Content Addressing
 
-Todos los fallos comparten el mismo sobre:
+Every buildable specification produces bit-for-bit identical mesh geometry. The `model_id` is computed as the SHA-256 digest of the canonical sorted JSON specification, engine revision, and tessellation settings. 
+
+Repeating an identical parameter set re-serves existing artifacts from cache instantly without re-executing OpenCASCADE boolean operations.
+
+```
+Canonical Spec JSON + Tessellation Deflection -> SHA-256 Digest -> /static/models/<model_id>/model.glb
+```
+
+---
+
+## Dual Parameter Extraction
+
+Parameter extraction implements two swappable backends behind an identical port:
+
+1. **`rule_based`** (Default): Deterministic offline parser. Operates without network access or API credentials. Parses unit conversions (mm, cm, m, inches) and bilingual terminology (English and Spanish).
+2. **`groq`**: Hosted LLM extraction via Llama 3.3. Activated by configuring `PARAMETRICAD_GROQ_API_KEY`.
+
+Both extractors output identical validated Pydantic models. Any malformed or physically impossible dimensions are rejected by domain validation rules rather than failing inside the solid modeler.
+
+---
+
+## API Specification
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/health` | Service health status and active infrastructure adapters |
+| `GET` | `/api/v1/catalog` | Component specifications, parameters, limits, units, and export formats |
+| `POST` | `/api/v1/models` | Direct parametric model generation from structured specification |
+| `POST` | `/api/v1/generate` | Natural-language prompt parsing and automated model generation |
+| `GET` | `/static/models/...` | Immutable, content-addressed 3D artifacts and CAD files |
+
+### Error Envelope
+
+All API errors return a uniform, structured envelope:
 
 ```json
 {
@@ -100,87 +144,91 @@ Todos los fallos comparten el mismo sobre:
     "code": "invalid_parameters",
     "message": "The request does not describe a buildable component.",
     "hint": "Check the field names and the dimensional limits in /api/v1/catalog.",
-    "details": { "violations": [ { "field": "spec.pipe", "message": "..." } ] }
+    "details": {
+      "violations": [
+        {
+          "field": "spec.pipe.wall_thickness_mm",
+          "message": "Bore would collapse: wall thickness must be less than outer radius."
+        }
+      ]
+    }
   }
 }
 ```
 
-## Extracción de parámetros
+---
 
-Dos backends intercambiables tras el mismo puerto:
+## Quality & Verification
 
-- **`rule_based`** (por defecto): determinista, sin red ni clave de API. Reconoce
-  español e inglés, ambos órdenes de palabras, separadores decimales de coma o
-  punto y conversión de unidades (mm, cm, m, pulgadas).
-- **`groq`**: modelo alojado. Se activa configurando `PARAMETRICAD_GROQ_API_KEY`.
-
-Sea cual sea el backend, la salida se valida contra el mismo esquema, de modo que
-una pieza imposible se rechaza por las reglas del dominio y no por el kernel.
-
-## Ejecución local
-
-### Backend
+The test suite exercises property-based verification using Hypothesis, checking geometry invariants against analytical closed-form equations (cylindrical shell volume, Pappus's centroid theorem, box volume differences):
 
 ```bash
-cd backend && pip install -r requirements.txt && uvicorn app.main:app --reload
+# Backend verification
+cd backend
+ruff check .               # 0 errors
+mypy app tests             # strict type checking (61 source files, 0 errors)
+pytest                     # 261 passing tests (unit, integration, property)
+
+# Frontend verification
+cd ../frontend
+npm run lint               # oxlint (38 files, 0 warnings)
+npm run typecheck          # tsc --noEmit
+npm run build              # production bundle compilation
 ```
 
-Docker (recomendado; OpenCASCADE arrastra dependencias nativas de C++):
+---
 
-```bash
-cd backend && docker build -t parametricad-backend . && docker run -p 8000:8000 parametricad-backend
-```
+## Quickstart
 
-### Frontend
+### Option A: Docker (Recommended)
 
-```bash
-cd frontend && npm install && npm run dev
-```
-
-Apunta el frontend al backend con `VITE_API_URL` (por defecto
-`http://localhost:8000`).
-
-## Configuración
-
-Todo se controla por entorno con el prefijo `PARAMETRICAD_`; los grupos anidados
-usan doble guion bajo.
-
-| Variable                                        | Por defecto | Descripción                                     |
-| ----------------------------------------------- | ----------- | ----------------------------------------------- |
-| `PARAMETRICAD_EXTRACTOR`                        | `auto`      | `auto` \| `rule_based` \| `groq`                |
-| `PARAMETRICAD_GROQ_API_KEY`                     | —           | Activa el backend LLM cuando `auto`             |
-| `PARAMETRICAD_TESSELLATION__LINEAR_DEFLECTION_MM` | `0.05`    | Fidelidad del teselado                          |
-| `PARAMETRICAD_KERNEL_MAX_CONCURRENCY`           | `1`        | Trabajos CAD simultáneos                        |
-| `PARAMETRICAD_REJECT_INVALID_MESHES`            | `true`     | Bloquea la publicación de mallas defectuosas    |
-| `PARAMETRICAD_MAX_STORED_ARTIFACTS`             | `512`      | Retención en disco                              |
-| `PARAMETRICAD_CORS_ALLOW_ORIGINS`               | ver config  | Lista separada por comas o JSON                 |
-
-OpenCASCADE no es reentrante de forma fiable, por lo que la concurrencia del
-kernel es 1 por defecto: se escala por procesos, no por hilos.
-
-## Calidad
+OpenCASCADE and VTK require native C++ OpenGL libraries:
 
 ```bash
 cd backend
-pytest                       # 261 pruebas
-ruff check app tests
-mypy app                     # modo estricto
+docker build -t parametricad-backend .
+docker run -p 8000:8000 parametricad-backend
 ```
 
+### Option B: Local Environment
+
+#### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
+pip install -r requirements-dev.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+#### Frontend
 ```bash
 cd frontend
-npm run typecheck            # TypeScript estricto
-npm run lint
-npm run build
+npm install
+npm run dev
 ```
 
-Las pruebas de geometría se contrastan contra fórmulas cerradas (área de corona,
-teorema de Pappus, volumen de caja menos cilindro), no contra valores grabados,
-de modo que un cambio en las recetas de construcción falla en lugar de
-convertirse en la nueva referencia.
+The frontend connects to the backend via `VITE_API_URL` (defaults to `http://localhost:8000`).
 
-## Requisitos
+---
 
-- Python 3.12+
-- Node.js 20+
-- Docker (recomendado para el backend)
+## Configuration Reference
+
+All settings can be configured via environment variables with the `PARAMETRICAD_` prefix:
+
+| Environment Variable | Default | Description |
+|---|---|---|
+| `PARAMETRICAD_EXTRACTOR` | `auto` | Extraction backend: `auto`, `rule_based`, or `groq` |
+| `PARAMETRICAD_GROQ_API_KEY` | `null` | API key activating the hosted Groq LLM backend |
+| `PARAMETRICAD_TESSELLATION__LINEAR_DEFLECTION_MM` | `0.05` | Maximum chordal deviation for surface mesh tessellation |
+| `PARAMETRICAD_TESSELLATION__ANGULAR_DEFLECTION_RAD` | `0.35` | Maximum angular deflection between adjacent facets |
+| `PARAMETRICAD_KERNEL_MAX_CONCURRENCY` | `1` | Max concurrent CAD kernel workers (OpenCASCADE is scaled by process) |
+| `PARAMETRICAD_REJECT_INVALID_MESHES` | `true` | Refuse publication of meshes failing topological invariants |
+| `PARAMETRICAD_MAX_STORED_ARTIFACTS` | `512` | Maximum cached models retained in storage |
+| `PARAMETRICAD_CORS_ALLOW_ORIGINS` | See config | Allowed CORS origins for the frontend client |
+
+---
+
+## License
+
+MIT License. See `LICENSE` for details.

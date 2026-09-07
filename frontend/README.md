@@ -1,67 +1,44 @@
-# ParametriCAD · Frontend
+# ParametriCAD Frontend
 
-Interfaz de la generación paramétrica: formulario dirigido por esquema, visor 3D
-y lectura del informe de validación de malla.
+Interactive parametric CAD interface: schema-driven parameter controls, 3D WebGL viewer, and automated mesh quality inspector.
 
-## Estructura
+## Directory Structure
 
 ```
 src/
-  types/api.ts         Contrato de la API
+  types/api.ts         API contract and wire models
   lib/
-    apiClient.ts       Cliente fetch tipado, con cancelación
-    catalog.ts         Catálogo -> estado de formulario -> payload
-    format.ts          Formato de magnitudes de ingeniería
+    apiClient.ts       Typed Fetch client with request cancellation
+    catalog.ts         Catalog schema parsing and parameter state mapping
+    format.ts          Engineering unit formatters
     hooks/             useCatalog, useGeneration, useDebouncedValue
   components/
-    ui/                Primitivas (botón, campo numérico, panel, badge)
-    generator/         Selector de componente, formulario, composer de prompt
-    report/            Validación, propiedades, artefactos, errores
-    viewer/            Canvas, cámara, luces, cotas, ciclo de vida del modelo
+    ui/                Base design system primitives (Button, NumberField, Panel, Badge)
+    generator/         ComponentPicker, ParameterForm, PromptComposer
+    report/            QualityReport, PropertiesPanel, ArtifactList, GenerationError
+    viewer/            Three.js Canvas, CameraRig, StudioLights, DimensionOverlay
 ```
 
-## Decisiones
+## Architecture & Design Principles
 
-**El formulario se construye desde `/api/v1/catalog`.** Cada control -- tipo,
-unidad, paso, límites, valor por defecto -- procede del esquema del backend. Un
-parámetro nuevo aparece sin tocar el frontend, y no hay una segunda copia de las
-reglas de validación que pueda desincronizarse.
+1. **Schema-Driven Form Generation**: Every parameter input (type, unit, step, constraints, default value) is derived dynamically from `/api/v1/catalog`. Adding a new mechanical parameter to the backend automatically reflects in the web interface without updating the frontend.
+2. **Debounced Lifecycle with Cancellation**: Changing a parameter triggers model generation after a 350 ms debounce. Outdated requests are immediately aborted using `AbortSignal` to prevent stale geometries from landing over recent edits.
+3. **On-Demand Format Generation**: The live interactive 3D viewer requests only GLB meshes. Exact B-Rep formats (STEP) and 2D profiles (DXF) are generated on-demand when explicitly downloaded.
+4. **Explicit Scene Graph Memory Cleanup**: Three.js does not automatically deallocate buffers or textures upon unmounting. Every loaded model is managed through dedicated `GLTFLoader` lifecycles and explicitly disposed of across scene graph traversals to prevent memory leaks during parameter scrubbing.
+5. **Calibrated Studio Lighting**: Three neutral directional and ambient lights provide accurate geometric depth without the network overhead or tinting artifacts of external HDRI textures.
+6. **On-Demand Rendering**: `frameloop="demand"` ensures GPU resources are idle when the camera and model are static.
 
-**Vista previa con debounce y cancelación.** Editar un parámetro regenera tras
-350 ms de reposo. Una petición superada se aborta: sin eso, una petición lenta
-podría resolverse después de otra más reciente y dejar geometría obsoleta en
-pantalla. El último modelo válido sobrevive a una regeneración y a un error, para
-no vaciar el visor en cada pulsación.
-
-**Formatos bajo demanda.** La vista previa pide solo GLB. Los formatos exactos se
-generan al solicitarlos, así que arrastrar un valor no paga un export STEP que
-nadie ha pedido.
-
-**Gestión explícita de memoria en el visor.** Three.js no libera búferes ni
-texturas al sacar un objeto de la escena. Cada modelo se carga con su propio
-`GLTFLoader` y se libera recorriendo el grafo, en lugar de usar la caché por URL
-de `useGLTF`, que nunca desaloja: cada cambio de parámetro produce un modelo
-nuevo y la caché crecería sin límite mientras la pestaña siga abierta.
-
-**Iluminación con luces, no con HDRI.** Los presets de entorno descargan una
-textura de varios megas desde un CDN y tiñen la superficie cuyo color real se
-intenta leer. Tres luces neutras son inmediatas, funcionan sin red y no falsean
-el material.
-
-**Renderizado bajo demanda.** `frameloop="demand"`: una pieza estática no
-necesita fotogramas.
-
-## Comandos
+## Development & Build Commands
 
 ```bash
-npm run dev
-npm run build
-npm run typecheck
-npm run lint
+npm run dev          # Start local Vite development server
+npm run typecheck    # TypeScript strict type validation
+npm run lint         # Run oxlint across all source files
+npm run build        # Production bundle compilation
 ```
 
-## Configuración
+## Environment Configuration
 
-| Variable       | Por defecto             | Descripción       |
-| -------------- | ----------------------- | ----------------- |
-| `VITE_API_URL` | `http://localhost:8000` | Origen de la API  |
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_API_URL` | `http://localhost:8000` | Target backend API base URL |
