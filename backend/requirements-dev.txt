@@ -1,0 +1,7 @@
+-r requirements.txt
+
+pytest>=8.0
+hypothesis>=6.100
+httpx>=0.28          # required by fastapi.testclient
+ruff>=0.6
+mypy>=1.11

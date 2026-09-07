@@ -25,6 +25,11 @@ yarn-error.log*
 frontend/dist
 frontend/build
 
-# Backend Generated Files
-backend/static/outputs/*
-!backend/static/outputs/.gitkeep
+# Backend generated artifacts
+backend/static/
+
+# Test and tooling caches
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/

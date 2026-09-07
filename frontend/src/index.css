@@ -1,3 +1,156 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/*
+ * Design tokens for a technical CAD tool.
+ *
+ * The palette is deliberately narrow and desaturated: in a 3D viewer the model
+ * is the only thing that should carry colour, so the interface stays in
+ * neutrals and spends its one accent on the primary action. Status colours are
+ * reserved for the mesh verdict, where they mean something specific.
+ *
+ * Declared under `@theme` so Tailwind v4 generates the matching utilities
+ * (`bg-surface`, `text-ink-muted`, `border-line`, and so on).
+ */
+@theme {
+  --color-void: #08090b;
+  --color-surface: #101318;
+  --color-raised: #171b22;
+  --color-overlay: #1d222b;
+
+  --color-line: #232935;
+  --color-line-strong: #333c4d;
+
+  --color-ink: #e8ecf2;
+  --color-ink-muted: #9aa5b6;
+  --color-ink-faint: #6b7688;
+
+  --color-accent: #3d8bfd;
+  --color-accent-hover: #5b9dff;
+  --color-accent-ink: #ffffff;
+
+  --color-valid: #34d399;
+  --color-warn: #fbbf24;
+  --color-invalid: #f87171;
+
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, 'SF Mono', 'Cascadia Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+
+  --radius-panel: 0.625rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html,
+  body,
+  #root {
+    /* `min-height` rather than `height`: on a wide screen the shell pins itself
+       to the viewport and the panels scroll independently, but on a narrow one
+       the layout stacks and the page itself has to be able to scroll. */
+    min-height: 100%;
+  }
+
+  body {
+    background-color: var(--color-void);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Numeric readouts are compared column to column, so they need tabular
+     figures to stop digits from shifting as values change. */
+  .numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
+  }
+
+  /* Firefox honours these two; the WebKit rules below cover the rest. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-strong) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--color-line-strong);
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+
+  /* Number inputs get their own increment control from the field component, so
+     the native spinners are redundant and crowd the value. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+
+  input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+}
+
+@layer utilities {
+  /* Progress feedback for work whose duration cannot be known in advance. */
+  @keyframes indeterminate {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(300%);
+    }
+  }
+
+  .animate-indeterminate {
+    animation: indeterminate 1.2s ease-in-out infinite;
+  }
+
+  @keyframes shimmer {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,7 +1,16 @@
-fastapi>=0.104.1
-uvicorn[standard]>=0.24.0
-pydantic>=2.4.2
-cadquery>=2.4.0
-trimesh>=4.0.0
-python-multipart>=0.0.6
-groq>=1.6.0
+# Runtime dependencies. Lower bounds only: the Docker image pins the resolved
+# set, while local development stays free to pick up patch releases.
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pydantic-settings>=2.5
+
+# Geometry: CadQuery brings the OpenCASCADE kernel, trimesh handles the mesh
+# transport formats, numpy backs the pure analysis in the domain layer.
+cadquery>=2.5
+trimesh>=4.5
+numpy>=1.26
+
+# Optional parameter extraction backend. The service runs without it, using the
+# deterministic rule-based extractor.
+groq>=1.6

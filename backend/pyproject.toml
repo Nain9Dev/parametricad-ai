@@ -1,0 +1,51 @@
+[project]
+name = "parametricad-ai-backend"
+version = "1.0.0"
+description = "Parametric CAD generation with deterministic mesh validation."
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "kernel: exercises the real CAD kernel and is therefore slow",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:starlette.*",
+    "ignore::starlette.exceptions.StarletteDeprecationWarning",
+    "ignore:.*StarletteDeprecationWarning.*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "SIM", "RET", "ARG", "PTH"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Depends() in a parameter default is how FastAPI declares dependencies.
+"app/infrastructure/api/routes/*" = ["B008"]
+# Fixtures are injected by name and are frequently unused inside a test body.
+"tests/*" = ["ARG"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["cadquery.*", "trimesh.*", "groq.*", "OCP.*"]
+ignore_missing_imports = true
+
+# CadQuery pulls in stubs mypy cannot parse (casadi ships a .pyi with a
+# duplicate parameter), and a parse error there aborts the whole run. Not
+# following into the CAD stack keeps strict checking available for our code.
+[[tool.mypy.overrides]]
+module = ["cadquery", "cadquery.*", "casadi", "casadi.*", "nlopt", "nlopt.*", "vtk", "vtk.*", "vtkmodules.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+ignore_errors = true

@@ -1,32 +1,67 @@
-# React + TypeScript + Vite
+# ParametriCAD · Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Interfaz de la generación paramétrica: formulario dirigido por esquema, visor 3D
+y lectura del informe de validación de malla.
 
-Currently, two official plugins are available:
+## Estructura
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```
+src/
+  types/api.ts         Contrato de la API
+  lib/
+    apiClient.ts       Cliente fetch tipado, con cancelación
+    catalog.ts         Catálogo -> estado de formulario -> payload
+    format.ts          Formato de magnitudes de ingeniería
+    hooks/             useCatalog, useGeneration, useDebouncedValue
+  components/
+    ui/                Primitivas (botón, campo numérico, panel, badge)
+    generator/         Selector de componente, formulario, composer de prompt
+    report/            Validación, propiedades, artefactos, errores
+    viewer/            Canvas, cámara, luces, cotas, ciclo de vida del modelo
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Decisiones
+
+**El formulario se construye desde `/api/v1/catalog`.** Cada control -- tipo,
+unidad, paso, límites, valor por defecto -- procede del esquema del backend. Un
+parámetro nuevo aparece sin tocar el frontend, y no hay una segunda copia de las
+reglas de validación que pueda desincronizarse.
+
+**Vista previa con debounce y cancelación.** Editar un parámetro regenera tras
+350 ms de reposo. Una petición superada se aborta: sin eso, una petición lenta
+podría resolverse después de otra más reciente y dejar geometría obsoleta en
+pantalla. El último modelo válido sobrevive a una regeneración y a un error, para
+no vaciar el visor en cada pulsación.
+
+**Formatos bajo demanda.** La vista previa pide solo GLB. Los formatos exactos se
+generan al solicitarlos, así que arrastrar un valor no paga un export STEP que
+nadie ha pedido.
+
+**Gestión explícita de memoria en el visor.** Three.js no libera búferes ni
+texturas al sacar un objeto de la escena. Cada modelo se carga con su propio
+`GLTFLoader` y se libera recorriendo el grafo, en lugar de usar la caché por URL
+de `useGLTF`, que nunca desaloja: cada cambio de parámetro produce un modelo
+nuevo y la caché crecería sin límite mientras la pestaña siga abierta.
+
+**Iluminación con luces, no con HDRI.** Los presets de entorno descargan una
+textura de varios megas desde un CDN y tiñen la superficie cuyo color real se
+intenta leer. Tres luces neutras son inmediatas, funcionan sin red y no falsean
+el material.
+
+**Renderizado bajo demanda.** `frameloop="demand"`: una pieza estática no
+necesita fotogramas.
+
+## Comandos
+
+```bash
+npm run dev
+npm run build
+npm run typecheck
+npm run lint
+```
+
+## Configuración
+
+| Variable       | Por defecto             | Descripción       |
+| -------------- | ----------------------- | ----------------- |
+| `VITE_API_URL` | `http://localhost:8000` | Origen de la API  |
