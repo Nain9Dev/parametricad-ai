@@ -1,35 +1,113 @@
-# Python
+# =============================================================================
+# ParametriCAD AI - Git Ignore
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# AI Assistant & Agent Artifacts
+# -----------------------------------------------------------------------------
+.agents/
+.gemini/
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.windsurfrules
+.copilot/
+copilot/
+.aider*
+aider.chat.*
+.cortex/
+.devin/
+.continue/
+.chat/
+*.prompt.md
+*scratchpad*
+.system_generated/
+brain/
+
+# -----------------------------------------------------------------------------
+# Environment Configurations, Secrets & Private Credentials
+# -----------------------------------------------------------------------------
+.env
+.env.*
+*.env
+*.local
+*.secret
+*.key
+*.pem
+*.cert
+*.crt
+*.pfx
+*.p12
+credentials.json
+client_secret*.json
+service_account*.json
+id_rsa*
+id_ed25519*
+!.env.example
+
+# -----------------------------------------------------------------------------
+# Operating System Metadata
+# -----------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# -----------------------------------------------------------------------------
+# IDEs & Editor Workspaces
+# -----------------------------------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# -----------------------------------------------------------------------------
+# Python Runtime, Virtual Environments & Tooling
+# -----------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 env/
 ENV/
-.env
-.env.*
-!.env.production
-
-# Node
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Mac
-.DS_Store
-
-# Vercel
-.vercel
-
-# Build
-frontend/dist
-frontend/build
-
-# Backend generated artifacts
-backend/static/
-
-# Test and tooling caches
+.venv/
 .pytest_cache/
 .hypothesis/
 .mypy_cache/
 .ruff_cache/
+coverage/
+.coverage
+.coverage.*
+htmlcov/
+*.log
+logs/
+
+# -----------------------------------------------------------------------------
+# Node.js, Frontend Package Managers & Build Artifacts
+# -----------------------------------------------------------------------------
+node_modules/
+frontend/dist/
+frontend/build/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# -----------------------------------------------------------------------------
+# Cloud & Deployment Providers
+# -----------------------------------------------------------------------------
+.vercel/
+
+# -----------------------------------------------------------------------------
+# Backend Runtime Generated CAD Artifacts
+# -----------------------------------------------------------------------------
+backend/static/
