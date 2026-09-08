@@ -270,9 +270,9 @@ class TestCors:
         response = api_client.options(
             "/api/v1/models",
             headers={
-                "Origin": "http://localhost:5173",
+                "Origin": "http://localhost:5300",
                 "Access-Control-Request-Method": "POST",
             },
         )
         assert response.status_code == 200
-        assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+        assert response.headers["access-control-allow-origin"] == "http://localhost:5300"

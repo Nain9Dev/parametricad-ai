@@ -43,8 +43,8 @@ class Settings(BaseSettings):
         default_factory=lambda: [
             "https://parametricad.naindev.com",
             "https://www.naindev.com",
-            "http://localhost:5173",
-            "http://127.0.0.1:5173",
+            "http://localhost:5300",
+            "http://127.0.0.1:5300",
         ]
     )
 

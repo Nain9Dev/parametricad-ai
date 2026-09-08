@@ -19,7 +19,8 @@ import type {
   HealthResponse,
 } from '@/types/api'
 
-const DEFAULT_BASE_URL = 'http://localhost:8000'
+/** The backend's reserved local port; see `docs/10-runbook.md`. */
+const DEFAULT_BASE_URL = 'http://localhost:8130'
 
 /** Trailing slashes would double up when joined with a path. */
 export const API_BASE_URL: string = (
