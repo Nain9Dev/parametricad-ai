@@ -171,7 +171,7 @@ export default function App() {
             ]}
           />
 
-          {catalog.status === 'loading' ? <InputSkeleton /> : null}
+          {catalog.status === 'loading' ? <InputSkeleton waking={catalog.slow} /> : null}
 
           {catalog.status === 'error' ? (
             <GenerationError error={catalog.error} onRetry={catalog.retry} />
@@ -325,9 +325,20 @@ export default function App() {
   )
 }
 
-function InputSkeleton() {
+function InputSkeleton({ waking }: { waking: boolean }) {
   return (
     <div className="space-y-3">
+      {/* The hosted backend suspends when idle. Saying so beats a skeleton that
+          sits still for a minute and reads as a broken deploy. */}
+      {waking ? (
+        <p
+          role="status"
+          className="rounded-panel border border-line bg-surface px-3 py-2.5 text-[0.6875rem] leading-relaxed text-ink-muted"
+        >
+          Waking the generation service. It sleeps while unused, so the first
+          request can take up to a minute.
+        </p>
+      ) : null}
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-64 w-full" />
     </div>

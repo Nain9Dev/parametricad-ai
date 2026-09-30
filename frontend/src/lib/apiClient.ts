@@ -135,6 +135,56 @@ export function fetchCatalog(signal?: AbortSignal): Promise<Catalog> {
   return request<Catalog>('/api/v1/catalog', signal ? { signal } : {})
 }
 
+/** A cancellable sleep that rejects like an aborted request, so one catch covers both. */
+function delay(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms)
+    signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer)
+        reject(new DOMException('Aborted', 'AbortError'))
+      },
+      { once: true },
+    )
+  })
+}
+
+/** Coerce an unknown rejection into the failure type the client surfaces. */
+export function asApiError(cause: unknown): ApiError {
+  return cause instanceof ApiError
+    ? cause
+    : new ApiError('The catalog could not be loaded.', {
+        code: 'catalog_unavailable',
+        status: 0,
+      })
+}
+
+/**
+ * Load the catalog, retrying transient failures with a growing backoff.
+ *
+ * A transport failure or a server overload is worth retrying because a service
+ * resuming from idle refuses connections for a few seconds; a failure the
+ * backend actually described is surfaced at once, since retrying it would only
+ * produce the same answer.
+ */
+export async function fetchCatalogWithRetry(
+  signal: AbortSignal,
+  backoffMs: readonly number[] = [1_000, 3_000, 6_000],
+): Promise<Catalog> {
+  for (let tries = 0; ; tries += 1) {
+    try {
+      return await fetchCatalog(signal)
+    } catch (cause) {
+      if (isAbort(cause) || signal.aborted) throw cause
+      const error = asApiError(cause)
+      const backoff = backoffMs[tries]
+      if (!error.isRetryable || backoff === undefined) throw error
+      await delay(backoff, signal)
+    }
+  }
+}
+
 export function generateFromSpec(
   spec: ComponentSpec,
   formats: ExportFormat[],
