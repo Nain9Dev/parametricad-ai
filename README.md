@@ -167,7 +167,7 @@ The test suite exercises property-based verification using Hypothesis, checking 
 cd backend
 ruff check .               # 0 errors
 mypy app tests             # strict type checking (61 source files, 0 errors)
-pytest                     # 261 passing tests (unit, integration, property)
+pytest                     # 271 passing tests (unit, integration, property)
 
 # Frontend verification
 cd ../frontend
@@ -187,7 +187,7 @@ OpenCASCADE and VTK require native C++ OpenGL libraries:
 ```bash
 cd backend
 docker build -t parametricad-backend .
-docker run -p 8000:8000 parametricad-backend
+docker run -p 8130:8000 parametricad-backend
 ```
 
 ### Option B: Local Environment
@@ -198,17 +198,19 @@ cd backend
 python -m venv venv
 source venv/bin/activate  # On Windows: .\venv\Scripts\Activate.ps1
 pip install -r requirements-dev.txt
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --port 8130
 ```
 
 #### Frontend
 ```bash
 cd frontend
 npm install
-npm run dev
+npm run dev            # http://localhost:5300
 ```
 
-The frontend connects to the backend via `VITE_API_URL` (defaults to `http://localhost:8000`).
+The frontend connects to the backend via `VITE_API_URL` (defaults to `http://localhost:8130`).
+
+**Reserved local ports.** The development servers are pinned to 5300 (web), 5301 (Vite preview) and 8130 (API), and `strictPort` makes Vite fail rather than move when one is taken. The toolchain defaults, 5173 and 8000, are avoided on purpose: several projects claim them at once, and two apps sharing an origin also share the `localStorage`, cookies and service worker the browser scopes to that origin. See [`docs/10-runbook.md`](docs/10-runbook.md) for the full rationale.
 
 ---
 
