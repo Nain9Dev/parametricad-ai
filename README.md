@@ -166,12 +166,12 @@ The test suite exercises property-based verification using Hypothesis, checking 
 # Backend verification
 cd backend
 ruff check .               # 0 errors
-mypy app tests             # strict type checking (61 source files, 0 errors)
-pytest                     # 271 passing tests (unit, integration, property)
+mypy app tests             # strict type checking (64 source files, 0 errors)
+pytest                     # 282 passing tests (unit, integration, property, traceability)
 
 # Frontend verification
 cd ../frontend
-npm run lint               # oxlint (38 files, 0 warnings)
+npm run lint               # oxlint (43 files, 0 warnings)
 npm run typecheck          # tsc --noEmit
 npm run build              # production bundle compilation
 ```

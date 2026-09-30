@@ -129,8 +129,14 @@ curl http://127.0.0.1:8130/health
 
 | Surface | Host | Source | Notes |
 |---|---|---|---|
-| Web client | Vercel | `frontend/` | `VITE_API_URL` is set in the project's environment variables |
+| Web client | Vercel (project `nain-dev/parametricad-ai`) | `frontend/` from branch `main` | `VITE_API_URL` is set in the project's environment variables |
 | API | Render | `backend/Dockerfile` | Suspends when idle on the free tier; the first request after a pause pays the cold start |
+
+The Vercel project's production branch is **`main`** as of Sept 30, 2026. It had
+been left pointing at the vestigial `master` alias created when the remote's
+default branch migrated to `main`, so production kept serving the Sep 7 build
+while `main` pushes only produced previews. If the production URL ever goes
+stale again, check the branch first.
 
 ### Response headers
 
