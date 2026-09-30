@@ -31,14 +31,28 @@ src/
 ## Development & Build Commands
 
 ```bash
-npm run dev          # Start local Vite development server
+npm run dev          # Start local Vite development server on port 5300
 npm run typecheck    # TypeScript strict type validation
 npm run lint         # Run oxlint across all source files
 npm run build        # Production bundle compilation
+npm run preview      # Serve the built bundle on port 5301
 ```
+
+Both ports are fixed with `strictPort`, so a collision fails the start instead of
+moving the server to a port nobody wrote down. See `docs/10-runbook.md`.
 
 ## Environment Configuration
 
 | Variable | Default | Description |
 |---|---|---|
-| `VITE_API_URL` | `http://localhost:8000` | Target backend API base URL |
+| `VITE_API_URL` | `http://localhost:8130` | Target backend API base URL |
+
+## Deployment
+
+`vercel.json` declares the response headers for the deployed client: a Content
+Security Policy, transport and framing policy, and a one-year immutable
+`Cache-Control` for the content-hashed files under `/assets/`.
+
+The policy's `connect-src` names the API origin literally, so **a change of API
+host has to land in `vercel.json` in the same commit** or the browser blocks
+every request the client makes.
