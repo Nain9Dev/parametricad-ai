@@ -11,6 +11,8 @@ from app.domain.errors import StorageError
 from app.domain.models.artifacts import ExportFormat
 from app.infrastructure.storage.filesystem_storage import FilesystemArtifactStorage
 
+pytestmark = pytest.mark.req("REQ-UBI-07")
+
 MODEL_ID = "0123456789abcdef0123456789abcdef"
 
 

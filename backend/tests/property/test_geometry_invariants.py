@@ -51,6 +51,8 @@ def rotation_matrix(yaw: float, pitch: float, roll: float) -> np.ndarray:
 
 
 class TestMeshInvariants:
+    pytestmark = pytest.mark.req("REQ-UBI-02")
+
     @given(size=sizes)
     def test_volume_scales_with_the_cube_of_size(self, size: float) -> None:
         assert analysis.signed_volume(axis_aligned_box(size)) == pytest.approx(size**3)
@@ -115,6 +117,8 @@ class TestMeshInvariants:
 
 
 class TestSpecificationInvariants:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
     @given(
         outer=st.floats(min_value=1.0, max_value=MAX_DIMENSION_MM),
         ratio=st.floats(min_value=0.001, max_value=0.999),
@@ -170,6 +174,8 @@ class TestSpecificationInvariants:
 
 
 class TestExtractorInvariants:
+    pytestmark = pytest.mark.req("REQ-EVT-02")
+
     @given(
         diameter=st.integers(min_value=6, max_value=400),
         length=st.integers(min_value=1, max_value=2000),
@@ -208,6 +214,8 @@ class TestExtractorInvariants:
 
 @pytest.mark.kernel
 class TestPipelineInvariants:
+    pytestmark = pytest.mark.req("REQ-STA-02")
+
     @given(
         outer=st.floats(min_value=6.0, max_value=300.0),
         ratio=st.floats(min_value=0.05, max_value=0.45),

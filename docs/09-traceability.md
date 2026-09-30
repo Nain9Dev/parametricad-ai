@@ -7,11 +7,15 @@ This matrix maps system requirements to their implementing domain models, use ca
 | REQ-UBI-01 | Content addressing via SHA-256 | `domain/models/specs.py` (`canonical_key`) | `tests/unit/test_specs.py`, `tests/property/test_geometry_invariants.py` |
 | REQ-UBI-02 | Domain layer isolation | `domain/geometry/`, `domain/models/` | `backend/pyproject.toml` (mypy strict), `tests/unit/test_mesh_analysis.py` |
 | REQ-UBI-03 | Component catalog endpoint | `application/catalog.py`, `api/routes/catalog.py` | `tests/integration/test_api.py` (`test_catalog_returns_all_components`) |
+| REQ-UBI-04 | Web client response headers | `frontend/vercel.json` | Manual: served bundle loads with zero CSP violations; `curl -sI` on the deployment |
+| REQ-UBI-05 | Reserved local development ports | `frontend/vite.config.ts` (`strictPort`), `app/config.py` | `tests/unit/test_config.py` (`TestCorsDefaults`), `tests/integration/test_api.py` (`TestCors`) |
 | REQ-EVT-01 | Solid build & tessellation from spec | `application/use_cases/generate_from_spec.py` | `tests/integration/test_cadquery_kernel.py`, `tests/unit/test_generation_service.py` |
 | REQ-EVT-02 | Parameter extraction from prompt | `application/use_cases/generate_from_prompt.py` | `tests/unit/test_rule_based_extractor.py` |
 | REQ-EVT-03 | Content-addressed artifact caching | `application/services/model_generation_service.py` | `tests/unit/test_generation_service.py` (`TestContentAddressing`) |
+| REQ-EVT-04 | Catalog retry with backoff | `frontend/src/lib/hooks/useCatalog.ts` | Manual: an unreachable API produces exactly four attempts, then one error |
 | REQ-STA-01 | Offline rule-based extraction fallback | `infrastructure/llm/rule_based_extractor.py` | `tests/unit/test_rule_based_extractor.py`, `tests/integration/test_api.py` |
 | REQ-STA-02 | Rejection of non-manifold/invalid meshes | `application/services/model_generation_service.py` | `tests/unit/test_generation_service.py` (`TestQualityGateRejection`) |
+| REQ-STA-03 | Cold-start disclosure | `frontend/src/lib/hooks/useCatalog.ts`, `frontend/src/App.tsx` | Manual: the notice replaces a silent skeleton after 3.5 s |
 | REQ-UNW-01 | Fabricability validation rejection | `domain/models/specs.py` | `tests/unit/test_specs.py` (`TestPipeRules`, `TestElbowRules`, etc.) |
 | REQ-UNW-02 | Concurrency limit timeout handling | `application/services/model_generation_service.py` | `tests/unit/test_generation_service.py` (`TestConcurrencyLimit`) |
 | REQ-UNW-03 | Unrecognized prompt rejection | `infrastructure/llm/rule_based_extractor.py` | `tests/integration/test_api.py` (`test_unparseable_prompt_fails_cleanly`) |

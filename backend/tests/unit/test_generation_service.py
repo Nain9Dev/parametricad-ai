@@ -89,6 +89,8 @@ def build_service(
 
 
 class TestContentAddressing:
+    pytestmark = pytest.mark.req("REQ-UBI-01")
+
     def test_the_same_spec_maps_to_the_same_id(self, tmp_path: Path) -> None:
         service, _ = build_service(tmp_path)
         first = make_spec(kind="pipe", outer_diameter_mm=25, length_mm=100)
@@ -122,6 +124,8 @@ class TestContentAddressing:
 
 
 class TestCaching:
+    pytestmark = pytest.mark.req("REQ-EVT-03")
+
     def test_a_repeat_request_does_not_rebuild(self, tmp_path: Path) -> None:
         service, kernel = build_service(tmp_path)
         spec = make_spec(kind="pipe")
@@ -166,6 +170,8 @@ class TestCaching:
 
 
 class TestQualityGate:
+    pytestmark = pytest.mark.req("REQ-STA-02")
+
     def test_an_invalid_mesh_is_not_published(self, tmp_path: Path) -> None:
         service, _ = build_service(tmp_path, inspector=FailingInspector())
         with pytest.raises(MeshQualityRejectedError) as raised:
@@ -185,6 +191,8 @@ class TestQualityGate:
 
 
 class TestExportRouting:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_brep_formats_go_to_the_kernel_and_mesh_formats_do_not(
         self, tmp_path: Path
     ) -> None:
@@ -209,6 +217,8 @@ class TestExportRouting:
 
 
 class TestReportedProperties:
+    pytestmark = pytest.mark.req("REQ-UBI-06")
+
     def test_mass_uses_the_exact_kernel_volume(self, tmp_path: Path) -> None:
         service, _ = build_service(tmp_path)
         spec = make_spec(kind="pipe", material="aluminium")
@@ -232,6 +242,8 @@ class TestReportedProperties:
 
 
 class TestCapacity:
+    pytestmark = pytest.mark.req("REQ-UNW-02")
+
     def test_a_saturated_engine_reports_a_retryable_failure(self, tmp_path: Path) -> None:
         service, _ = build_service(tmp_path, max_concurrency=1, acquire_timeout_s=0.05)
         released = threading.Event()
@@ -252,6 +264,8 @@ class TestCapacity:
 
 
 class TestArtifactIntegrity:
+    pytestmark = pytest.mark.req("REQ-UBI-07")
+
     def test_the_digest_matches_the_stored_bytes(self, tmp_path: Path) -> None:
         import hashlib
 

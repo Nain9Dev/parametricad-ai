@@ -15,6 +15,8 @@ from app.domain.geometry.quality import (
 )
 from tests.conftest import axis_aligned_box, unit_tetrahedron
 
+pytestmark = pytest.mark.req("REQ-STA-02")
+
 
 def codes(report: object) -> set[MeshIssueCode]:
     return {issue.code for issue in report.issues}  # type: ignore[attr-defined]

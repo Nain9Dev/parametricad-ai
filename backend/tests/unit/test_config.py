@@ -30,6 +30,8 @@ def settings(monkeypatch: pytest.MonkeyPatch) -> Settings:
 
 
 class TestCorsDefaults:
+    pytestmark = pytest.mark.req("REQ-UBI-05")
+
     def test_the_reserved_local_origin_is_allowed(self, settings: Settings) -> None:
         # 5300 is this project's reserved development port; see docs/10-runbook.md.
         assert "http://localhost:5300" in settings.cors_allow_origins
@@ -54,6 +56,8 @@ class TestCorsDefaults:
 
 
 class TestExtractorSelection:
+    pytestmark = pytest.mark.req("REQ-STA-01")
+
     def test_auto_falls_back_to_the_offline_extractor(self, settings: Settings) -> None:
         assert settings.groq_api_key is None
         assert settings.resolved_extractor == "rule_based"
@@ -68,6 +72,8 @@ class TestExtractorSelection:
 
 
 class TestArtifactLocations:
+    pytestmark = pytest.mark.req("REQ-UBI-07")
+
     def test_the_models_directory_sits_under_the_static_root(
         self, settings: Settings
     ) -> None:

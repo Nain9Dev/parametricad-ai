@@ -22,6 +22,8 @@ def _two_boxes(offset: tuple[float, float, float]) -> TriangleMesh:
 
 
 class TestTriangleMesh:
+    pytestmark = pytest.mark.req("REQ-UBI-02")
+
     def test_arrays_are_read_only(self) -> None:
         mesh = unit_tetrahedron()
         with pytest.raises(ValueError, match="read-only"):
@@ -47,6 +49,8 @@ class TestTriangleMesh:
 
 
 class TestBoundingBox:
+    pytestmark = pytest.mark.req("REQ-UBI-02")
+
     def test_extents_of_a_unit_box(self) -> None:
         box = axis_aligned_box(2.0).bounding_box
         assert box.size == (2.0, 2.0, 2.0)
@@ -59,6 +63,8 @@ class TestBoundingBox:
 
 
 class TestMetrics:
+    pytestmark = pytest.mark.req("REQ-UBI-02")
+
     def test_tetrahedron_volume(self) -> None:
         assert analysis.signed_volume(unit_tetrahedron()) == pytest.approx(1 / 6)
 
@@ -83,6 +89,8 @@ class TestMetrics:
 
 
 class TestEdgeTopology:
+    pytestmark = pytest.mark.req("REQ-STA-02")
+
     def test_a_closed_solid_has_no_boundary(self) -> None:
         topology = analysis.edge_topology(axis_aligned_box())
         assert topology.is_watertight
@@ -120,6 +128,8 @@ class TestEdgeTopology:
 
 
 class TestDefects:
+    pytestmark = pytest.mark.req("REQ-STA-02")
+
     def test_a_repeated_vertex_makes_a_face_degenerate(self) -> None:
         mesh = TriangleMesh(unit_tetrahedron().vertices, np.array([[0, 1, 1]]))
         assert analysis.degenerate_face_indices(mesh).tolist() == [0]
@@ -145,6 +155,8 @@ class TestDefects:
 
 
 class TestConnectivity:
+    pytestmark = pytest.mark.req("REQ-STA-02")
+
     def test_a_single_solid_is_one_body(self) -> None:
         assert analysis.connected_component_count(axis_aligned_box()) == 1
 
@@ -162,6 +174,8 @@ class TestConnectivity:
 
 
 class TestSelfIntersection:
+    pytestmark = pytest.mark.req("REQ-STA-02")
+
     def test_a_clean_solid_reports_nothing(self) -> None:
         assert not analysis.find_self_intersections(axis_aligned_box()).has_intersections
 

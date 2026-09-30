@@ -15,6 +15,8 @@ def extractor() -> RuleBasedParameterExtractor:
 
 
 class TestKindDetection:
+    pytestmark = pytest.mark.req("REQ-EVT-02")
+
     @pytest.mark.parametrize(
         ("prompt", "expected"),
         [
@@ -42,6 +44,8 @@ class TestKindDetection:
 
 
 class TestWordOrder:
+    pytestmark = pytest.mark.req("REQ-EVT-02")
+
     def test_english_puts_the_number_after_the_keyword(
         self, extractor: RuleBasedParameterExtractor
     ) -> None:
@@ -73,6 +77,8 @@ class TestWordOrder:
 
 
 class TestUnits:
+    pytestmark = pytest.mark.req("REQ-EVT-02")
+
     @pytest.mark.parametrize(
         ("written", "millimetres"),
         [
@@ -117,6 +123,8 @@ class TestUnits:
 
 
 class TestComponentFields:
+    pytestmark = pytest.mark.req("REQ-EVT-02")
+
     def test_elbow_parameters(self, extractor: RuleBasedParameterExtractor) -> None:
         spec = extractor.extract(
             "codo de 90 grados, diametro 25mm, radio de curvatura 50mm, "
@@ -198,6 +206,8 @@ class TestComponentFields:
 
 
 class TestMaterial:
+    pytestmark = pytest.mark.req("REQ-EVT-02")
+
     @pytest.mark.parametrize(
         ("prompt", "material"),
         [
@@ -222,6 +232,8 @@ class TestMaterial:
 
 
 class TestFailures:
+    pytestmark = pytest.mark.req("REQ-UNW-03")
+
     @pytest.mark.parametrize("prompt", ["", "   ", "\n\t"])
     def test_an_empty_prompt_is_rejected(
         self, extractor: RuleBasedParameterExtractor, prompt: str
@@ -242,6 +254,8 @@ class TestFailures:
 
 
 class TestDeterminism:
+    pytestmark = pytest.mark.req("REQ-STA-01")
+
     def test_the_same_prompt_always_yields_the_same_spec(
         self, extractor: RuleBasedParameterExtractor
     ) -> None:

@@ -10,6 +10,7 @@ testpaths = ["tests"]
 addopts = "-ra --strict-markers --strict-config"
 markers = [
     "kernel: exercises the real CAD kernel and is therefore slow",
+    "req: links a test to the requirement(s) it verifies (e.g. REQ-UBI-01)",
 ]
 filterwarnings = [
     "ignore::DeprecationWarning:starlette.*",

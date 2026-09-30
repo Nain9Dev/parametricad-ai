@@ -11,6 +11,8 @@ PIPE = {"kind": "pipe", "outer_diameter_mm": 25.0, "wall_thickness_mm": 2.0, "le
 
 
 class TestSystemEndpoints:
+    pytestmark = pytest.mark.req("REQ-UBI-09")
+
     def test_health_reports_the_active_adapters(self, api_client: TestClient) -> None:
         body = api_client.get("/health").json()
         assert body["status"] == "ok"
@@ -27,6 +29,8 @@ class TestSystemEndpoints:
 
 
 class TestCatalog:
+    pytestmark = pytest.mark.req("REQ-UBI-03")
+
     def test_every_component_family_is_described(self, api_client: TestClient) -> None:
         body = api_client.get("/api/v1/catalog").json()
         assert {component["kind"] for component in body["components"]} == {
@@ -68,6 +72,8 @@ class TestCatalog:
 
 
 class TestParametricGeneration:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_a_valid_specification_produces_artifacts(
         self, api_client: TestClient
     ) -> None:
@@ -113,6 +119,8 @@ class TestParametricGeneration:
 
 
 class TestPromptGeneration:
+    pytestmark = pytest.mark.req("REQ-EVT-02")
+
     def test_a_description_is_turned_into_a_model(self, api_client: TestClient) -> None:
         response = api_client.post(
             "/api/v1/generate",
@@ -150,6 +158,8 @@ class TestPromptGeneration:
 
 
 class TestFailures:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
     def test_an_unbuildable_part_is_rejected_with_a_reason(
         self, api_client: TestClient
     ) -> None:
@@ -221,6 +231,8 @@ class TestFailures:
 
 
 class TestArtifactDelivery:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_a_generated_artifact_is_downloadable(self, api_client: TestClient) -> None:
         model = api_client.post(
             "/api/v1/models", json={"spec": PIPE, "formats": ["glb"]}
@@ -266,6 +278,8 @@ class TestArtifactDelivery:
 
 
 class TestCors:
+    pytestmark = pytest.mark.req("REQ-UBI-05")
+
     def test_a_configured_origin_is_allowed(self, api_client: TestClient) -> None:
         response = api_client.options(
             "/api/v1/models",

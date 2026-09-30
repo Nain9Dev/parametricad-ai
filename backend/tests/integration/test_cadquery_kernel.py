@@ -42,6 +42,8 @@ def _without_provenance(step: str) -> list[str]:
 
 
 class TestPipeGeometry:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_volume_matches_the_annulus_formula(self, kernel: CadQueryKernel) -> None:
         spec = make_spec(
             kind="pipe", outer_diameter_mm=25.0, wall_thickness_mm=2.5, length_mm=200.0
@@ -72,6 +74,8 @@ class TestPipeGeometry:
 
 
 class TestElbowGeometry:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     @pytest.mark.parametrize("angle", [45.0, 90.0, 180.0])
     def test_volume_matches_pappus(self, kernel: CadQueryKernel, angle: float) -> None:
         """The swept volume is the section area times the centroid path length."""
@@ -111,6 +115,8 @@ class TestElbowGeometry:
 
 
 class TestFlangeGeometry:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_volume_accounts_for_the_bore_and_every_bolt_hole(
         self, kernel: CadQueryKernel
     ) -> None:
@@ -144,6 +150,8 @@ class TestFlangeGeometry:
 
 
 class TestPlateGeometry:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_a_plain_plate_is_a_box(self, kernel: CadQueryKernel) -> None:
         spec = make_spec(
             kind="plate",
@@ -180,6 +188,8 @@ class TestPlateGeometry:
 
 
 class TestMeshQuality:
+    pytestmark = pytest.mark.req("REQ-STA-02")
+
     @pytest.mark.parametrize(
         "payload",
         [
@@ -246,6 +256,8 @@ class TestMeshQuality:
 
 
 class TestDeterminism:
+    pytestmark = pytest.mark.req("REQ-UBI-01")
+
     @pytest.mark.parametrize(
         "payload", [{"kind": "pipe"}, {"kind": "elbow"}, {"kind": "flange"}, {"kind": "plate"}]
     )
@@ -272,6 +284,8 @@ class TestDeterminism:
 
 
 class TestExports:
+    pytestmark = pytest.mark.req("REQ-OPT-01")
+
     def test_step_is_written_as_iso_10303(self, kernel: CadQueryKernel) -> None:
         payload = kernel.export(kernel.build(make_spec(kind="flange")), ExportFormat.STEP)
         assert payload.startswith(b"ISO-10303-21;")
@@ -310,6 +324,8 @@ class TestExports:
 
 
 class TestSolidValidation:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_the_reported_volume_is_the_exact_one(self, kernel: CadQueryKernel) -> None:
         solid = kernel.build(make_spec(kind="plate", corner_radius_mm=0.0, center_hole_diameter_mm=0.0))
         assert solid.kernel == "cadquery-occt"

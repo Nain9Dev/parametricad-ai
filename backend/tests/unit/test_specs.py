@@ -20,6 +20,8 @@ from tests.conftest import make_spec
 
 
 class TestDiscrimination:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
     def test_kind_selects_the_model(self) -> None:
         assert isinstance(make_spec(kind="pipe"), PipeSpec)
         assert isinstance(make_spec(kind="elbow"), ElbowSpec)
@@ -40,6 +42,8 @@ class TestDiscrimination:
 
 
 class TestImmutability:
+    pytestmark = pytest.mark.req("REQ-UBI-01")
+
     def test_specs_are_frozen(self) -> None:
         spec = make_spec(kind="pipe")
         assert isinstance(spec, PipeSpec)
@@ -65,6 +69,8 @@ class TestImmutability:
 
 
 class TestBoundaries:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
     @pytest.mark.parametrize("value", [0, -1, -0.001])
     def test_non_positive_dimensions_are_rejected(self, value: float) -> None:
         with pytest.raises(ValidationError, match="greater than 0"):
@@ -86,6 +92,8 @@ class TestBoundaries:
 
 
 class TestPipeRules:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
     def test_wall_equal_to_the_radius_collapses_the_bore(self) -> None:
         with pytest.raises(ValidationError, match="bore would collapse"):
             make_spec(kind="pipe", outer_diameter_mm=10, wall_thickness_mm=5)
@@ -101,6 +109,8 @@ class TestPipeRules:
 
 
 class TestElbowRules:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
     def test_bend_radius_equal_to_the_outer_radius_is_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must exceed the outer radius"):
             make_spec(kind="elbow", outer_diameter_mm=50, bend_radius_mm=25)
@@ -126,6 +136,8 @@ class TestElbowRules:
 
 
 class TestFlangeRules:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
     def test_bore_wider_than_the_disc_is_rejected(self) -> None:
         with pytest.raises(ValidationError, match="must be smaller than"):
             make_spec(kind="flange", outer_diameter_mm=50, bore_diameter_mm=60)
@@ -205,6 +217,8 @@ class TestFlangeRules:
 
 
 class TestPlateRules:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
     def test_fillet_larger_than_half_the_short_side_is_rejected(self) -> None:
         with pytest.raises(ValidationError, match="half the shortest side"):
             make_spec(kind="plate", width_mm=100, depth_mm=50, corner_radius_mm=25)
@@ -226,6 +240,8 @@ class TestPlateRules:
 
 
 class TestMaterial:
+    pytestmark = pytest.mark.req("REQ-UBI-06")
+
     def test_mass_follows_density(self) -> None:
         steel = make_spec(kind="pipe", material="stainless_steel")
         plastic = make_spec(kind="pipe", material="pvc")

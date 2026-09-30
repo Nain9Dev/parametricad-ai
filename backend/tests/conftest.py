@@ -23,8 +23,16 @@ from app.infrastructure.cad.cadquery_kernel import CadQueryKernel
 from app.infrastructure.mesh.inspector import GeometricMeshInspector
 from app.infrastructure.mesh.trimesh_exporter import TrimeshExporter
 from app.infrastructure.storage.filesystem_storage import FilesystemArtifactStorage
+from tests.traceability import (
+    build_report,
+    extract_frontend_requirement_ids,
+    extract_requirement_ids,
+    format_report,
+)
 
 SPEC_ADAPTER: TypeAdapter[ComponentSpec] = TypeAdapter(ComponentSpec)
+
+REQUIREMENTS_DOC = Path(__file__).resolve().parents[2] / "docs" / "02-requirements.md"
 
 
 def make_spec(**payload: object) -> ComponentSpec:
@@ -168,6 +176,56 @@ def api_client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[obje
     _reset_composition_root()
 
 
+# --------------------------------------------------------------------------- #
+# Requirements traceability gate
+# --------------------------------------------------------------------------- #
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--no-traceability-check",
+        action="store_true",
+        default=False,
+        help="skip the requirements-to-test traceability gate",
+    )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Fail closed unless every requirement is covered and every test is tagged.
+
+    The check runs after collection so it sees the whole suite, but before any
+    test executes. Each test declares the requirement(s) it verifies with
+    ``@pytest.mark.req("REQ-...")``; a test that carries no ``req`` marker, a
+    requirement that no test claims, or a marker that references an unknown
+    requirement id aborts the run with a descriptive message.
+    """
+    if config.getoption("--no-traceability-check") or not REQUIREMENTS_DOC.exists():
+        return
+    text = REQUIREMENTS_DOC.read_text(encoding="utf-8")
+    backend_requirements = set(extract_requirement_ids(text)) - set(
+        extract_frontend_requirement_ids(text)
+    )
+    test_tags: dict[str, set[str]] = {}
+    for item in items:
+        tags = {
+            marker.args[0]
+            for marker in item.iter_markers("req")
+            if marker.args and isinstance(marker.args[0], str)
+        }
+        test_tags[item.nodeid] = tags
+    report = build_report(backend_requirements, test_tags)
+    if not report.ok:
+        pytest.exit(format_report(report), returncode=1)
+
+
+_SESSION_EXITSTATUS = 0
+"""Exit status of the finished session, captured for the Windows teardown below."""
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:
+    """Record the authoritative exit status before the Windows teardown runs."""
+    global _SESSION_EXITSTATUS
+    _SESSION_EXITSTATUS = int(exitstatus)
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_unconfigure(config: pytest.Config) -> None:
     """Terminate the process cleanly on Windows.
@@ -182,9 +240,7 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     import sys
 
     if sys.platform == "win32":
-        tr = config.pluginmanager.get_plugin("terminalreporter")
-        exitstatus = getattr(tr, "_sessionexitstatus", 0) if tr else 0
         sys.stdout.flush()
         sys.stderr.flush()
-        os._exit(int(exitstatus))
+        os._exit(_SESSION_EXITSTATUS)
 
