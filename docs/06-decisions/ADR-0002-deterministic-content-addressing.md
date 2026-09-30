@@ -1,6 +1,6 @@
 # ADR-0002: Deterministic Content Addressing via Parameter Digest
 
-- **Status**: Proposed
+- **Status**: Accepted (approved 2026-09-30, TSK-08)
 - **Date**: 2026-09-07
 - **Context**: Re-running the CAD kernel and OpenCASCADE tessellation for previously generated components introduces avoidable latency and CPU load.
 - **Decision**: Generate an immutable `model_id` using the SHA-256 digest of the sorted canonical JSON representation of component parameters, tessellation settings, and engine revision.

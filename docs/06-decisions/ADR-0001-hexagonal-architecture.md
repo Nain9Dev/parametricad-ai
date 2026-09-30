@@ -1,6 +1,6 @@
 # ADR-0001: Hexagonal Architecture for Geometric Domain Isolation
 
-- **Status**: Proposed
+- **Status**: Accepted (approved 2026-09-30, TSK-08)
 - **Date**: 2026-09-07
 - **Context**: The original MVP tightly coupled CadQuery, Groq, and FastAPI routes, making testing slow and domain invariants hard to protect.
 - **Decision**: Adopt Hexagonal Architecture (Ports and Adapters) separating domain models and algorithms from external frameworks and geometry kernels.
