@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Standard Pipe DN20",
+    "spec": {
+      "kind": "pipe",
+      "material": "stainless_steel",
+      "outer_diameter_mm": 26.9,
+      "wall_thickness_mm": 2.6,
+      "length_mm": 150.0
+    }
+  },
+  {
+    "name": "Standard 90-Degree Elbow",
+    "spec": {
+      "kind": "elbow",
+      "material": "carbon_steel",
+      "outer_diameter_mm": 33.7,
+      "wall_thickness_mm": 3.2,
+      "bend_radius_mm": 50.0,
+      "bend_angle_deg": 90.0,
+      "leg_length_mm": 25.0
+    }
+  },
+  {
+    "name": "Standard ANSI Flange 8-Bolt",
+    "spec": {
+      "kind": "flange",
+      "material": "stainless_steel",
+      "outer_diameter_mm": 120.0,
+      "bore_diameter_mm": 60.0,
+      "thickness_mm": 14.0,
+      "bolt_circle_diameter_mm": 95.0,
+      "bolt_hole_count": 8,
+      "bolt_hole_diameter_mm": 12.0
+    }
+  },
+  {
+    "name": "Machined Base Plate",
+    "spec": {
+      "kind": "plate",
+      "material": "aluminium",
+      "width_mm": 120.0,
+      "depth_mm": 80.0,
+      "thickness_mm": 10.0,
+      "corner_radius_mm": 6.0,
+      "center_hole_diameter_mm": 25.0
+    }
+  },
+  {
+    "name": "Equal Tee Fitting",
+    "spec": {
+      "kind": "tee",
+      "material": "carbon_steel",
+      "run_diameter_mm": 48.3,
+      "run_length_mm": 120.0,
+      "branch_diameter_mm": 48.3,
+      "branch_length_mm": 60.0,
+      "wall_thickness_mm": 3.2
+    }
+  },
+  {
+    "name": "Reducing Tee Fitting",
+    "spec": {
+      "kind": "tee",
+      "material": "stainless_steel",
+      "run_diameter_mm": 60.3,
+      "run_length_mm": 140.0,
+      "branch_diameter_mm": 33.7,
+      "branch_length_mm": 50.0,
+      "wall_thickness_mm": 3.6
+    }
+  },
+  {
+    "name": "Concentric Reducer",
+    "spec": {
+      "kind": "reducer",
+      "material": "carbon_steel",
+      "large_diameter_mm": 60.3,
+      "small_diameter_mm": 33.7,
+      "length_mm": 75.0,
+      "wall_thickness_mm": 3.6,
+      "is_eccentric": false
+    }
+  },
+  {
+    "name": "Eccentric Reducer",
+    "spec": {
+      "kind": "reducer",
+      "material": "stainless_steel",
+      "large_diameter_mm": 60.3,
+      "small_diameter_mm": 42.4,
+      "length_mm": 75.0,
+      "wall_thickness_mm": 3.6,
+      "is_eccentric": true
+    }
+  },
+  {
+    "name": "Pipe End Cap",
+    "spec": {
+      "kind": "cap",
+      "material": "carbon_steel",
+      "outer_diameter_mm": 48.3,
+      "depth_mm": 35.0,
+      "wall_thickness_mm": 3.2
+    }
+  }
+]
