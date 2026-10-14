@@ -166,13 +166,21 @@ export interface GenerationResponse {
   extractor: string | null
 }
 
+export interface KernelCapacity {
+  active: number
+  pending: number
+  max: number
+}
+
 export interface HealthResponse {
   status: string
   service: string
   version: string
   geometry_kernel: string
   parameter_extractor: string
+  kernel_capacity?: KernelCapacity
 }
+
 
 /** The structured failure envelope every non-2xx response carries. */
 export interface ApiErrorBody {

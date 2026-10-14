@@ -8,10 +8,23 @@ from app.domain.geometry.quality import MeshQualityReport
 from app.domain.models.artifacts import ArtifactRef, ExportFormat
 from app.domain.models.specs import ComponentSpec
 
-__all__ = ["GeneratedModel", "GenerationTimings", "SolidProperties"]
+__all__ = ["GeneratedModel", "GenerationTimings", "KernelCapacity", "SolidProperties"]
+
+
+class KernelCapacity(BaseModel):
+    """Capacity gauges for in-flight generation pipelines (ADR-0004)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    active: int = Field(ge=0, description="Pipelines currently holding an execution slot.")
+    pending: int = Field(
+        ge=0, description="Pipelines currently queued waiting for an execution slot."
+    )
+    max: int = Field(ge=1, description="Maximum pipeline concurrency.")
 
 
 class GenerationTimings(BaseModel):
+
     """Wall-clock cost of each pipeline stage, in milliseconds.
 
     Surfaced to the client so a slow request can be attributed to the kernel,

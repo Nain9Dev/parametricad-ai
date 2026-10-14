@@ -23,7 +23,12 @@ from app.domain.models.artifacts import (
     ArtifactSource,
     ExportFormat,
 )
-from app.domain.models.results import GeneratedModel, GenerationTimings, SolidProperties
+from app.domain.models.results import (
+    GeneratedModel,
+    GenerationTimings,
+    KernelCapacity,
+    SolidProperties,
+)
 from app.domain.models.specs import ComponentSpec
 from app.domain.ports.artifact_storage import ArtifactStoragePort
 from app.domain.ports.geometry_kernel import GeometryKernelPort
@@ -61,7 +66,11 @@ class ModelGenerationService:
         self._reject_invalid_meshes = reject_invalid_meshes
         self._acquire_timeout_s = acquire_timeout_s
 
+        self._max_concurrency = max_concurrency
         self._slots = threading.BoundedSemaphore(max_concurrency)
+        self._active_jobs = 0
+        self._pending_jobs = 0
+        self._gauge_lock = threading.Lock()
         self._cache: OrderedDict[str, GeneratedModel] = OrderedDict()
         self._cache_size = cache_size
         self._cache_lock = threading.Lock()
@@ -69,6 +78,16 @@ class ModelGenerationService:
     # ------------------------------------------------------------------ #
     # Public API
     # ------------------------------------------------------------------ #
+    @property
+    def capacity(self) -> KernelCapacity:
+        """Instantaneous gauge of pipeline execution slots."""
+        with self._gauge_lock:
+            return KernelCapacity(
+                active=self._active_jobs,
+                pending=self._pending_jobs,
+                max=self._max_concurrency,
+            )
+
     def model_id_for(self, spec: ComponentSpec) -> str:
         """Content address of the artifacts this spec would produce.
 
@@ -106,7 +125,19 @@ class ModelGenerationService:
     ) -> GeneratedModel:
         started = time.perf_counter()
 
-        if not self._slots.acquire(timeout=self._acquire_timeout_s):
+        with self._gauge_lock:
+            self._pending_jobs += 1
+
+        acquired = False
+        try:
+            acquired = self._slots.acquire(timeout=self._acquire_timeout_s)
+        finally:
+            with self._gauge_lock:
+                self._pending_jobs -= 1
+                if acquired:
+                    self._active_jobs += 1
+
+        if not acquired:
             raise CapacityExhaustedError(
                 "The geometry engine is busy and could not start a new job in time.",
                 hint="Retry in a few seconds.",
@@ -143,6 +174,8 @@ class ModelGenerationService:
                 )
             export_ms = _elapsed_ms(checkpoint)
         finally:
+            with self._gauge_lock:
+                self._active_jobs -= 1
             self._slots.release()
 
         result = GeneratedModel(

@@ -12,7 +12,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.domain.models.artifacts import ExportFormat
-from app.domain.models.results import GeneratedModel
+from app.domain.models.results import GeneratedModel, KernelCapacity
 from app.domain.models.specs import ComponentSpec
 
 __all__ = [
@@ -95,3 +95,4 @@ class HealthResponse(BaseModel):
     version: str
     geometry_kernel: str
     parameter_extractor: str
+    kernel_capacity: KernelCapacity

@@ -72,8 +72,10 @@ class Settings(BaseSettings):
         ge=1,
         le=16,
         description=(
-            "Concurrent CAD kernel jobs. OpenCASCADE is not reliably re-entrant, "
-            "so the default serialises kernel work and scales out by process."
+            "Pipeline budget (ADR-0004): how many generation pipelines may be in "
+            "flight at once. OpenCASCADE stays single-flight per process, so this "
+            "bounds pipelines, not kernel parallelism; raise it only to overlap "
+            "non-kernel stages across more in-flight pipelines."
         ),
     )
     kernel_acquire_timeout_s: float = Field(default=30.0, gt=0.0)

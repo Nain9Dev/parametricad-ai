@@ -19,6 +19,15 @@ class TestSystemEndpoints:
         assert body["geometry_kernel"] == "cadquery-occt"
         assert body["parameter_extractor"] == "rule_based"
 
+    def test_health_reports_kernel_capacity(self, api_client: TestClient) -> None:
+        body = api_client.get("/health").json()
+        assert "kernel_capacity" in body
+        capacity = body["kernel_capacity"]
+        assert capacity["active"] == 0
+        assert capacity["pending"] == 0
+        assert capacity["max"] >= 1
+
+
     def test_the_root_redirects_to_the_documentation(self, api_client: TestClient) -> None:
         response = api_client.get("/", follow_redirects=False)
         assert response.status_code == 307
