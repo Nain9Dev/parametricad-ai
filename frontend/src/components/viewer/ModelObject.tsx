@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from 'react'
 import { DoubleSide, FrontSide, Mesh, MeshStandardMaterial } from 'three'
-import type { Group } from 'three'
+import type { Group, Plane } from 'three'
 
 interface ModelObjectProps {
   object: Group
   wireframe: boolean
+  clippingPlanes?: Plane[]
 }
 
 /**
@@ -16,7 +17,7 @@ interface ModelObjectProps {
  * consistent read across every part, makes the toggle a single flag, and drops
  * the per-node materials that arrived with the file.
  */
-export function ModelObject({ object, wireframe }: ModelObjectProps) {
+export function ModelObject({ object, wireframe, clippingPlanes }: ModelObjectProps) {
   const material = useMemo(
     () =>
       new MeshStandardMaterial({
@@ -49,9 +50,12 @@ export function ModelObject({ object, wireframe }: ModelObjectProps) {
 
   useEffect(() => {
     material.wireframe = wireframe
-    material.side = wireframe ? DoubleSide : FrontSide
+    material.clippingPlanes = clippingPlanes && clippingPlanes.length > 0 ? clippingPlanes : null
+    material.clipShadows = true
+    // When section plane is active, render DoubleSide so interior cavity walls are visible
+    material.side = wireframe || (clippingPlanes && clippingPlanes.length > 0) ? DoubleSide : FrontSide
     material.needsUpdate = true
-  }, [material, wireframe])
+  }, [material, wireframe, clippingPlanes])
 
   // The loaded graph belongs to the loading hook, which disposes it; the
   // material created here is the only resource this component owns.

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { GizmoHelper, GizmoViewport, Grid } from '@react-three/drei'
-import { Box3, Vector3 } from 'three'
+import { Box3, Plane, Vector3 } from 'three'
 
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Spinner } from '@/components/ui/Spinner'
@@ -9,6 +9,8 @@ import { AlertIcon, CubeIcon } from '@/components/ui/Icons'
 import { CameraRig } from '@/components/viewer/CameraRig'
 import { DimensionOverlay } from '@/components/viewer/DimensionOverlay'
 import { ModelObject } from '@/components/viewer/ModelObject'
+import { SectionPlaneHelper } from '@/components/viewer/SectionPlaneHelper'
+import { CaliperOverlay } from '@/components/viewer/CaliperOverlay'
 import { StudioLights } from '@/components/viewer/StudioLights'
 import type { ViewerOptions } from '@/components/viewer/viewerOptions'
 import { useGltfModel } from '@/components/viewer/useGltfModel'
@@ -29,6 +31,31 @@ export function ModelViewer({ url, options, fitToken, regenerating }: ModelViewe
     if (model.status !== 'ready') return null
     return new Box3().setFromObject(model.object)
   }, [model])
+
+  const clippingPlanes = useMemo(() => {
+    if (!options.sectionPlane || !bounds) return []
+    const mid = bounds.getCenter(new Vector3())
+    const extent = bounds.getSize(new Vector3())
+
+    let normal = new Vector3(0, 0, -1)
+    let constant = 0
+
+    if (options.sectionAxis === 'x') {
+      normal = new Vector3(-1, 0, 0)
+      const x = mid.x + (options.sectionOffset * extent.x) / 2
+      constant = x
+    } else if (options.sectionAxis === 'y') {
+      normal = new Vector3(0, -1, 0)
+      const y = mid.y + (options.sectionOffset * extent.y) / 2
+      constant = y
+    } else {
+      normal = new Vector3(0, 0, -1)
+      const z = mid.z + (options.sectionOffset * extent.z) / 2
+      constant = z
+    }
+
+    return [new Plane(normal, constant)]
+  }, [options.sectionPlane, options.sectionAxis, options.sectionOffset, bounds])
 
   return (
     <ErrorBoundary
@@ -55,7 +82,10 @@ export function ModelViewer({ url, options, fitToken, regenerating }: ModelViewe
             // buffer saves the blend and avoids halo artefacts on edges.
             alpha: false,
           }}
-          onCreated={({ gl }) => gl.setClearColor('#08090b')}
+          onCreated={({ gl }) => {
+            gl.setClearColor('#08090b')
+            gl.localClippingEnabled = true
+          }}
         >
           <StudioLights />
           <CameraRig
@@ -67,8 +97,25 @@ export function ModelViewer({ url, options, fitToken, regenerating }: ModelViewe
           {options.grid && bounds ? <GroundGrid bounds={bounds} /> : null}
 
           {model.status === 'ready' ? (
-            <ModelObject object={model.object} wireframe={options.wireframe} />
+            <ModelObject
+              object={model.object}
+              wireframe={options.wireframe}
+              clippingPlanes={clippingPlanes}
+            />
           ) : null}
+
+          {options.sectionPlane && bounds ? (
+            <SectionPlaneHelper
+              bounds={bounds}
+              axis={options.sectionAxis}
+              offset={options.sectionOffset}
+            />
+          ) : null}
+
+          <CaliperOverlay
+            modelObject={model.status === 'ready' ? model.object : null}
+            enabled={options.caliper}
+          />
 
           {options.dimensions && bounds ? <DimensionOverlay bounds={bounds} /> : null}
 

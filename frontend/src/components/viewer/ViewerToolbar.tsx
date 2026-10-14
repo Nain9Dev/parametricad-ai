@@ -1,7 +1,15 @@
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { ToggleButton } from '@/components/ui/ToggleButton'
-import { AxesIcon, GridIcon, ResetIcon, RulerIcon, WireframeIcon } from '@/components/ui/Icons'
-import type { ViewerOptions } from '@/components/viewer/viewerOptions'
+import {
+  AxesIcon,
+  CaliperIcon,
+  GridIcon,
+  ResetIcon,
+  RulerIcon,
+  SectionIcon,
+  WireframeIcon,
+} from '@/components/ui/Icons'
+import type { SectionAxis, ViewerOptions } from '@/components/viewer/viewerOptions'
 
 interface ViewerToolbarProps {
   options: ViewerOptions
@@ -51,7 +59,57 @@ export function ViewerToolbar({
         >
           <RulerIcon />
         </ToggleButton>
+        <ToggleButton
+          label="Section plane"
+          pressed={options.sectionPlane}
+          onToggle={(pressed) => set('sectionPlane', pressed)}
+        >
+          <SectionIcon />
+        </ToggleButton>
+        <ToggleButton
+          label="3D Caliper metrology"
+          pressed={options.caliper}
+          onToggle={(pressed) => set('caliper', pressed)}
+        >
+          <CaliperIcon />
+        </ToggleButton>
       </div>
+
+      {options.sectionPlane && (
+        <div className="flex items-center gap-2 rounded-md border border-line bg-raised/80 px-2 py-1">
+          <span className="text-[0.625rem] font-medium text-ink-muted">Cut:</span>
+          <div className="w-24">
+            <SegmentedControl
+              label="Cut Axis"
+              size="sm"
+              value={options.sectionAxis}
+              onChange={(axis) => set('sectionAxis', axis as SectionAxis)}
+              segments={[
+                { value: 'x', label: 'X', title: 'Cut along X plane' },
+                { value: 'y', label: 'Y', title: 'Cut along Y plane' },
+                { value: 'z', label: 'Z', title: 'Cut along Z plane' },
+              ]}
+            />
+          </div>
+          <input
+            type="range"
+            min="-0.95"
+            max="0.95"
+            step="0.05"
+            value={options.sectionOffset}
+            onChange={(e) => set('sectionOffset', parseFloat(e.target.value))}
+            className="h-1.5 w-16 cursor-pointer appearance-none rounded bg-line accent-accent"
+            title="Adjust cutting plane position"
+          />
+        </div>
+      )}
+
+      {options.caliper && (
+        <div className="flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[0.6875rem] text-amber-400">
+          <CaliperIcon className="size-3.5" />
+          <span>Click 2 vertices</span>
+        </div>
+      )}
 
       <div className="w-44">
         <SegmentedControl

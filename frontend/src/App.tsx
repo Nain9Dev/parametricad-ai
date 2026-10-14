@@ -130,6 +130,20 @@ export default function App() {
     [generate],
   )
 
+  const refinePrompt = useCallback(
+    (prompt: string) => {
+      if (!generation.model?.spec) return
+      awaitingPromptSync.current = true
+      generate({
+        source: 'refine',
+        current_spec: generation.model.spec,
+        prompt,
+        formats: PREVIEW_FORMATS,
+      })
+    },
+    [generate, generation.model],
+  )
+
   const generateNow = useCallback(() => {
     if (!spec) return
     generate({ source: 'spec', spec, formats: PREVIEW_FORMATS })
@@ -232,6 +246,8 @@ export default function App() {
               <Panel title="Natural language">
                 <PromptComposer
                   onSubmit={submitPrompt}
+                  onRefine={refinePrompt}
+                  currentSpec={generation.model?.spec ?? null}
                   busy={busy}
                   extractor={generation.extractor}
                 />

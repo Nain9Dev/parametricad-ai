@@ -99,3 +99,18 @@ export const CubeIcon = (props: IconProps) => (
     <path d="m3 7 9 5 9-5M12 22V12" />
   </Icon>
 )
+
+export const SectionIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M4 12h16M12 4v16" strokeDasharray="3 3" />
+    <circle cx="12" cy="12" r="3" />
+  </Icon>
+)
+
+export const CaliperIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <path d="M4 6h16M4 6v8M20 6v8M8 6v4M16 6v4M7 14h10" />
+    <path d="M7 14l-2 3M17 14l2 3" />
+  </Icon>
+)
+

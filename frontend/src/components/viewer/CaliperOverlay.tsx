@@ -1,0 +1,204 @@
+import { useEffect, useMemo, useState } from 'react'
+import { useThree } from '@react-three/fiber'
+import { Html } from '@react-three/drei'
+import { BufferGeometry, Float32BufferAttribute, Mesh, Vector2, Vector3 } from 'three'
+import type { Group } from 'three'
+
+interface CaliperOverlayProps {
+  modelObject: Group | null
+  enabled: boolean
+}
+
+/**
+ * 3D Caliper measurement tool with vertex snapping.
+ *
+ * Click two vertices on the mesh to measure the exact physical distance and
+ * coordinate delta in millimetres.
+ */
+export function CaliperOverlay({ modelObject, enabled }: CaliperOverlayProps) {
+  const { gl, camera, raycaster } = useThree()
+  const [hoverVertex, setHoverVertex] = useState<Vector3 | null>(null)
+  const [pointA, setPointA] = useState<Vector3 | null>(null)
+  const [pointB, setPointB] = useState<Vector3 | null>(null)
+
+  // Reset points when caliper is disabled
+  useEffect(() => {
+    if (!enabled) {
+      setHoverVertex(null)
+      setPointA(null)
+      setPointB(null)
+    }
+  }, [enabled])
+
+  useEffect(() => {
+    if (!enabled || !modelObject) return
+
+    const dom = gl.domElement
+    dom.style.cursor = 'crosshair'
+
+    const handlePointerMove = (e: MouseEvent) => {
+      const rect = dom.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1
+      const y = -((e.clientY - rect.top) / rect.height) * 2 + 1
+
+      raycaster.setFromCamera(new Vector2(x, y), camera)
+      const meshes: Mesh[] = []
+      modelObject.traverse((child) => {
+        if (child instanceof Mesh) meshes.push(child)
+      })
+
+      const intersects = raycaster.intersectObjects(meshes, false)
+      if (intersects.length > 0) {
+        const hit = intersects[0]
+        if (hit && hit.face && hit.object instanceof Mesh) {
+          const geom = hit.object.geometry
+          const pos = geom.attributes.position
+          if (pos) {
+            const vA = new Vector3().fromBufferAttribute(pos, hit.face.a).applyMatrix4(hit.object.matrixWorld)
+            const vB = new Vector3().fromBufferAttribute(pos, hit.face.b).applyMatrix4(hit.object.matrixWorld)
+            const vC = new Vector3().fromBufferAttribute(pos, hit.face.c).applyMatrix4(hit.object.matrixWorld)
+
+            const p = hit.point
+            let closest = vA
+            let minDist = p.distanceTo(vA)
+
+            const distB = p.distanceTo(vB)
+            if (distB < minDist) {
+              closest = vB
+              minDist = distB
+            }
+
+            const distC = p.distanceTo(vC)
+            if (distC < minDist) {
+              closest = vC
+              minDist = distC
+            }
+
+            setHoverVertex(closest)
+            return
+          }
+        }
+      }
+      setHoverVertex(null)
+    }
+
+    const handleClick = () => {
+      if (!hoverVertex) return
+
+      if (!pointA) {
+        setPointA(hoverVertex.clone())
+      } else if (!pointB) {
+        setPointB(hoverVertex.clone())
+      } else {
+        setPointA(hoverVertex.clone())
+        setPointB(null)
+      }
+    }
+
+    dom.addEventListener('mousemove', handlePointerMove)
+    dom.addEventListener('click', handleClick)
+
+    return () => {
+      dom.style.cursor = 'auto'
+      dom.removeEventListener('mousemove', handlePointerMove)
+      dom.removeEventListener('click', handleClick)
+    }
+  }, [enabled, modelObject, camera, raycaster, gl, pointA, pointB, hoverVertex])
+
+  const lineGeometry = useMemo(() => {
+    if (!pointA || !pointB) return null
+    const geom = new BufferGeometry()
+    const points = [
+      pointA.x, pointA.y, pointA.z,
+      pointB.x, pointB.y, pointB.z,
+    ]
+    geom.setAttribute('position', new Float32BufferAttribute(points, 3))
+    return geom
+  }, [pointA, pointB])
+
+  const distance = useMemo(() => {
+    if (!pointA || !pointB) return 0
+    return pointA.distanceTo(pointB)
+  }, [pointA, pointB])
+
+  const midpoint = useMemo(() => {
+    if (!pointA || !pointB) return new Vector3()
+    return new Vector3().addVectors(pointA, pointB).multiplyScalar(0.5)
+  }, [pointA, pointB])
+
+  const delta = useMemo(() => {
+    if (!pointA || !pointB) return { dx: 0, dy: 0, dz: 0 }
+    return {
+      dx: Math.abs(pointB.x - pointA.x),
+      dy: Math.abs(pointB.y - pointA.y),
+      dz: Math.abs(pointB.z - pointA.z),
+    }
+  }, [pointA, pointB])
+
+  if (!enabled) return null
+
+  return (
+    <group>
+      {/* Snapping target marker */}
+      {hoverVertex && !pointB && (
+        <mesh position={hoverVertex}>
+          <sphereGeometry args={[0.8, 16, 16]} />
+          <meshBasicMaterial color="#38bdf8" />
+        </mesh>
+      )}
+
+      {/* Point A */}
+      {pointA && (
+        <mesh position={pointA}>
+          <sphereGeometry args={[1.0, 16, 16]} />
+          <meshBasicMaterial color="#f59e0b" />
+        </mesh>
+      )}
+
+      {/* Point B */}
+      {pointB && (
+        <mesh position={pointB}>
+          <sphereGeometry args={[1.0, 16, 16]} />
+          <meshBasicMaterial color="#f59e0b" />
+        </mesh>
+      )}
+
+      {/* Measurement line */}
+      {lineGeometry && (
+        <lineSegments geometry={lineGeometry}>
+          <lineBasicMaterial color="#f59e0b" linewidth={2} />
+        </lineSegments>
+      )}
+
+      {/* Caliper Measurement Tag */}
+      {pointA && pointB && (
+        <Html position={midpoint} center zIndexRange={[30, 0]} style={{ pointerEvents: 'auto' }}>
+          <div className="flex flex-col items-center gap-1 rounded-md border border-amber-500/60 bg-void/90 p-2 shadow-lg backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-xs font-semibold text-amber-400">
+                {distance.toFixed(2)} mm
+              </span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setPointA(null)
+                  setPointB(null)
+                }}
+                className="rounded px-1 text-[0.625rem] text-ink-muted hover:bg-raised hover:text-ink"
+                title="Clear measurement"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="flex gap-2 font-mono text-[0.5625rem] text-ink-muted">
+              <span>ΔX: {delta.dx.toFixed(1)}</span>
+              <span>ΔY: {delta.dy.toFixed(1)}</span>
+              <span>ΔZ: {delta.dz.toFixed(1)}</span>
+            </div>
+          </div>
+        </Html>
+      )}
+    </group>
+  )
+}
