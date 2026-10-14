@@ -19,12 +19,15 @@ from collections.abc import Callable
 import cadquery as cq
 
 from app.domain.models.specs import (
+    CapSpec,
     ComponentKind,
     ComponentSpec,
     ElbowSpec,
     FlangeSpec,
     PipeSpec,
     PlateSpec,
+    ReducerSpec,
+    TeeSpec,
 )
 
 __all__ = ["BUILDERS", "build_shape"]
@@ -111,11 +114,125 @@ def _build_plate(spec: PlateSpec) -> cq.Shape:
     return result.val()
 
 
+def _build_tee(spec: TeeSpec) -> cq.Shape:
+    half_run = spec.run_length_mm / 2.0
+    run_outer_r = spec.run_diameter_mm / 2.0
+    run_inner_r = run_outer_r - spec.wall_thickness_mm
+    branch_outer_r = spec.branch_diameter_mm / 2.0
+    branch_inner_r = branch_outer_r - spec.wall_thickness_mm
+
+    run_solid = (
+        cq.Workplane("XY")
+        .workplane(offset=-half_run)
+        .circle(run_outer_r)
+        .circle(run_inner_r)
+        .extrude(spec.run_length_mm)
+        .val()
+    )
+
+    branch_solid = (
+        cq.Workplane("YZ")
+        .circle(branch_outer_r)
+        .circle(branch_inner_r)
+        .extrude(spec.branch_length_mm)
+        .val()
+    )
+
+    run_bore = (
+        cq.Workplane("XY")
+        .workplane(offset=-half_run - 1.0)
+        .circle(run_inner_r)
+        .extrude(spec.run_length_mm + 2.0)
+        .val()
+    )
+    branch_bore = (
+        cq.Workplane("YZ")
+        .circle(branch_inner_r)
+        .extrude(spec.branch_length_mm + 1.0)
+        .val()
+    )
+
+    return run_solid.fuse(branch_solid).cut(run_bore).cut(branch_bore).clean()
+
+
+def _build_reducer(spec: ReducerSpec) -> cq.Shape:
+    large_r = spec.large_diameter_mm / 2.0
+    small_r = spec.small_diameter_mm / 2.0
+    wall = spec.wall_thickness_mm
+
+    dy = -(large_r - small_r) if spec.is_eccentric else 0.0
+
+    outer = (
+        cq.Workplane("XY")
+        .circle(large_r)
+        .workplane(offset=spec.length_mm)
+        .center(0, dy)
+        .circle(small_r)
+        .loft(combine=True)
+        .val()
+    )
+
+    inner = (
+        cq.Workplane("XY")
+        .workplane(offset=-1.0)
+        .circle(large_r - wall)
+        .workplane(offset=spec.length_mm + 2.0)
+        .center(0, dy)
+        .circle(small_r - wall)
+        .loft(combine=True)
+        .val()
+    )
+
+    return outer.cut(inner).clean()
+
+
+def _build_cap(spec: CapSpec) -> cq.Shape:
+    outer_r = spec.outer_diameter_mm / 2.0
+    wall = spec.wall_thickness_mm
+    depth = spec.depth_mm
+    inner_r = outer_r - wall
+    inner_depth = depth - wall
+
+    outer_cyl = (
+        cq.Workplane("XY")
+        .circle(outer_r)
+        .extrude(depth)
+        .val()
+    )
+    fillet_r = min(depth * 0.7, outer_r * 0.95)
+    outer = outer_cyl
+    if fillet_r > 0.5:
+        try:
+            outer = outer_cyl.edges(">Z").fillet(fillet_r)
+        except Exception:
+            outer = outer_cyl
+
+    inner_cyl = (
+        cq.Workplane("XY")
+        .workplane(offset=-1.0)
+        .circle(inner_r)
+        .extrude(inner_depth + 1.0)
+        .val()
+    )
+    inner_fillet_r = max(0.0, fillet_r - wall)
+    inner = inner_cyl
+    if inner_fillet_r > 0.5:
+        try:
+            inner = inner_cyl.edges(">Z").fillet(inner_fillet_r)
+        except Exception:
+            inner = inner_cyl
+
+    return outer.cut(inner).clean()
+
+
 BUILDERS: dict[ComponentKind, Callable[..., cq.Shape]] = {
     ComponentKind.PIPE: _build_pipe,
     ComponentKind.ELBOW: _build_elbow,
     ComponentKind.FLANGE: _build_flange,
     ComponentKind.PLATE: _build_plate,
+    ComponentKind.TEE: _build_tee,
+    ComponentKind.REDUCER: _build_reducer,
+    ComponentKind.CAP: _build_cap,
 }
 
 

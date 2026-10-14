@@ -7,7 +7,14 @@
  * truth that could drift from the backend's.
  */
 
-export type ComponentKind = 'pipe' | 'elbow' | 'flange' | 'plate'
+export type ComponentKind =
+  | 'pipe'
+  | 'elbow'
+  | 'flange'
+  | 'plate'
+  | 'tee'
+  | 'reducer'
+  | 'cap'
 
 export type ExportFormat = 'glb' | 'gltf' | 'stl' | 'step' | 'dxf'
 

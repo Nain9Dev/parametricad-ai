@@ -187,6 +187,46 @@ class TestPlateGeometry:
         )
 
 
+class TestTeeGeometry:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
+    def test_tee_solid_has_positive_volume_and_area(self, kernel: CadQueryKernel) -> None:
+        spec = make_spec(kind="tee", run_diameter_mm=50.0, branch_diameter_mm=50.0)
+        solid = kernel.build(spec)
+        assert solid.volume_mm3 > 0.0
+        assert solid.surface_area_mm2 > 0.0
+
+    def test_reducing_tee_is_smaller_than_equal_tee(self, kernel: CadQueryKernel) -> None:
+        equal_tee = kernel.build(make_spec(kind="tee", run_diameter_mm=50.0, branch_diameter_mm=50.0))
+        reducing_tee = kernel.build(make_spec(kind="tee", run_diameter_mm=50.0, branch_diameter_mm=30.0))
+        assert equal_tee.volume_mm3 > reducing_tee.volume_mm3
+
+
+class TestReducerGeometry:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
+    def test_concentric_reducer_has_positive_volume_and_area(self, kernel: CadQueryKernel) -> None:
+        spec = make_spec(kind="reducer", large_diameter_mm=60.0, small_diameter_mm=40.0)
+        solid = kernel.build(spec)
+        assert solid.volume_mm3 > 0.0
+        assert solid.surface_area_mm2 > 0.0
+
+    def test_eccentric_reducer_builds_valid_solid(self, kernel: CadQueryKernel) -> None:
+        spec = make_spec(kind="reducer", large_diameter_mm=60.0, small_diameter_mm=40.0, is_eccentric=True)
+        solid = kernel.build(spec)
+        assert solid.volume_mm3 > 0.0
+
+
+class TestCapGeometry:
+    pytestmark = pytest.mark.req("REQ-EVT-01")
+
+    def test_cap_solid_has_positive_volume_and_area(self, kernel: CadQueryKernel) -> None:
+        spec = make_spec(kind="cap", outer_diameter_mm=50.0, depth_mm=25.0)
+        solid = kernel.build(spec)
+        assert solid.volume_mm3 > 0.0
+        assert solid.surface_area_mm2 > 0.0
+
+
 class TestMeshQuality:
     pytestmark = pytest.mark.req("REQ-STA-02")
 
@@ -203,6 +243,11 @@ class TestMeshQuality:
             {"kind": "flange", "bolt_hole_count": 24, "bolt_hole_diameter_mm": 6.0},
             {"kind": "plate"},
             {"kind": "plate", "corner_radius_mm": 0.0, "center_hole_diameter_mm": 0.0},
+            {"kind": "tee"},
+            {"kind": "tee", "branch_diameter_mm": 30.0},
+            {"kind": "reducer"},
+            {"kind": "reducer", "is_eccentric": True},
+            {"kind": "cap"},
         ],
     )
     def test_every_supported_part_tessellates_into_a_valid_mesh(

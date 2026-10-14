@@ -25,6 +25,7 @@ from typing import Annotated, Literal, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 __all__ = [
+    "CapSpec",
     "ComponentKind",
     "ComponentSpec",
     "ElbowSpec",
@@ -33,6 +34,8 @@ __all__ = [
     "MATERIAL_DENSITY_G_CM3",
     "PipeSpec",
     "PlateSpec",
+    "ReducerSpec",
+    "TeeSpec",
 ]
 
 MAX_DIMENSION_MM = 5_000.0
@@ -53,6 +56,9 @@ class ComponentKind(StrEnum):
     ELBOW = "elbow"
     FLANGE = "flange"
     PLATE = "plate"
+    TEE = "tee"
+    REDUCER = "reducer"
+    CAP = "cap"
 
 
 class Material(StrEnum):
@@ -329,8 +335,166 @@ class PlateSpec(_BaseSpec):
         return self
 
 
+class TeeSpec(_BaseSpec):
+    """An orthogonal pipe tee (equal or reducing)."""
+
+    kind: Literal[ComponentKind.TEE] = ComponentKind.TEE
+
+    run_diameter_mm: Millimetres = Field(
+        default=50.0,
+        description="Outside diameter of the main straight run.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    run_length_mm: Millimetres = Field(
+        default=150.0,
+        description="Total length along the main run axis.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    branch_diameter_mm: Millimetres = Field(
+        default=50.0,
+        description="Outside diameter of the orthogonal branch.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    branch_length_mm: Millimetres = Field(
+        default=75.0,
+        description="Length of the branch measured from the run centreline.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    wall_thickness_mm: Millimetres = Field(
+        default=3.0,
+        description="Wall thickness of the fitting.",
+        json_schema_extra={"unit": "mm", "step": 0.1, "group": "Section"},
+    )
+
+    @property
+    def run_inner_diameter_mm(self) -> float:
+        return self.run_diameter_mm - 2.0 * self.wall_thickness_mm
+
+    @property
+    def branch_inner_diameter_mm(self) -> float:
+        return self.branch_diameter_mm - 2.0 * self.wall_thickness_mm
+
+    @model_validator(mode="after")
+    def _validate_tee(self) -> Self:
+        if self.branch_diameter_mm > self.run_diameter_mm:
+            raise ValueError(
+                f"branch_diameter_mm ({self.branch_diameter_mm}) cannot exceed "
+                f"run_diameter_mm ({self.run_diameter_mm})"
+            )
+        min_radius = min(self.run_diameter_mm, self.branch_diameter_mm) / 2.0
+        if self.wall_thickness_mm >= min_radius:
+            raise ValueError(
+                f"wall_thickness_mm ({self.wall_thickness_mm}) must be smaller than the "
+                f"branch radius ({min_radius}); the bore would collapse"
+            )
+        if self.branch_length_mm <= self.run_diameter_mm / 2.0:
+            raise ValueError(
+                f"branch_length_mm ({self.branch_length_mm}) must exceed the run outer "
+                f"radius ({self.run_diameter_mm / 2.0})"
+            )
+        if self.run_length_mm <= self.branch_diameter_mm:
+            raise ValueError(
+                f"run_length_mm ({self.run_length_mm}) must exceed the branch "
+                f"diameter ({self.branch_diameter_mm})"
+            )
+        return self
+
+
+class ReducerSpec(_BaseSpec):
+    """A straight concentric or eccentric pipe reducer."""
+
+    kind: Literal[ComponentKind.REDUCER] = ComponentKind.REDUCER
+
+    large_diameter_mm: Millimetres = Field(
+        default=60.0,
+        description="Outside diameter of the larger end.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    small_diameter_mm: Millimetres = Field(
+        default=40.0,
+        description="Outside diameter of the smaller end.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    length_mm: Millimetres = Field(
+        default=100.0,
+        description="Total transition length along the axis.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    wall_thickness_mm: Millimetres = Field(
+        default=3.0,
+        description="Wall thickness of the conical transition.",
+        json_schema_extra={"unit": "mm", "step": 0.1, "group": "Section"},
+    )
+    is_eccentric: bool = Field(
+        default=False,
+        description="Whether the flat side aligns with the bottom edge (eccentric reducer).",
+        json_schema_extra={"group": "Features"},
+    )
+
+    @property
+    def large_inner_diameter_mm(self) -> float:
+        return self.large_diameter_mm - 2.0 * self.wall_thickness_mm
+
+    @property
+    def small_inner_diameter_mm(self) -> float:
+        return self.small_diameter_mm - 2.0 * self.wall_thickness_mm
+
+    @model_validator(mode="after")
+    def _validate_reducer(self) -> Self:
+        if self.small_diameter_mm >= self.large_diameter_mm:
+            raise ValueError(
+                f"small_diameter_mm ({self.small_diameter_mm}) must be strictly smaller "
+                f"than large_diameter_mm ({self.large_diameter_mm})"
+            )
+        if self.wall_thickness_mm >= self.small_diameter_mm / 2.0:
+            raise ValueError(
+                f"wall_thickness_mm ({self.wall_thickness_mm}) must be smaller than the "
+                f"small radius ({self.small_diameter_mm / 2.0}); the bore would collapse"
+            )
+        return self
+
+
+class CapSpec(_BaseSpec):
+    """A domed end cap for sealing pipe ends."""
+
+    kind: Literal[ComponentKind.CAP] = ComponentKind.CAP
+
+    outer_diameter_mm: Millimetres = Field(
+        default=50.0,
+        description="Outside diameter of the cap base.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+    wall_thickness_mm: Millimetres = Field(
+        default=3.0,
+        description="Wall thickness of the cap shell.",
+        json_schema_extra={"unit": "mm", "step": 0.1, "group": "Section"},
+    )
+    depth_mm: Millimetres = Field(
+        default=25.0,
+        description="Total axial depth of the cap.",
+        json_schema_extra={"unit": "mm", "step": 1.0, "group": "Geometry"},
+    )
+
+    @property
+    def inner_diameter_mm(self) -> float:
+        return self.outer_diameter_mm - 2.0 * self.wall_thickness_mm
+
+    @model_validator(mode="after")
+    def _validate_cap(self) -> Self:
+        if self.wall_thickness_mm >= self.outer_diameter_mm / 2.0:
+            raise ValueError(
+                f"wall_thickness_mm ({self.wall_thickness_mm}) must be smaller than the "
+                f"outer radius ({self.outer_diameter_mm / 2.0}); the bore would collapse"
+            )
+        if self.depth_mm <= self.wall_thickness_mm:
+            raise ValueError(
+                f"depth_mm ({self.depth_mm}) must exceed wall_thickness_mm ({self.wall_thickness_mm})"
+            )
+        return self
+
+
 ComponentSpec = Annotated[
-    PipeSpec | ElbowSpec | FlangeSpec | PlateSpec,
+    PipeSpec | ElbowSpec | FlangeSpec | PlateSpec | TeeSpec | ReducerSpec | CapSpec,
     Field(discriminator="kind"),
 ]
 """Tagged union of every buildable component, discriminated on ``kind``."""
@@ -340,4 +504,7 @@ SPEC_BY_KIND: dict[ComponentKind, type[_BaseSpec]] = {
     ComponentKind.ELBOW: ElbowSpec,
     ComponentKind.FLANGE: FlangeSpec,
     ComponentKind.PLATE: PlateSpec,
+    ComponentKind.TEE: TeeSpec,
+    ComponentKind.REDUCER: ReducerSpec,
+    ComponentKind.CAP: CapSpec,
 }

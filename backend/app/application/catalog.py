@@ -33,6 +33,9 @@ _COMPONENT_LABELS: dict[ComponentKind, str] = {
     ComponentKind.ELBOW: "Elbow",
     ComponentKind.FLANGE: "Flange",
     ComponentKind.PLATE: "Plate",
+    ComponentKind.TEE: "Pipe Tee",
+    ComponentKind.REDUCER: "Pipe Reducer",
+    ComponentKind.CAP: "Pipe Cap",
 }
 
 

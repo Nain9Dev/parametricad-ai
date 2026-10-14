@@ -9,12 +9,15 @@ from pydantic import ValidationError
 
 from app.domain.models.specs import (
     MAX_DIMENSION_MM,
+    CapSpec,
     ComponentKind,
     ElbowSpec,
     FlangeSpec,
     Material,
     PipeSpec,
     PlateSpec,
+    ReducerSpec,
+    TeeSpec,
 )
 from tests.conftest import make_spec
 
@@ -27,6 +30,9 @@ class TestDiscrimination:
         assert isinstance(make_spec(kind="elbow"), ElbowSpec)
         assert isinstance(make_spec(kind="flange"), FlangeSpec)
         assert isinstance(make_spec(kind="plate"), PlateSpec)
+        assert isinstance(make_spec(kind="tee"), TeeSpec)
+        assert isinstance(make_spec(kind="reducer"), ReducerSpec)
+        assert isinstance(make_spec(kind="cap"), CapSpec)
 
     def test_unknown_kind_is_rejected(self) -> None:
         with pytest.raises(ValidationError, match="does not match any of the expected tags"):
@@ -237,6 +243,78 @@ class TestPlateRules:
         spec = make_spec(kind="plate", corner_radius_mm=0, center_hole_diameter_mm=0)
         assert isinstance(spec, PlateSpec)
         assert (spec.corner_radius_mm, spec.center_hole_diameter_mm) == (0.0, 0.0)
+
+
+class TestTeeRules:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
+    def test_branch_diameter_larger_than_run_diameter_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="branch_diameter_mm .* cannot exceed"):
+            make_spec(
+                kind="tee",
+                run_diameter_mm=50.0,
+                branch_diameter_mm=60.0,
+            )
+
+    def test_wall_exceeding_branch_radius_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="bore would collapse"):
+            make_spec(
+                kind="tee",
+                run_diameter_mm=50.0,
+                branch_diameter_mm=30.0,
+                wall_thickness_mm=16.0,
+            )
+
+    def test_valid_tee_defaults_are_accepted(self) -> None:
+        spec = make_spec(kind="tee")
+        assert isinstance(spec, TeeSpec)
+        assert spec.kind is ComponentKind.TEE
+        assert spec.run_diameter_mm == 50.0
+        assert spec.branch_diameter_mm == 50.0
+
+
+class TestReducerRules:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
+    def test_small_diameter_greater_or_equal_to_large_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="small_diameter_mm .* must be strictly smaller"):
+            make_spec(
+                kind="reducer",
+                large_diameter_mm=50.0,
+                small_diameter_mm=50.0,
+            )
+
+    def test_wall_exceeding_small_radius_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="bore would collapse"):
+            make_spec(
+                kind="reducer",
+                large_diameter_mm=60.0,
+                small_diameter_mm=30.0,
+                wall_thickness_mm=15.0,
+            )
+
+    def test_valid_reducer_defaults_are_accepted(self) -> None:
+        spec = make_spec(kind="reducer")
+        assert isinstance(spec, ReducerSpec)
+        assert spec.kind is ComponentKind.REDUCER
+        assert spec.large_diameter_mm > spec.small_diameter_mm
+
+
+class TestCapRules:
+    pytestmark = pytest.mark.req("REQ-UNW-01")
+
+    def test_wall_exceeding_outer_radius_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="bore would collapse"):
+            make_spec(kind="cap", outer_diameter_mm=40.0, wall_thickness_mm=20.0)
+
+    def test_depth_less_than_wall_is_rejected(self) -> None:
+        with pytest.raises(ValidationError, match="depth_mm .* must exceed wall_thickness_mm"):
+            make_spec(kind="cap", outer_diameter_mm=50.0, wall_thickness_mm=10.0, depth_mm=8.0)
+
+    def test_valid_cap_defaults_are_accepted(self) -> None:
+        spec = make_spec(kind="cap")
+        assert isinstance(spec, CapSpec)
+        assert spec.kind is ComponentKind.CAP
 
 
 class TestMaterial:
