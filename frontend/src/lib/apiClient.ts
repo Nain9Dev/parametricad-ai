@@ -201,4 +201,18 @@ export function generateFromPrompt(
   return postJson<GenerationResponse>('/api/v1/generate', { prompt, formats }, signal)
 }
 
+export function refineModel(
+  current_spec: ComponentSpec,
+  prompt: string,
+  formats: ExportFormat[],
+  signal?: AbortSignal,
+): Promise<GenerationResponse> {
+  return postJson<GenerationResponse>(
+    '/api/v1/generate/refine',
+    { current_spec, prompt, formats },
+    signal,
+  )
+}
+
 export { isAbort as isAbortError }
+

@@ -47,6 +47,9 @@ class TestCatalog:
             "elbow",
             "flange",
             "plate",
+            "tee",
+            "reducer",
+            "cap",
         }
 
     def test_parameters_carry_what_a_form_control_needs(
@@ -164,6 +167,34 @@ class TestPromptGeneration:
             25.5,
             200.0,
         )
+
+
+class TestPromptRefinement:
+    pytestmark = pytest.mark.req("REQ-EVT-05")
+
+    def test_refining_an_existing_spec(self, api_client: TestClient) -> None:
+        initial_spec = {
+            "kind": "pipe",
+            "outer_diameter_mm": 25.0,
+            "wall_thickness_mm": 2.5,
+            "length_mm": 100.0,
+            "material": "stainless_steel",
+        }
+        response = api_client.post(
+            "/api/v1/generate/refine",
+            json={
+                "current_spec": initial_spec,
+                "prompt": "increase length by 50mm and switch material to aluminium",
+                "formats": ["glb"],
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["extractor"] == "rule_based"
+        spec = body["model"]["spec"]
+        assert spec["length_mm"] == 150.0
+        assert spec["material"] == "aluminium"
+        assert spec["outer_diameter_mm"] == 25.0
 
 
 class TestFailures:

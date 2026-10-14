@@ -7,15 +7,18 @@ from starlette.concurrency import run_in_threadpool
 
 from app.application.use_cases.generate_from_prompt import GenerateFromPromptUseCase
 from app.application.use_cases.generate_from_spec import GenerateFromSpecUseCase
+from app.application.use_cases.refine_from_prompt import RefineFromPromptUseCase
 from app.infrastructure.api.dependencies import (
     get_generate_from_prompt_use_case,
     get_generate_from_spec_use_case,
+    get_refine_from_prompt_use_case,
 )
 from app.infrastructure.api.schemas import (
     ErrorResponse,
     GenerateFromPromptRequest,
     GenerateFromSpecRequest,
     GenerationResponse,
+    RefinePromptRequest,
 )
 
 router = APIRouter(tags=["generation"])
@@ -59,3 +62,21 @@ async def generate_from_prompt(
     """Extract parameters from ``prompt`` and build the resulting component."""
     result = await run_in_threadpool(use_case.execute, request.prompt, request.formats)
     return GenerationResponse.of(result.model, extractor=result.extractor)
+
+
+@router.post(
+    "/generate/refine",
+    response_model=GenerationResponse,
+    responses=_ERROR_RESPONSES,
+    summary="Refine an existing model from a natural-language description",
+)
+async def refine_from_prompt(
+    request: RefinePromptRequest,
+    use_case: RefineFromPromptUseCase = Depends(get_refine_from_prompt_use_case),
+) -> GenerationResponse:
+    """Modify parameters of ``current_spec`` using ``prompt`` and generate the updated component."""
+    result = await run_in_threadpool(
+        use_case.execute, request.current_spec, request.prompt, request.formats
+    )
+    return GenerationResponse.of(result.model, extractor=result.extractor)
+

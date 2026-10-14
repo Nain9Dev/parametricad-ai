@@ -22,6 +22,7 @@ __all__ = [
     "GenerateFromSpecRequest",
     "GenerationResponse",
     "HealthResponse",
+    "RefinePromptRequest",
 ]
 
 MAX_PROMPT_LENGTH = 2_000
@@ -44,6 +45,16 @@ class GenerateFromPromptRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    prompt: str = Field(min_length=1, max_length=MAX_PROMPT_LENGTH)
+    formats: list[ExportFormat] | None = None
+
+
+class RefinePromptRequest(BaseModel):
+    """Stateless conversational refinement."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    current_spec: ComponentSpec
     prompt: str = Field(min_length=1, max_length=MAX_PROMPT_LENGTH)
     formats: list[ExportFormat] | None = None
 

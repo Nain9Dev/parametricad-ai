@@ -5,7 +5,14 @@ from __future__ import annotations
 import pytest
 
 from app.domain.errors import ParameterExtractionError
-from app.domain.models.specs import ComponentKind, ElbowSpec, FlangeSpec, PipeSpec, PlateSpec
+from app.domain.models.specs import (
+    ComponentKind,
+    ElbowSpec,
+    FlangeSpec,
+    PipeSpec,
+    PlateSpec,
+    ReducerSpec,
+)
 from app.infrastructure.llm.rule_based_extractor import RuleBasedParameterExtractor
 
 
@@ -30,6 +37,12 @@ class TestKindDetection:
             ("an aluminium plate", ComponentKind.PLATE),
             ("una placa de acero", ComponentKind.PLATE),
             ("una chapa", ComponentKind.PLATE),
+            ("a tee joint fitting", ComponentKind.TEE),
+            ("una derivacion en t", ComponentKind.TEE),
+            ("a concentric reducer", ComponentKind.REDUCER),
+            ("un reductor excentrico", ComponentKind.REDUCER),
+            ("an end cap", ComponentKind.CAP),
+            ("una tapa para tubo", ComponentKind.CAP),
         ],
     )
     def test_component_family(
@@ -265,3 +278,61 @@ class TestDeterminism:
 
     def test_the_backend_names_itself(self, extractor: RuleBasedParameterExtractor) -> None:
         assert extractor.name == "rule_based"
+
+
+class TestRefinement:
+    pytestmark = pytest.mark.req("REQ-EVT-05")
+
+    def test_relative_length_increase(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = PipeSpec(outer_diameter_mm=25.0, wall_thickness_mm=2.5, length_mm=200.0)
+        refined = extractor.refine(initial, "increase length by 50mm")
+        assert isinstance(refined, PipeSpec)
+        assert refined.length_mm == 250.0
+        assert refined.outer_diameter_mm == 25.0
+
+    def test_relative_wall_thickness_decrease(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = PipeSpec(outer_diameter_mm=30.0, wall_thickness_mm=3.0, length_mm=100.0)
+        refined = extractor.refine(initial, "reduce wall thickness by 1mm")
+        assert isinstance(refined, PipeSpec)
+        assert refined.wall_thickness_mm == 2.0
+
+    def test_shorthand_relative_adjustment(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = PipeSpec(outer_diameter_mm=25.0, wall_thickness_mm=2.5, length_mm=100.0)
+        refined = extractor.refine(initial, "length + 50mm")
+        assert isinstance(refined, PipeSpec)
+        assert refined.length_mm == 150.0
+
+    def test_material_switch(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = PipeSpec(outer_diameter_mm=25.0, wall_thickness_mm=2.5, length_mm=200.0)
+        refined = extractor.refine(initial, "switch material to aluminium")
+        assert refined.material.value == "aluminium"
+
+    def test_absolute_dimension_override(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = PipeSpec(outer_diameter_mm=25.0, wall_thickness_mm=2.5, length_mm=200.0)
+        refined = extractor.refine(initial, "change wall to 3mm and length to 300mm")
+        assert isinstance(refined, PipeSpec)
+        assert refined.wall_thickness_mm == 3.0
+        assert refined.length_mm == 300.0
+
+    def test_reducer_eccentric_toggle(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = ReducerSpec(
+            large_diameter_mm=50.0,
+            small_diameter_mm=30.0,
+            length_mm=60.0,
+            wall_thickness_mm=3.0,
+            is_eccentric=False,
+        )
+        refined = extractor.refine(initial, "make it eccentric")
+        assert isinstance(refined, ReducerSpec)
+        assert refined.is_eccentric is True
+
+    def test_empty_refinement_prompt_raises(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = PipeSpec(outer_diameter_mm=25.0, wall_thickness_mm=2.5, length_mm=200.0)
+        with pytest.raises(ParameterExtractionError, match="empty"):
+            extractor.refine(initial, "   ")
+
+    def test_unbuildable_refinement_raises(self, extractor: RuleBasedParameterExtractor) -> None:
+        initial = PipeSpec(outer_diameter_mm=25.0, wall_thickness_mm=2.5, length_mm=200.0)
+        with pytest.raises(ParameterExtractionError):
+            extractor.refine(initial, "reduce diameter by 30mm")
+

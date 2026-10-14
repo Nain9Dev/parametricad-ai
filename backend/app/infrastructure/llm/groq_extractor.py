@@ -103,6 +103,44 @@ class GroqParameterExtractor:
                 },
             ) from exc
 
+    def refine(self, current_spec: ComponentSpec, prompt: str) -> ComponentSpec:
+        if not prompt.strip():
+            raise ParameterExtractionError("The refinement prompt is empty.")
+
+        refine_prompt = (
+            f"Current specification JSON:\n{current_spec.model_dump_json()}\n\n"
+            f"User requested modification:\n{prompt}\n\n"
+            "Return the complete updated specification JSON reflecting the requested modification."
+        )
+        content = self._complete(refine_prompt)
+
+        try:
+            payload: Any = json.loads(content)
+        except json.JSONDecodeError as exc:
+            raise ParameterExtractionError(
+                "The language model did not return valid JSON for refinement.",
+                hint="Retry, or rephrase the modification in plainer terms.",
+                details={"raw_response": content[:500]},
+            ) from exc
+
+        try:
+            return _SPEC_ADAPTER.validate_python(payload)
+        except ValidationError as exc:
+            raise ParameterExtractionError(
+                "The refined parameters do not describe a buildable part.",
+                hint="Ensure modifications preserve fabricability constraints.",
+                details={
+                    "extracted": payload,
+                    "violations": [
+                        {
+                            "field": ".".join(str(part) for part in error["loc"]),
+                            "message": error["msg"],
+                        }
+                        for error in exc.errors()
+                    ],
+                },
+            ) from exc
+
     def _complete(self, prompt: str) -> str:
         try:
             response = self._client.chat.completions.create(

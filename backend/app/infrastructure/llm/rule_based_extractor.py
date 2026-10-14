@@ -72,6 +72,9 @@ _KIND_KEYWORDS: tuple[tuple[ComponentKind, str], ...] = (
     (ComponentKind.ELBOW, r"\b(codo|elbow|bend|curva)\b"),
     (ComponentKind.FLANGE, r"\b(brida|flange)\b"),
     (ComponentKind.PLATE, r"\b(placa|plancha|chapa|plate|plaque)\b"),
+    (ComponentKind.TEE, r"\b(tee|t-pipe|t-fitting|t-joint|derivacion|racor\s+en\s+t|pieza\s+en\s+t)\b"),
+    (ComponentKind.REDUCER, r"\b(reductor|reduccion|reducer|reduction)\b"),
+    (ComponentKind.CAP, r"\b(tapa|tapon|end\s*cap|cap)\b"),
     (ComponentKind.PIPE, r"\b(tubo|tuberia|caneria|cano|pipe|tube|conducto)\b"),
 )
 
@@ -123,6 +126,24 @@ _FIELD_PATTERNS: dict[ComponentKind, tuple[tuple[str, str], ...]] = {
         ("thickness_mm", r"\b(espesor|grosor|thickness)\b"),
         ("width_mm", r"\b(ancho|anchura|width)\b"),
         ("depth_mm", r"\b(fondo|profundidad|depth|alto|altura|height)\b"),
+    ),
+    ComponentKind.TEE: (
+        ("wall_thickness_mm", r"\b(espesor|grosor|pared|thickness|wall)\b"),
+        ("branch_length_mm", r"\b(longitud\s+ramal|largo\s+ramal|longitud\s+derivacion|branch\s+length)\b"),
+        ("branch_diameter_mm", r"\b(diametro\s+ramal|diametro\s+derivacion|branch\s+diameter|branch\s+od|branch)\b"),
+        ("run_diameter_mm", r"\b(diametro\s+paso|diametro\s+principal|run\s+diameter|main\s+diameter|run\s+od|diametro|diameter|od)\b"),
+        ("run_length_mm", r"\b(longitud\s+paso|longitud\s+principal|run\s+length|longitud|largo|length)\b"),
+    ),
+    ComponentKind.REDUCER: (
+        ("wall_thickness_mm", r"\b(espesor|grosor|pared|thickness|wall)\b"),
+        ("small_diameter_mm", r"\b(diametro\s+menor|diametro\s+pequeno|small\s+diameter|minor\s+diameter|min\s+diameter)\b"),
+        ("large_diameter_mm", r"\b(diametro\s+mayor|diametro\s+grande|large\s+diameter|major\s+diameter|max\s+diameter|diametro|diameter|od)\b"),
+        ("length_mm", r"\b(longitud|largo|length)\b"),
+    ),
+    ComponentKind.CAP: (
+        ("wall_thickness_mm", r"\b(espesor|grosor|pared|thickness|wall)\b"),
+        ("outer_diameter_mm", r"\b(diametro\s+exterior|diametro|diameter|od)\b"),
+        ("depth_mm", r"\b(profundidad|fondo|depth|longitud|largo|length|alto|altura|height)\b"),
     ),
 }
 
@@ -353,6 +374,9 @@ class RuleBasedParameterExtractor:
         if kind is ComponentKind.FLANGE:
             _scale_flange_bolt_pattern(payload)
 
+        if kind is ComponentKind.REDUCER and re.search(r"\b(excentrico|eccentric)\b", text):
+            payload["is_eccentric"] = True
+
         material = _detect_material(text)
         if material is not None:
             payload["material"] = material.value
@@ -366,6 +390,110 @@ class RuleBasedParameterExtractor:
                 details={
                     "kind": kind.value,
                     "extracted": payload,
+                    "violations": [
+                        {"field": ".".join(str(p) for p in error["loc"]), "message": error["msg"]}
+                        for error in exc.errors()
+                    ],
+                },
+            ) from exc
+
+    def refine(self, current_spec: ComponentSpec, prompt: str) -> ComponentSpec:
+        """Apply incremental or relative modifications from ``prompt`` onto ``current_spec``."""
+        if not prompt.strip():
+            raise ParameterExtractionError(
+                "The refinement prompt is empty.",
+                hint="Describe what to adjust, for example: increase length by 50mm, change material to aluminium.",
+            )
+
+        text = _normalise(prompt)
+        payload = current_spec.model_dump()
+        kind = current_spec.kind
+
+        material = _detect_material(text)
+        if material is not None:
+            payload["material"] = material.value
+
+        if kind is ComponentKind.REDUCER:
+            if re.search(r"\b(excentrico|eccentric)\b", text):
+                payload["is_eccentric"] = True
+            elif re.search(r"\b(concentrico|concentric)\b", text):
+                payload["is_eccentric"] = False
+
+        quantities = _find_quantities(text)
+        claimed: set[int] = set()
+        modified_fields: set[str] = set()
+
+        rel_regex = re.compile(
+            r"\b(?P<op>increase|aumentar|subir|incrementar|add|decrease|reduce|disminuir|reducir|bajar|subtract|drop)\s+"
+            r"(?:the\s+|el\s+|la\s+)?(?P<target>[a-z_ ]+?)\s+(?:by|en)\s+",
+            re.IGNORECASE,
+        )
+        decrease_ops = frozenset(
+            {"decrease", "reduce", "disminuir", "reducir", "bajar", "subtract", "drop"}
+        )
+
+        for rel_match in rel_regex.finditer(text):
+            target = rel_match.group("target").strip()
+            op = rel_match.group("op").lower()
+            sign = -1.0 if op in decrease_ops else 1.0
+
+            matched_field: str | None = None
+            for field, pattern in _FIELD_PATTERNS.get(kind, ()):
+                if re.search(pattern, target):
+                    matched_field = field
+                    break
+
+            if matched_field is not None:
+                idx = _claim_nearest(text, rel_match.start(), rel_match.end(), quantities, claimed)
+                if idx is not None:
+                    claimed.add(idx)
+                    val = float(_value_for(matched_field, quantities[idx]))
+                    cur = float(payload.get(matched_field, 0.0))
+                    new_val = cur + sign * val
+                    payload[matched_field] = (
+                        int(round(new_val)) if matched_field in _INTEGER_FIELDS else round(new_val, 3)
+                    )
+                    modified_fields.add(matched_field)
+
+        for field, pattern in _FIELD_PATTERNS.get(kind, ()):
+            if field in modified_fields:
+                continue
+            shorthand_regex = re.compile(pattern + r"\s*(?P<sign>[+-])\s*", re.IGNORECASE)
+            shorthand_match = shorthand_regex.search(text)
+            if shorthand_match is not None:
+                idx = _claim_nearest(text, shorthand_match.start(), shorthand_match.end(), quantities, claimed)
+                if idx is not None:
+                    claimed.add(idx)
+                    val = float(_value_for(field, quantities[idx]))
+                    sign = -1.0 if shorthand_match.group("sign") == "-" else 1.0
+                    cur = float(payload.get(field, 0.0))
+                    new_val = cur + sign * val
+                    payload[field] = int(round(new_val)) if field in _INTEGER_FIELDS else round(new_val, 3)
+                    modified_fields.add(field)
+
+        for field, pattern in _FIELD_PATTERNS.get(kind, ()):
+            if field in modified_fields:
+                continue
+            for match in re.finditer(pattern, text):
+                idx = _claim_nearest(text, match.start(), match.end(), quantities, claimed)
+                if idx is not None:
+                    claimed.add(idx)
+                    payload[field] = _value_for(field, quantities[idx])
+                    modified_fields.add(field)
+                    break
+
+        if kind is ComponentKind.FLANGE:
+            _scale_flange_bolt_pattern(payload)
+
+        try:
+            return _SPEC_ADAPTER.validate_python(payload)
+        except ValidationError as exc:
+            raise ParameterExtractionError(
+                "The refined parameters describe a part that cannot be built as specified.",
+                hint="Check that wall thickness and dimensions maintain fabricability constraints.",
+                details={
+                    "kind": kind.value,
+                    "refined": payload,
                     "violations": [
                         {"field": ".".join(str(p) for p in error["loc"]), "message": error["msg"]}
                         for error in exc.errors()

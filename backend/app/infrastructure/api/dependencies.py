@@ -13,6 +13,7 @@ from functools import lru_cache
 from app.application.services.model_generation_service import ModelGenerationService
 from app.application.use_cases.generate_from_prompt import GenerateFromPromptUseCase
 from app.application.use_cases.generate_from_spec import GenerateFromSpecUseCase
+from app.application.use_cases.refine_from_prompt import RefineFromPromptUseCase
 from app.config import Settings, get_settings
 from app.domain.ports.artifact_storage import ArtifactStoragePort
 from app.domain.ports.geometry_kernel import GeometryKernelPort
@@ -30,6 +31,7 @@ __all__ = [
     "get_generate_from_spec_use_case",
     "get_generation_service",
     "get_parameter_extractor",
+    "get_refine_from_prompt_use_case",
 ]
 
 
@@ -103,3 +105,9 @@ def get_generate_from_spec_use_case() -> GenerateFromSpecUseCase:
 @lru_cache(maxsize=1)
 def get_generate_from_prompt_use_case() -> GenerateFromPromptUseCase:
     return GenerateFromPromptUseCase(get_parameter_extractor(), get_generation_service())
+
+
+@lru_cache(maxsize=1)
+def get_refine_from_prompt_use_case() -> RefineFromPromptUseCase:
+    return RefineFromPromptUseCase(get_parameter_extractor(), get_generation_service())
+

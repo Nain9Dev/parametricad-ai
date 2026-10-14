@@ -22,3 +22,13 @@ class ParameterExtractorPort(Protocol):
             ParameterExtractionUnavailableError: the backend is not reachable.
         """
         ...
+
+    def refine(self, current_spec: ComponentSpec, prompt: str) -> ComponentSpec:
+        """Apply incremental or relative modifications from ``prompt`` onto ``current_spec``.
+
+        Raises:
+            ParameterExtractionError: the prompt could not be interpreted or results in invalid parameters.
+            ParameterExtractionUnavailableError: the backend is not reachable.
+        """
+        ...
+

@@ -5,12 +5,14 @@ import {
   generateFromPrompt,
   generateFromSpec,
   isAbortError,
+  refineModel,
 } from '@/lib/apiClient'
-import type { ComponentSpec, ExportFormat, GeneratedModel } from '@/types/api'
+import type { ComponentSpec, ExportFormat, GeneratedModel, GenerationResponse } from '@/types/api'
 
 export type GenerationRequest =
   | { source: 'spec'; spec: ComponentSpec; formats: ExportFormat[] }
   | { source: 'prompt'; prompt: string; formats: ExportFormat[] }
+  | { source: 'refine'; current_spec: ComponentSpec; prompt: string; formats: ExportFormat[] }
 
 export type GenerationStatus = 'idle' | 'generating' | 'ready' | 'error'
 
@@ -64,10 +66,19 @@ export function useGeneration(): GenerationController {
       setStatus('generating')
       setError(null)
 
-      const pending =
-        request.source === 'spec'
-          ? generateFromSpec(request.spec, request.formats, controller.signal)
-          : generateFromPrompt(request.prompt, request.formats, controller.signal)
+      let pending: Promise<GenerationResponse>
+      if (request.source === 'spec') {
+        pending = generateFromSpec(request.spec, request.formats, controller.signal)
+      } else if (request.source === 'prompt') {
+        pending = generateFromPrompt(request.prompt, request.formats, controller.signal)
+      } else {
+        pending = refineModel(
+          request.current_spec,
+          request.prompt,
+          request.formats,
+          controller.signal,
+        )
+      }
 
       pending
         .then((response) => {
