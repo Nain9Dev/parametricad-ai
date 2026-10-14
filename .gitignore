@@ -22,6 +22,8 @@ aider.chat.*
 .chat/
 *.prompt.md
 *scratchpad*
+scratch_*
+ws/
 .system_generated/
 brain/
 
