@@ -20,6 +20,7 @@ This document details functional and non-functional requirements formulated in E
 - **REQ-EVT-02**: When a prompt string is received at `/api/v1/generate`, the system shall extract dimensional parameters using the configured parameter extractor before initiating model generation.
 - **REQ-EVT-03**: When an identical specification has previously been processed and cached, the system shall return existing artifact URLs without re-running the CAD kernel.
 - **REQ-EVT-04**: When a catalog request fails with a transport-level error, the web client shall retry it up to three times with an increasing backoff before surfacing the failure. (frontend)
+- **REQ-EVT-05**: When a refinement request with `current_spec` and `prompt` is received at `/api/v1/generate/refine`, the system shall apply relative and absolute parameter adjustments onto `current_spec`, re-validate fabricability invariants, and generate the updated solid without server-side session persistence.
 
 ## 3. State-Driven Requirements
 
@@ -36,6 +37,8 @@ This document details functional and non-functional requirements formulated in E
 ## 5. Optional Feature Requirements
 
 - **REQ-OPT-01**: Where supported by client requests, the system may generate 2D DXF profiles alongside 3D meshes and B-Rep solids.
+- **REQ-OPT-02**: The web client shall provide interactive 3D section plane slicing with interior stencil cap rendering to inspect internal hollow features. (frontend)
+- **REQ-OPT-03**: The web client shall provide an interactive 3D caliper measurement tool with vertex snapping to inspect physical dimensions on the viewport canvas. (frontend)
 
 ## 6. Deployment Requirements
 

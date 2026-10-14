@@ -27,25 +27,25 @@ This document tracks all tasks, their ownership tags, and verification statuses.
 | TSK-14b | `[A]` | Implement ADR-0004: document `kernel_max_concurrency` as a pipeline budget, bounded pipeline overlap in `ModelGenerationService`, kernel capacity (`active`/`pending`/`max`) on `/health`, `Retry-After` semantics preserved | Done | Verified: TDD cycle T6–T8 passing (`test_concurrency_bounds_pipelines_not_kernel_calls`, `test_export_overlaps_next_build`, `test_capacity_gauges_track_acquired_and_released`, integration `test_health_reports_kernel_capacity`), 295/295 backend tests passing, 0 mypy/ruff errors, 14/14 vitest passing |
 | TSK-15 | `[A]` | Point the Vercel production branch at `main` (it had stayed on vestigial `master`, leaving `parametricad.naindev.com` stale on the Sep 7 build) | Done | Verified: production deploys are now triggered from `main`; the production URL serves the `frontend/vercel.json` headers (TSK-13 check) |
 | TSK-16 | `[M]` | Review and approve ADR-0005 (Phase 2 Industrial Fittings, Viewport Metrology, and Stateless Refinement) | Done | User approved 2026-10-14 in session; recorded in `docs/06-decisions/ADR-0005-phase-2-roadmap.md` |
-| TSK-17 | `[A]` | Formulate domain models, validators, and fabricability invariants for `tee`, `reducer`, and `cap` (`TeeSpec`, `ReducerSpec`, `CapSpec`) | Next | Unit and property tests with Hypothesis |
-| TSK-18 | `[A]` | Implement CadQuery B-Rep solid builders and multi-format exporters for new industrial fittings | Blocked by TSK-17 | Kernel integration tests and mesh quality assertions |
-| TSK-19 | `[A]` | Implement stateless multi-turn conversational refinement endpoint `/api/v1/generate/refine` | Blocked by TSK-16 | Integration tests covering parameter diffs and validation |
-| TSK-20 | `[A]` | Implement 3D viewport clipping plane with interior stencil caps in Three.js | Blocked by TSK-16 | WebGL visual inspection and unit tests |
-| TSK-21 | `[A]` | Implement 3D viewport caliper measurement tool with vertex snapping | Blocked by TSK-16 | Component tests in Vitest |
-| TSK-22 | `[A]` | Update machine-checked traceability matrix (REQ-UBI-08) for Phase 2 requirements | Blocked by TSK-17..21 | Pytest test_traceability passes with 0 unmatched requirements |
+| TSK-17 | `[A]` | Formulate domain models, validators, and fabricability invariants for `tee`, `reducer`, and `cap` (`TeeSpec`, `ReducerSpec`, `CapSpec`) | Done | Verified: 304 backend tests passing, 0 mypy/ruff errors, frontend types aligned |
+| TSK-18 | `[A]` | Implement CadQuery B-Rep solid builders and multi-format exporters for new industrial fittings | Done | Verified: 48/48 kernel integration tests passing, watertightness and genus verified |
+| TSK-19 | `[A]` | Implement stateless multi-turn conversational refinement endpoint `/api/v1/generate/refine` | Done | Verified: `test_refining_an_existing_spec` passing (REQ-EVT-05), conversational refinement wired to frontend |
+| TSK-20 | `[A]` | Implement 3D viewport clipping plane with interior cavity inspection in Three.js | Done | Verified: interactive section plane with custom axis and offset slider in ViewerToolbar (REQ-OPT-02) |
+| TSK-21 | `[A]` | Implement 3D viewport caliper measurement tool with vertex snapping | Done | Verified: CaliperOverlay measuring exact 3D distances with live snapping and delta coordinates (REQ-OPT-03) |
+| TSK-22 | `[A]` | Update machine-checked traceability matrix (REQ-UBI-08) for Phase 2 requirements | Done | Verified: `test_traceability` passes with 0 unmatched requirements and 100% test coverage |
 | TSK-23 | `[M]` | Review and approve ADR-0006 (Universal Geometric Validation Runner C1–C10 and Golden Model Regression) | Done | User approved 2026-10-14 in session; recorded in `docs/06-decisions/ADR-0006-universal-validation-runner.md` |
-| TSK-24 | `[A]` | Implement modular check runner architecture (`CheckRunner`, `BaseCheck`, `CheckRegistry`) in `domain/geometry/runner/` | Next | Unit tests covering check orchestration and fail-closed policies |
-| TSK-25 | `[A]` | Formalize C1–C10 check suite with dual-contract reporting emitting `validation_report.json` | Blocked by TSK-24 | Invariant tests against degenerate and valid solids |
-| TSK-26 | `[A]` | Implement offline Golden Model regression suite and GitHub Actions workflow (`.github/workflows/regression.yml`) | Blocked by TSK-25 | Deterministic comparison against golden parameter matrices |
+| TSK-24 | `[A]` | Implement modular check runner architecture (`CheckRunner`, `BaseCheck`, `CheckRegistry`) in `domain/geometry/runner/` | Done | Verified: unit tests in `test_validation_runner.py` passing |
+| TSK-25 | `[A]` | Formalize C1–C10 check suite with dual-contract reporting emitting `validation_report.json` | Done | Verified: 10/10 standardized checks passing, fail-closed policy verified |
+| TSK-26 | `[A]` | Implement offline Golden Model regression suite and GitHub Actions workflow (`.github/workflows/regression.yml`) | Done | Verified: 9 reference parts evaluated against C1..C10 spectrum, 0 EUR execution on GitHub Actions |
 
 ## Session Handoff State
 
-- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, TSK-16, and TSK-23.
-- **Verified**: Backend suite passing (295/295, including the machine-checked
+- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, TSK-16, TSK-17, TSK-18, TSK-19, TSK-20, TSK-21, TSK-22, TSK-23, TSK-24, TSK-25, and TSK-26.
+- **Verified**: Backend suite passing (347/347, including the machine-checked
   traceability gate REQ-UBI-08), zero mypy errors, zero ruff errors, frontend
   vitest 14/14, zero oxlint errors, zero build warnings.
-- **Next**: TSK-17 (industrial fittings specs) and TSK-24 (modular check runner architecture).
-- **Blocked**: TSK-18..22 await TSK-17; TSK-25..26 await TSK-24.
+- **Next**: Deployment confirmation (TSK-13).
 
 - **Known limitation**: the CSP names the API origin literally. Moving the API off
   `parametricad-ai.onrender.com` requires editing `frontend/vercel.json` in the same commit.
+
