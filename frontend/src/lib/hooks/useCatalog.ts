@@ -12,7 +12,7 @@ import type { Catalog } from '@/types/api'
  * reads as a broken deploy, so past this point the interface says what is
  * happening instead of leaving the user to guess.
  */
-const SLOW_LOAD_MS = 3_500
+export const SLOW_LOAD_MS = 3_500
 
 export type CatalogState =
   | { status: 'loading'; catalog: null; error: null }

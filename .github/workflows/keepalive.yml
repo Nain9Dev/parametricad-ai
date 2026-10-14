@@ -1,0 +1,72 @@
+# Scheduled keepalive ping for the sleeping free-tier host.
+#
+# Render suspends idle Free-tier web services; the next visitor then pays the
+# cold-boot latency. This workflow sends a plain GET to the health path of
+# every manifest target flagged "sleeps": true, once every five minutes, so
+# the demo answers within its 30 s catalogue budget at any hour (REQ-DEP-02,
+# REQ-DEP-05). The pinger only ever GETs a health path: a keep-alive request
+# must not reach the generation API, because that would burn free compute on
+# kernel work. GitHub Actions is free for public repos, so the whole
+# arrangement stays at 0 EUR (REQ-DEP-01).
+
+name: Keepalive
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    name: Ping sleeping targets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read the host manifest
+        run: |
+          test -f deploy/hosts.json
+          python3 -c "import json; print('targets:', len(json.load(open('deploy/hosts.json'))['targets']))"
+
+      - name: Ping the health paths of every sleeping target
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          import sys
+          import urllib.request
+
+          with open("deploy/hosts.json", encoding="utf-8") as handle:
+              manifest = json.load(handle)
+
+          # Only targets declared "sleeps": true can hibernate; pinging an
+          # always-on static host is wasteful. The filter is data-driven: add
+          # a sleeping host to the manifest and this workflow picks it up.
+          targets = [t for t in manifest["targets"] if t["sleeps"]]
+          if not targets:
+              print("no sleeping targets declared; nothing to ping")
+              sys.exit(0)
+
+          for target in targets:
+              url = target["origin"] + (target["health_path"] or "/")
+              request = urllib.request.Request(
+                  url, method="GET", headers={"User-Agent": "parametricad-keepalive"}
+              )
+              print(f"pinging {target['id']} -> GET {url}")
+              response = urllib.request.urlopen(request, timeout=30)
+              body = response.read()
+              if response.status != 200:
+                  print(f"unexpected status {response.status} from {target['id']}", file=sys.stderr)
+                  sys.exit(1)
+              print(f"  200 OK ({len(body)} bytes)")
+
+          print(f"all {len(targets)} sleeping target(s) are warm")
+          PY

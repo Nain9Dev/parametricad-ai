@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "description": "Canonical deployment targets for ParametriCAD AI. Every entry must cost 0 EUR (REQ-DEP-01). Any target flagged \"sleeps\": true is pinged every 5 minutes by .github/workflows/keepalive.yml (REQ-DEP-02). Do not add a paid tier without a matching ADR; the tests in backend/tests/unit/test_deployment_targets.py fail on violation.",
+  "targets": [
+    {
+      "id": "web-vercel",
+      "layer": "web",
+      "provider": "vercel",
+      "plan": "Hobby ($0/mo)",
+      "origin": "https://parametricad.naindev.com",
+      "route": "/",
+      "health_path": "/",
+      "source_path": "frontend/",
+      "free": true,
+      "cost_eur": 0,
+      "sleeps": false,
+      "notes": "Static Vite build. Always-on: static files are served by a CDN with no instance to suspend. Vercel Hobby is 100 GB egress/mo, which bounds the demo's traffic envelope."
+    },
+    {
+      "id": "api-render",
+      "layer": "compute",
+      "provider": "render",
+      "plan": "Free (512 MB instance)",
+      "origin": "https://parametricad-ai.onrender.com",
+      "route": "/",
+      "health_path": "/health",
+      "source_path": "backend/",
+      "free": true,
+      "cost_eur": 0,
+      "sleeps": true,
+      "notes": "Free-tier web service (Docker) hosting the FastAPI + CadQuery backend. Render suspends idle free instances and wakes them on traffic; keepalive.yml issues a GET to /health every 5 minutes so visitors never wait on a cold boot. The 512 MB instance is sized for the uvicorn process plus CadQuery/OpenCASCADE; if a generation ever approaches it, reduce tessellation density rather than upgrade the plan."
+    }
+  ]
+}

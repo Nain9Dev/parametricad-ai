@@ -36,3 +36,11 @@ This document details functional and non-functional requirements formulated in E
 ## 5. Optional Feature Requirements
 
 - **REQ-OPT-01**: Where supported by client requests, the system may generate 2D DXF profiles alongside 3D meshes and B-Rep solids.
+
+## 6. Deployment Requirements
+
+- **REQ-DEP-01**: The system shall deploy its entire production stack exclusively to zero-euro-cost (free-tier) hosts, with the canonical deployment target list maintained in `deploy/hosts.json`, and every declared target must have `"free": true` and `"cost_eur": 0`.
+- **REQ-DEP-02**: Where a deployed target uses auto-sleeping free-tier compute, the system shall maintain a scheduled keepalive pinger (a GitHub Actions workflow that `GET`s every sleeping target's health path) with an interval of 1 to 10 minutes, so that the portfolio service answers interactive traffic within seconds at any hour of the day.
+- **REQ-DEP-03**: The system shall disclose a bounded cold-start budget in the client: after a service sleep, a returning visitor's first catalogue response must typically complete within 30 seconds (backend-only sleep), so the web user interface degrades to a notice instead of a broken page. (frontend)
+- **REQ-DEP-04**: The web client shall name exactly one external API origin in its Content Security Policy `connect-src` directives, and that origin shall appear in the service's CORS defaults, so that a deployment host change requires touching every declaration in the same commit. (frontend)
+- **REQ-DEP-05**: The production deployment shall keep all advertised functionality available to anonymous visitors at any time, without authentication, uploads, or user-specific state, because the service is a public portfolio artifact.
