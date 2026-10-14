@@ -10,22 +10,51 @@
 .claude/
 .cursor/
 .cursorrules
+.cursorignore
 .windsurf/
 .windsurfrules
 .copilot/
 copilot/
+.github/copilot-instructions.md
 .aider*
 aider.chat.*
 .cortex/
 .devin/
 .continue/
 .chat/
+.roo/
+.cline/
+.codeium/
+.supermaven/
+.llm/
+.prompt/
+prompts/
 *.prompt.md
 *scratchpad*
 scratch_*
+scratch.*
 ws/
 .system_generated/
 brain/
+*.transcript.jsonl
+*transcript*.jsonl
+*.chat.json
+*.ai.md
+
+# -----------------------------------------------------------------------------
+# Confidentiality, Enterprise & Private Project Isolation
+# -----------------------------------------------------------------------------
+*contrast3d*
+*contrast-3d*
+*enterprise*
+*confidential*
+*.bak
+*.tmp
+*.dump
+*.sql
+*.sqlite
+*.sqlite3
+*.db
 
 # -----------------------------------------------------------------------------
 # DSH Session Recovery Artifacts

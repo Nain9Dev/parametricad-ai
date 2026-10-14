@@ -33,15 +33,19 @@ This document tracks all tasks, their ownership tags, and verification statuses.
 | TSK-20 | `[A]` | Implement 3D viewport clipping plane with interior stencil caps in Three.js | Blocked by TSK-16 | WebGL visual inspection and unit tests |
 | TSK-21 | `[A]` | Implement 3D viewport caliper measurement tool with vertex snapping | Blocked by TSK-16 | Component tests in Vitest |
 | TSK-22 | `[A]` | Update machine-checked traceability matrix (REQ-UBI-08) for Phase 2 requirements | Blocked by TSK-17..21 | Pytest test_traceability passes with 0 unmatched requirements |
+| TSK-23 | `[M]` | Review and approve ADR-0006 (Universal Geometric Validation Runner C1–C10 and Golden Model Regression) | Done | User approved 2026-10-14 in session; recorded in `docs/06-decisions/ADR-0006-universal-validation-runner.md` |
+| TSK-24 | `[A]` | Implement modular check runner architecture (`CheckRunner`, `BaseCheck`, `CheckRegistry`) in `domain/geometry/runner/` | Next | Unit tests covering check orchestration and fail-closed policies |
+| TSK-25 | `[A]` | Formalize C1–C10 check suite with dual-contract reporting emitting `validation_report.json` | Blocked by TSK-24 | Invariant tests against degenerate and valid solids |
+| TSK-26 | `[A]` | Implement offline Golden Model regression suite and GitHub Actions workflow (`.github/workflows/regression.yml`) | Blocked by TSK-25 | Deterministic comparison against golden parameter matrices |
 
 ## Session Handoff State
 
-- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, and TSK-16.
+- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, TSK-16, and TSK-23.
 - **Verified**: Backend suite passing (295/295, including the machine-checked
   traceability gate REQ-UBI-08), zero mypy errors, zero ruff errors, frontend
   vitest 14/14, zero oxlint errors, zero build warnings.
-- **Next**: TSK-17 (Domain models, validators, and fabricability invariants for `tee`, `reducer`, and `cap`).
-- **Blocked**: TSK-18 through TSK-22 await TSK-17.
+- **Next**: TSK-17 (industrial fittings specs) and TSK-24 (modular check runner architecture).
+- **Blocked**: TSK-18..22 await TSK-17; TSK-25..26 await TSK-24.
 
 - **Known limitation**: the CSP names the API origin literally. Moving the API off
   `parametricad-ai.onrender.com` requires editing `frontend/vercel.json` in the same commit.
