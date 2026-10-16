@@ -1,5 +1,16 @@
 # ParametriCAD AI
 
+<div align="center">
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-parametricad.naindev.com-80FF00?style=flat-square&logo=googlechrome&logoColor=black)](https://parametricad.naindev.com/)
+[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-1f2937?style=flat-square&logo=github&logoColor=white)](https://codespaces.new/Nain9Dev/parametricad-ai)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vitest Passing](https://img.shields.io/badge/Vitest-14%2F14%20Passing-80FF00?style=flat-square&logo=vitest&logoColor=white)](src/test)
+[![Cost](https://img.shields.io/badge/Cost-0.00_%E2%82%AC-22c55e?style=flat-square)](https://github.com/Nain9Dev/engineering-handbook/blob/main/governance/zero-cost-philosophy.md)
+
+</div>
+
 Deterministic parametric CAD generation engine with domain-isolated topological mesh validation and an interactive 3D web viewer.
 
 ParametriCAD AI builds exact boundary representation (B-Rep) solids with OpenCASCADE, tessellates them into polygon meshes, subjects the geometry to deterministic quality checks (watertightness, 2-manifold invariants, outward normal consistency, zero self-intersections), and publishes content-addressed artifacts in five engineering formats. Component specifications can be supplied via schema-driven parameter controls or extracted from natural language descriptions.
@@ -231,6 +242,26 @@ All settings can be configured via environment variables with the `PARAMETRICAD_
 
 ---
 
+## FinOps & Zero-Cost Architecture (0.00 €)
+
+<details>
+<summary><b>Inspect 0.00 € Infrastructure Topology &amp; Governance</b></summary>
+
+In alignment with the [NainDev Zero-Cost Infrastructure Philosophy](https://github.com/Nain9Dev/engineering-handbook/blob/main/governance/zero-cost-philosophy.md), this system operates at strictly **0.00 €/month** recurring cloud cost:
+
+| Component | Architecture Mechanism | Provider / Runtime | Monthly Cost |
+|:---|:---|:---|:---|
+| **Global Edge Delivery** | Anycast CDN, HTTP/3, TLS termination &amp; DDoS mitigation | Vercel Free Tier / Cloudflare | 0.00 € |
+| **Instant 3D Showcase** | 5 pre-baked CAD models &amp; local WebGL viewer (0ms origin load) | Browser WebGL / Static JSON | 0.00 € |
+| **CAD Kernel Compute** | OpenCASCADE B-Rep tessellation &amp; mesh topological checks | Ephemeral Free Container | 0.00 € |
+| **CI/CD Quality Gate** | Continuous integration, Vitest topological invariant checks | GitHub Actions (Linux Runner) | 0.00 € |
+| **Total Recurring Cost** | **Zero billable cloud dependencies** | | **0.00 €** |
+
+</details>
+
+---
+
 ## License
 
 MIT License. See `LICENSE` for details.
+
