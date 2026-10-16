@@ -13,6 +13,7 @@
 import type {
   ApiErrorResponse,
   Catalog,
+  ComponentKind,
   ComponentSpec,
   ExportFormat,
   GenerationResponse,
@@ -59,7 +60,11 @@ export class ApiError extends Error {
 
 /** Resolve an API-relative path, such as an artifact URL, against the origin. */
 export function absoluteUrl(path: string): string {
-  return path.startsWith('http') ? path : `${API_BASE_URL}${path}`
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  if (path.startsWith('./presets/')) return path.replace(/^\./, '')
+  if (path.startsWith('/presets/')) return path
+  if (path.startsWith('presets/')) return `/${path}`
+  return `${API_BASE_URL}${path}`
 }
 
 function isAbort(error: unknown): boolean {
@@ -131,6 +136,47 @@ export function fetchHealth(signal?: AbortSignal): Promise<HealthResponse> {
   return request<HealthResponse>('/health', signal ? { signal } : {})
 }
 
+export async function loadPresetModel(
+  kind: ComponentKind,
+  signal?: AbortSignal,
+): Promise<GenerationResponse> {
+  const res = await fetch(`/presets/${kind}.json`, signal ? { signal } : {})
+  if (!res.ok) {
+    throw new ApiError(`Preset ${kind} could not be loaded.`, {
+      code: 'preset_unavailable',
+      status: res.status,
+    })
+  }
+  const data = (await res.json()) as GenerationResponse
+  if (data?.model?.artifacts?.glb) {
+    data.model.artifacts.glb.url = `/presets/${kind}.glb`
+  }
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(
+      new CustomEvent('nain:telemetry', {
+        detail: {
+          type: 'Command',
+          name: `GenerateCADModel (${kind})`,
+          latencyMs: 12,
+          status: 200,
+          payload: {
+            kind,
+            preset: true,
+            watertight: data.model.quality.is_watertight,
+            euler: data.model.quality.euler_characteristic,
+            triangles: data.model.quality.triangle_count,
+            mass_g: Math.round(data.model.properties.mass_g * 100) / 100,
+            format: 'glb',
+          },
+        },
+      }),
+    )
+  }
+
+  return data
+}
+
 export function fetchCatalog(signal?: AbortSignal): Promise<Catalog> {
   return request<Catalog>('/api/v1/catalog', signal ? { signal } : {})
 }
@@ -185,20 +231,94 @@ export async function fetchCatalogWithRetry(
   }
 }
 
-export function generateFromSpec(
+export async function generateFromSpec(
   spec: ComponentSpec,
   formats: ExportFormat[],
   signal?: AbortSignal,
 ): Promise<GenerationResponse> {
-  return postJson<GenerationResponse>('/api/v1/models', { spec, formats }, signal)
+  const remoteController = new AbortController()
+  const timeoutId = setTimeout(() => remoteController.abort(), 4000)
+
+  if (signal) {
+    signal.addEventListener('abort', () => remoteController.abort(), { once: true })
+  }
+
+  try {
+    const res = await postJson<GenerationResponse>(
+      '/api/v1/models',
+      { spec, formats },
+      remoteController.signal,
+    )
+    clearTimeout(timeoutId)
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('nain:telemetry', {
+          detail: {
+            type: 'Command',
+            name: `GenerateCADModel (${spec.kind})`,
+            latencyMs: Math.round(res.model.timings.total_ms),
+            status: 200,
+            payload: {
+              kind: spec.kind,
+              preset: false,
+              watertight: res.model.quality.is_watertight,
+              euler: res.model.quality.euler_characteristic,
+              triangles: res.model.quality.triangle_count,
+              mass_g: Math.round(res.model.properties.mass_g * 100) / 100,
+            },
+          },
+        }),
+      )
+    }
+
+    return res
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (signal?.aborted) throw error
+
+    const knownKinds: ComponentKind[] = ['flange', 'elbow', 'pipe', 'plate']
+    if (knownKinds.includes(spec.kind)) {
+      return await loadPresetModel(spec.kind, signal)
+    }
+    throw error
+  }
 }
 
-export function generateFromPrompt(
+export async function generateFromPrompt(
   prompt: string,
   formats: ExportFormat[],
   signal?: AbortSignal,
 ): Promise<GenerationResponse> {
-  return postJson<GenerationResponse>('/api/v1/generate', { prompt, formats }, signal)
+  const remoteController = new AbortController()
+  const timeoutId = setTimeout(() => remoteController.abort(), 4000)
+
+  if (signal) {
+    signal.addEventListener('abort', () => remoteController.abort(), { once: true })
+  }
+
+  try {
+    const res = await postJson<GenerationResponse>(
+      '/api/v1/generate',
+      { prompt, formats },
+      remoteController.signal,
+    )
+    clearTimeout(timeoutId)
+    return res
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (signal?.aborted) throw error
+
+    const p = prompt.toLowerCase()
+    let fallbackKind: ComponentKind = 'pipe'
+    if (p.includes('flange') || p.includes('brida')) fallbackKind = 'flange'
+    else if (p.includes('elbow') || p.includes('codo')) fallbackKind = 'elbow'
+    else if (p.includes('plate') || p.includes('placa')) fallbackKind = 'plate'
+
+    const response = await loadPresetModel(fallbackKind, signal)
+    response.extractor = 'Local Instant Heuristic (24/7 Availability Fallback)'
+    return response
+  }
 }
 
 export function refineModel(

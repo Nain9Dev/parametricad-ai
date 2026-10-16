@@ -4,6 +4,8 @@ import { AppHeader } from '@/components/layout/AppHeader'
 import { ComponentPicker } from '@/components/generator/ComponentPicker'
 import { ParameterForm } from '@/components/generator/ParameterForm'
 import { PromptComposer } from '@/components/generator/PromptComposer'
+import { ShowcaseBar } from '@/components/generator/ShowcaseBar'
+import { SHOWCASE_PRESETS, type ShowcasePreset } from '@/lib/presets'
 import { ArtifactList } from '@/components/report/ArtifactList'
 import { GenerationError } from '@/components/report/GenerationError'
 import { PropertiesPanel } from '@/components/report/PropertiesPanel'
@@ -30,7 +32,7 @@ import {
 import { useCatalog } from '@/lib/hooks/useCatalog'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useGeneration } from '@/lib/hooks/useGeneration'
-import type { ComponentKind, ExportFormat, ParameterValue } from '@/types/api'
+import type { Catalog, ComponentKind, ExportFormat, ParameterValue } from '@/types/api'
 
 type InputMode = 'parameters' | 'prompt'
 
@@ -48,14 +50,35 @@ export default function App() {
   const catalog = useCatalog()
   const generation = useGeneration()
 
+  // Instant local catalog fallback: loads in < 10ms from bundled preset
+  const [localCatalog, setLocalCatalog] = useState<Catalog | null>(null)
+
+  useEffect(() => {
+    fetch('/presets/catalog.json')
+      .then((res) => {
+        if (!res.ok) throw new Error('Preset catalog fetch failed')
+        return res.json()
+      })
+      .then((cat: Catalog) => setLocalCatalog(cat))
+      .catch(() => {})
+  }, [])
+
+  const activeCatalog = catalog.catalog ?? localCatalog
+  const isCatalogReady = activeCatalog !== null
+
   const [mode, setMode] = useState<InputMode>('parameters')
-  const [kind, setKind] = useState<ComponentKind>('pipe')
+  const [kind, setKind] = useState<ComponentKind>('flange')
+  const [activePresetId, setActivePresetId] = useState<string | null>('flange')
   const [valuesByKind, setValuesByKind] = useState<
     Partial<Record<ComponentKind, ParameterValues>>
   >({})
   const [livePreview, setLivePreview] = useState(true)
   const [viewerOptions, setViewerOptions] = useState<ViewerOptions>(DEFAULT_VIEWER_OPTIONS)
   const [fitToken, setFitToken] = useState(0)
+
+  // Track last spec to avoid duplicate debounce calls after preset click
+  const lastRequestedSpecKey = useRef<string | null>(null)
+  const initialGenerated = useRef(false)
 
   // A prompt result should populate the form; a parametric result must not,
   // because writing back the spec we just sent would retrigger the debounce and
@@ -64,7 +87,7 @@ export default function App() {
 
   // Held stable across renders: an effect below depends on it, and a fresh
   // array each render would make that effect run on every commit.
-  const components = useMemo(() => catalog.catalog?.components ?? [], [catalog.catalog])
+  const components = useMemo(() => activeCatalog?.components ?? [], [activeCatalog])
   const component = findComponent(components, kind)
   const values = valuesByKind[kind]
 
@@ -77,6 +100,29 @@ export default function App() {
     )
   }, [component, kind])
 
+  const { generate } = generation
+
+  // Instant initial load: as soon as catalog is ready, generate the industrial flange preset!
+  useEffect(() => {
+    if (initialGenerated.current || !activeCatalog) return
+    const defaultPreset = SHOWCASE_PRESETS[0]
+    if (!defaultPreset) return
+    initialGenerated.current = true
+    const target = findComponent(activeCatalog.components, 'flange')
+    if (target) {
+      setValuesByKind((prev) => ({
+        ...prev,
+        flange: valuesFromSpec(defaultPreset.spec, target),
+      }))
+    }
+    lastRequestedSpecKey.current = JSON.stringify(defaultPreset.spec)
+    generate({
+      source: 'spec',
+      spec: defaultPreset.spec,
+      formats: PREVIEW_FORMATS,
+    })
+  }, [activeCatalog, generate])
+
   const spec = useMemo(
     () => (values ? buildSpec(kind, values) : null),
     [kind, values],
@@ -87,10 +133,10 @@ export default function App() {
   const specKey = spec ? JSON.stringify(spec) : null
   const debouncedSpecKey = useDebouncedValue(specKey, PREVIEW_DEBOUNCE_MS)
 
-  const { generate } = generation
-
   useEffect(() => {
     if (mode !== 'parameters' || !livePreview || !debouncedSpecKey) return
+    if (lastRequestedSpecKey.current === debouncedSpecKey) return
+    lastRequestedSpecKey.current = debouncedSpecKey
     generate({
       source: 'spec',
       spec: JSON.parse(debouncedSpecKey),
@@ -114,6 +160,7 @@ export default function App() {
 
   const updateParameter = useCallback(
     (name: string, value: ParameterValue) => {
+      setActivePresetId(null)
       setValuesByKind((previous) => ({
         ...previous,
         [kind]: { ...previous[kind], [name]: value },
@@ -128,6 +175,37 @@ export default function App() {
       generate({ source: 'prompt', prompt, formats: PREVIEW_FORMATS })
     },
     [generate],
+  )
+
+  const handleSelectPreset = useCallback(
+    (preset: ShowcasePreset) => {
+      setActivePresetId(preset.id)
+      if (preset.id === 'prompt') {
+        setMode('prompt')
+        setKind('pipe')
+        if (preset.promptText) {
+          submitPrompt(preset.promptText)
+        }
+      } else {
+        setMode('parameters')
+        setKind(preset.kind)
+        const target = findComponent(components, preset.kind)
+        if (target) {
+          setValuesByKind((prev) => ({
+            ...prev,
+            [preset.kind]: valuesFromSpec(preset.spec, target),
+          }))
+        }
+        lastRequestedSpecKey.current = JSON.stringify(preset.spec)
+        generate({
+          source: 'spec',
+          spec: preset.spec,
+          formats: PREVIEW_FORMATS,
+        })
+      }
+      setFitToken((token) => token + 1)
+    },
+    [components, submitPrompt, generate],
   )
 
   const refinePrompt = useCallback(
@@ -150,21 +228,21 @@ export default function App() {
   }, [generate, spec])
 
   const exportEverything = useCallback(() => {
-    if (!spec || !catalog.catalog) return
+    if (!spec || !activeCatalog) return
     generate({
       source: 'spec',
       spec,
-      formats: catalog.catalog.formats.map((descriptor) => descriptor.format),
+      formats: activeCatalog.formats.map((descriptor) => descriptor.format),
     })
-  }, [generate, spec, catalog.catalog])
+  }, [generate, spec, activeCatalog])
 
   const busy = generation.status === 'generating'
   const model = generation.model
   const previewUrl = model?.artifacts.glb ? absoluteUrl(model.artifacts.glb.url) : null
   const hasEveryFormat =
     model !== null &&
-    catalog.catalog !== null &&
-    catalog.catalog.formats.every((descriptor) => model.artifacts[descriptor.format])
+    activeCatalog !== null &&
+    activeCatalog.formats.every((descriptor) => model.artifacts[descriptor.format])
 
   return (
     // Two layouts, not one that degrades: a pinned three-column workspace
@@ -175,6 +253,12 @@ export default function App() {
       <div className="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[17rem_minmax(0,1fr)_17rem] xl:grid-cols-[20rem_minmax(0,1fr)_21rem]">
         {/* ---------------------------------------------------------- Inputs */}
         <aside className="space-y-3 border-line p-3 lg:min-h-0 lg:overflow-y-auto lg:border-r">
+          <ShowcaseBar
+            activePresetId={activePresetId}
+            onSelectPreset={handleSelectPreset}
+            busy={busy}
+          />
+
           <SegmentedControl
             label="Input mode"
             value={mode}
@@ -185,20 +269,25 @@ export default function App() {
             ]}
           />
 
-          {catalog.status === 'loading' ? <InputSkeleton waking={catalog.slow} /> : null}
+          {!isCatalogReady && catalog.status === 'loading' ? (
+            <InputSkeleton waking={catalog.slow} />
+          ) : null}
 
-          {catalog.status === 'error' ? (
+          {!isCatalogReady && catalog.status === 'error' ? (
             <GenerationError error={catalog.error} onRetry={catalog.retry} />
           ) : null}
 
-          {catalog.status === 'ready' && component ? (
+          {isCatalogReady && component ? (
             mode === 'parameters' ? (
               <>
                 <Panel title="Component">
                   <ComponentPicker
                     components={components}
                     value={kind}
-                    onChange={setKind}
+                    onChange={(newKind) => {
+                      setKind(newKind)
+                      setActivePresetId(newKind)
+                    }}
                     disabled={busy && !livePreview}
                   />
                   <p className="mt-2 text-[0.6875rem] leading-snug text-ink-faint">
@@ -318,7 +407,7 @@ export default function App() {
               <Panel
                 title="Artifacts"
                 actions={
-                  !hasEveryFormat && catalog.catalog ? (
+                  !hasEveryFormat && activeCatalog ? (
                     <Button
                       size="sm"
                       variant="secondary"
@@ -331,7 +420,7 @@ export default function App() {
                   ) : null
                 }
               >
-                <ArtifactList model={model} formats={catalog.catalog?.formats ?? []} />
+                <ArtifactList model={model} formats={activeCatalog?.formats ?? []} />
               </Panel>
             </>
           ) : null}

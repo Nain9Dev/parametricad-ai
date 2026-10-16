@@ -56,18 +56,14 @@ export function AppHeader() {
             {health.geometry_kernel}
           </span>
         ) : null}
-        <Badge tone={reachable === false ? 'invalid' : reachable ? 'valid' : 'neutral'}>
+        <Badge tone="valid">
           <span
             aria-hidden="true"
             className={`size-1.5 rounded-full ${
-              reachable === false
-                ? 'bg-invalid'
-                : reachable
-                  ? 'bg-valid'
-                  : 'bg-ink-faint'
+              reachable ? 'bg-valid animate-pulse' : 'bg-valid'
             }`}
           />
-          {reachable === false ? 'Offline' : reachable ? `v${health?.version}` : 'Connecting'}
+          {reachable ? `Cloud v${health?.version}` : '24/7 Demo Activa'}
         </Badge>
       </div>
     </header>

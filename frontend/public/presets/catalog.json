@@ -1,0 +1,587 @@
+{
+  "components": [
+    {
+      "kind": "pipe",
+      "label": "Pipe",
+      "description": "A straight hollow cylinder.",
+      "parameters": [
+        {
+          "name": "material",
+          "label": "Material",
+          "type": "enum",
+          "group": "Material",
+          "description": "Material used for the mass estimate.",
+          "unit": null,
+          "default": "stainless_steel",
+          "minimum": null,
+          "maximum": null,
+          "exclusive_minimum": false,
+          "step": null,
+          "options": [
+            {
+              "value": "stainless_steel",
+              "label": "Stainless Steel"
+            },
+            {
+              "value": "carbon_steel",
+              "label": "Carbon Steel"
+            },
+            {
+              "value": "aluminium",
+              "label": "Aluminium"
+            },
+            {
+              "value": "brass",
+              "label": "Brass"
+            },
+            {
+              "value": "copper",
+              "label": "Copper"
+            },
+            {
+              "value": "pvc",
+              "label": "Pvc"
+            },
+            {
+              "value": "ptfe",
+              "label": "Ptfe"
+            },
+            {
+              "value": "abs",
+              "label": "Abs"
+            },
+            {
+              "value": "nylon",
+              "label": "Nylon"
+            }
+          ]
+        },
+        {
+          "name": "outer_diameter_mm",
+          "label": "Outer diameter",
+          "type": "number",
+          "group": "Section",
+          "description": "Outside diameter of the tube.",
+          "unit": "mm",
+          "default": 25.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 0.5,
+          "options": []
+        },
+        {
+          "name": "wall_thickness_mm",
+          "label": "Wall thickness",
+          "type": "number",
+          "group": "Section",
+          "description": "Wall thickness; must stay below the outer radius.",
+          "unit": "mm",
+          "default": 2.5,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 0.1,
+          "options": []
+        },
+        {
+          "name": "length_mm",
+          "label": "Length",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Length along the extrusion axis.",
+          "unit": "mm",
+          "default": 200.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 1.0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "kind": "elbow",
+      "label": "Elbow",
+      "description": "A swept bend, optionally extended by straight tangent legs.",
+      "parameters": [
+        {
+          "name": "material",
+          "label": "Material",
+          "type": "enum",
+          "group": "Material",
+          "description": "Material used for the mass estimate.",
+          "unit": null,
+          "default": "stainless_steel",
+          "minimum": null,
+          "maximum": null,
+          "exclusive_minimum": false,
+          "step": null,
+          "options": [
+            {
+              "value": "stainless_steel",
+              "label": "Stainless Steel"
+            },
+            {
+              "value": "carbon_steel",
+              "label": "Carbon Steel"
+            },
+            {
+              "value": "aluminium",
+              "label": "Aluminium"
+            },
+            {
+              "value": "brass",
+              "label": "Brass"
+            },
+            {
+              "value": "copper",
+              "label": "Copper"
+            },
+            {
+              "value": "pvc",
+              "label": "Pvc"
+            },
+            {
+              "value": "ptfe",
+              "label": "Ptfe"
+            },
+            {
+              "value": "abs",
+              "label": "Abs"
+            },
+            {
+              "value": "nylon",
+              "label": "Nylon"
+            }
+          ]
+        },
+        {
+          "name": "outer_diameter_mm",
+          "label": "Outer diameter",
+          "type": "number",
+          "group": "Section",
+          "description": "Outside diameter of the tube.",
+          "unit": "mm",
+          "default": 25.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 0.5,
+          "options": []
+        },
+        {
+          "name": "wall_thickness_mm",
+          "label": "Wall thickness",
+          "type": "number",
+          "group": "Section",
+          "description": "Wall thickness; must stay below the outer radius.",
+          "unit": "mm",
+          "default": 2.5,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 0.1,
+          "options": []
+        },
+        {
+          "name": "bend_radius_mm",
+          "label": "Bend radius",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Centreline bend radius; must exceed the outer radius.",
+          "unit": "mm",
+          "default": 50.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 1.0,
+          "options": []
+        },
+        {
+          "name": "bend_angle_deg",
+          "label": "Bend angle",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Swept angle of the bend.",
+          "unit": "deg",
+          "default": 90.0,
+          "minimum": 0.0,
+          "maximum": 180.0,
+          "exclusive_minimum": true,
+          "step": 5.0,
+          "options": []
+        },
+        {
+          "name": "leg_length_mm",
+          "label": "Leg length",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Straight tangent section added at each end. Zero for a bare bend.",
+          "unit": "mm",
+          "default": 0.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": false,
+          "step": 1.0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "kind": "flange",
+      "label": "Flange",
+      "description": "A bored disc with an optional bolt circle.",
+      "parameters": [
+        {
+          "name": "material",
+          "label": "Material",
+          "type": "enum",
+          "group": "Material",
+          "description": "Material used for the mass estimate.",
+          "unit": null,
+          "default": "stainless_steel",
+          "minimum": null,
+          "maximum": null,
+          "exclusive_minimum": false,
+          "step": null,
+          "options": [
+            {
+              "value": "stainless_steel",
+              "label": "Stainless Steel"
+            },
+            {
+              "value": "carbon_steel",
+              "label": "Carbon Steel"
+            },
+            {
+              "value": "aluminium",
+              "label": "Aluminium"
+            },
+            {
+              "value": "brass",
+              "label": "Brass"
+            },
+            {
+              "value": "copper",
+              "label": "Copper"
+            },
+            {
+              "value": "pvc",
+              "label": "Pvc"
+            },
+            {
+              "value": "ptfe",
+              "label": "Ptfe"
+            },
+            {
+              "value": "abs",
+              "label": "Abs"
+            },
+            {
+              "value": "nylon",
+              "label": "Nylon"
+            }
+          ]
+        },
+        {
+          "name": "outer_diameter_mm",
+          "label": "Outer diameter",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Outside diameter of the disc.",
+          "unit": "mm",
+          "default": 100.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 1.0,
+          "options": []
+        },
+        {
+          "name": "bore_diameter_mm",
+          "label": "Bore diameter",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Central through bore.",
+          "unit": "mm",
+          "default": 50.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 0.5,
+          "options": []
+        },
+        {
+          "name": "thickness_mm",
+          "label": "Thickness",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Disc thickness.",
+          "unit": "mm",
+          "default": 12.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 0.5,
+          "options": []
+        },
+        {
+          "name": "bolt_hole_count",
+          "label": "Bolt hole count",
+          "type": "integer",
+          "group": "Bolt pattern",
+          "description": "Number of bolt holes on the bolt circle. Zero for a plain flange.",
+          "unit": null,
+          "default": 8,
+          "minimum": 0.0,
+          "maximum": 64.0,
+          "exclusive_minimum": false,
+          "step": 1.0,
+          "options": []
+        },
+        {
+          "name": "bolt_hole_diameter_mm",
+          "label": "Bolt hole diameter",
+          "type": "number",
+          "group": "Bolt pattern",
+          "description": "Diameter of each bolt hole.",
+          "unit": "mm",
+          "default": 10.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": false,
+          "step": 0.5,
+          "options": []
+        },
+        {
+          "name": "bolt_circle_diameter_mm",
+          "label": "Bolt circle diameter",
+          "type": "number",
+          "group": "Bolt pattern",
+          "description": "Diameter of the circle the bolt holes sit on.",
+          "unit": "mm",
+          "default": 80.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": false,
+          "step": 1.0,
+          "options": []
+        }
+      ]
+    },
+    {
+      "kind": "plate",
+      "label": "Plate",
+      "description": "A rectangular plate with optional rounded corners and a central hole.",
+      "parameters": [
+        {
+          "name": "material",
+          "label": "Material",
+          "type": "enum",
+          "group": "Material",
+          "description": "Material used for the mass estimate.",
+          "unit": null,
+          "default": "stainless_steel",
+          "minimum": null,
+          "maximum": null,
+          "exclusive_minimum": false,
+          "step": null,
+          "options": [
+            {
+              "value": "stainless_steel",
+              "label": "Stainless Steel"
+            },
+            {
+              "value": "carbon_steel",
+              "label": "Carbon Steel"
+            },
+            {
+              "value": "aluminium",
+              "label": "Aluminium"
+            },
+            {
+              "value": "brass",
+              "label": "Brass"
+            },
+            {
+              "value": "copper",
+              "label": "Copper"
+            },
+            {
+              "value": "pvc",
+              "label": "Pvc"
+            },
+            {
+              "value": "ptfe",
+              "label": "Ptfe"
+            },
+            {
+              "value": "abs",
+              "label": "Abs"
+            },
+            {
+              "value": "nylon",
+              "label": "Nylon"
+            }
+          ]
+        },
+        {
+          "name": "width_mm",
+          "label": "Width",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Extent along X.",
+          "unit": "mm",
+          "default": 120.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 1.0,
+          "options": []
+        },
+        {
+          "name": "depth_mm",
+          "label": "Depth",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Extent along Y.",
+          "unit": "mm",
+          "default": 80.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 1.0,
+          "options": []
+        },
+        {
+          "name": "thickness_mm",
+          "label": "Thickness",
+          "type": "number",
+          "group": "Geometry",
+          "description": "Extent along Z.",
+          "unit": "mm",
+          "default": 10.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": true,
+          "step": 0.5,
+          "options": []
+        },
+        {
+          "name": "corner_radius_mm",
+          "label": "Corner radius",
+          "type": "number",
+          "group": "Features",
+          "description": "Fillet radius on the four vertical edges. Zero for sharp corners.",
+          "unit": "mm",
+          "default": 8.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": false,
+          "step": 0.5,
+          "options": []
+        },
+        {
+          "name": "center_hole_diameter_mm",
+          "label": "Center hole diameter",
+          "type": "number",
+          "group": "Features",
+          "description": "Central through hole. Zero for a solid plate.",
+          "unit": "mm",
+          "default": 20.0,
+          "minimum": 0.0,
+          "maximum": 5000.0,
+          "exclusive_minimum": false,
+          "step": 0.5,
+          "options": []
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "value": "stainless_steel",
+      "label": "Stainless Steel (7.9 g/cm3)"
+    },
+    {
+      "value": "carbon_steel",
+      "label": "Carbon Steel (7.85 g/cm3)"
+    },
+    {
+      "value": "aluminium",
+      "label": "Aluminium (2.7 g/cm3)"
+    },
+    {
+      "value": "brass",
+      "label": "Brass (8.5 g/cm3)"
+    },
+    {
+      "value": "copper",
+      "label": "Copper (8.96 g/cm3)"
+    },
+    {
+      "value": "pvc",
+      "label": "Pvc (1.4 g/cm3)"
+    },
+    {
+      "value": "ptfe",
+      "label": "Ptfe (2.2 g/cm3)"
+    },
+    {
+      "value": "abs",
+      "label": "Abs (1.04 g/cm3)"
+    },
+    {
+      "value": "nylon",
+      "label": "Nylon (1.14 g/cm3)"
+    }
+  ],
+  "formats": [
+    {
+      "format": "glb",
+      "label": "glTF binary",
+      "description": "Single-file mesh for the web viewer.",
+      "extension": "glb",
+      "media_type": "model/gltf-binary",
+      "source": "mesh"
+    },
+    {
+      "format": "gltf",
+      "label": "glTF",
+      "description": "JSON mesh with embedded buffers.",
+      "extension": "gltf",
+      "media_type": "model/gltf+json",
+      "source": "mesh"
+    },
+    {
+      "format": "stl",
+      "label": "STL",
+      "description": "Binary triangle mesh for additive manufacturing.",
+      "extension": "stl",
+      "media_type": "model/stl",
+      "source": "mesh"
+    },
+    {
+      "format": "step",
+      "label": "STEP AP214",
+      "description": "Exact boundary representation for downstream CAD.",
+      "extension": "step",
+      "media_type": "model/step",
+      "source": "brep"
+    },
+    {
+      "format": "dxf",
+      "label": "DXF section",
+      "description": "2D cross-section through the part, for drawings and cutting.",
+      "extension": "dxf",
+      "media_type": "image/vnd.dxf",
+      "source": "brep"
+    }
+  ],
+  "tessellation": {
+    "linear_deflection_mm": 0.05,
+    "angular_deflection_rad": 0.15,
+    "weld_tolerance_mm": 1E-06
+  }
+}

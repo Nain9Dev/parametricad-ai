@@ -1,0 +1,96 @@
+{
+  "model": {
+    "model_id": "eb4fd468a91f2e0e7f3436f547b93d95",
+    "spec": {
+      "material": "stainless_steel",
+      "kind": "elbow",
+      "outer_diameter_mm": 25.0,
+      "wall_thickness_mm": 2.5,
+      "bend_radius_mm": 50.0,
+      "bend_angle_deg": 90.0,
+      "leg_length_mm": 20.0
+    },
+    "properties": {
+      "volume_mm3": 20947.71465960891,
+      "surface_area_mm2": 17111.60090121601,
+      "mass_g": 165.4869458109104,
+      "density_g_cm3": 7.9
+    },
+    "quality": {
+      "status": "valid",
+      "issues": [],
+      "triangle_count": 8064,
+      "vertex_count": 4032,
+      "is_watertight": true,
+      "is_edge_manifold": true,
+      "is_winding_consistent": true,
+      "has_outward_normals": true,
+      "has_self_intersections": false,
+      "volume_mm3": 20915.259691562285,
+      "surface_area_mm2": 17100.89715975758,
+      "bounding_box": {
+        "min": {
+          "x": -19.999999999999993,
+          "y": -20.0,
+          "z": -12.5
+        },
+        "max": {
+          "x": 62.5,
+          "y": 62.5,
+          "z": 12.5
+        },
+        "size": {
+          "x": 82.5,
+          "y": 82.5,
+          "z": 25.0
+        },
+        "center": {
+          "x": 21.250000000000004,
+          "y": 21.25,
+          "z": 0.0
+        }
+      },
+      "euler_characteristic": 0,
+      "genus": 1,
+      "connected_component_count": 1,
+      "degenerate_face_count": 0,
+      "duplicate_face_count": 0,
+      "unreferenced_vertex_count": 0,
+      "boundary_edge_count": 0,
+      "non_manifold_edge_count": 0,
+      "self_intersecting_pair_count": 0,
+      "self_intersection_check_complete": true,
+      "reference_volume_mm3": 20947.71465960891,
+      "volume_deviation_ratio": 0.001549332162195496
+    },
+    "artifacts": {
+      "glb": {
+        "format": "glb",
+        "filename": "eb4fd468a91f2e0e7f3436f547b93d95.glb",
+        "url": "./presets/elbow.glb",
+        "media_type": "model/gltf-binary",
+        "size_bytes": 145992,
+        "sha256": "a8a0bf4d29a3d2bfc3e866aa3fa57d1362344e85b0c3947766a567cea9dc1aff",
+        "source": "mesh"
+      },
+      "stl": {
+        "format": "stl",
+        "filename": "eb4fd468a91f2e0e7f3436f547b93d95.stl",
+        "url": "/static/models/eb4fd468a91f2e0e7f3436f547b93d95.stl",
+        "media_type": "model/stl",
+        "size_bytes": 403284,
+        "sha256": "abcdd16bdf04d477fd19545a7cef80614ec09d3fd943d6aad1b66512269535ce",
+        "source": "mesh"
+      }
+    },
+    "timings": {
+      "build_ms": 1035.5541221797466,
+      "tessellate_ms": 1100.876146927476,
+      "inspect_ms": 3903.191647492349,
+      "export_ms": 4.174192436039448,
+      "total_ms": 6043.829219415784
+    },
+    "cached": true
+  },
+  "extractor": null
+}

@@ -6,7 +6,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'self' https://naindev.com https://www.naindev.com; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; worker-src 'self' blob:; connect-src 'self' https://parametricad-ai.onrender.com; manifest-src 'self'"
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'self' https://naindev.com https://www.naindev.com; script-src 'self' https://www.naindev.com https://brand.naindev.com; style-src 'self' 'unsafe-inline' https://www.naindev.com https://brand.naindev.com; img-src 'self' data: blob:; font-src 'self' https://brand.naindev.com; worker-src 'self' blob:; connect-src 'self' https://parametricad-ai.onrender.com https://www.naindev.com; manifest-src 'self'"
         },
         {
           "key": "Strict-Transport-Security",

@@ -1,0 +1,97 @@
+{
+  "model": {
+    "model_id": "f1c49e7d875481cc41f6c7c0c199acc2",
+    "spec": {
+      "material": "stainless_steel",
+      "kind": "flange",
+      "outer_diameter_mm": 100.0,
+      "bore_diameter_mm": 50.0,
+      "thickness_mm": 12.0,
+      "bolt_hole_count": 8,
+      "bolt_hole_diameter_mm": 10.0,
+      "bolt_circle_diameter_mm": 80.0
+    },
+    "properties": {
+      "volume_mm3": 63146.01233715487,
+      "surface_area_mm2": 19195.131113433632,
+      "mass_g": 498.85349746352347,
+      "density_g_cm3": 7.9
+    },
+    "quality": {
+      "status": "valid",
+      "issues": [],
+      "triangle_count": 3392,
+      "vertex_count": 1680,
+      "is_watertight": true,
+      "is_edge_manifold": true,
+      "is_winding_consistent": true,
+      "has_outward_normals": true,
+      "has_self_intersections": false,
+      "volume_mm3": 63087.14500565935,
+      "surface_area_mm2": 19183.298648633227,
+      "bounding_box": {
+        "min": {
+          "x": -50.0,
+          "y": -50.0,
+          "z": 0.0
+        },
+        "max": {
+          "x": 50.0,
+          "y": 50.0,
+          "z": 12.0
+        },
+        "size": {
+          "x": 100.0,
+          "y": 100.0,
+          "z": 12.0
+        },
+        "center": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 6.0
+        }
+      },
+      "euler_characteristic": -16,
+      "genus": 9,
+      "connected_component_count": 1,
+      "degenerate_face_count": 0,
+      "duplicate_face_count": 0,
+      "unreferenced_vertex_count": 0,
+      "boundary_edge_count": 0,
+      "non_manifold_edge_count": 0,
+      "self_intersecting_pair_count": 0,
+      "self_intersection_check_complete": true,
+      "reference_volume_mm3": 63146.01233715487,
+      "volume_deviation_ratio": 0.0009322414720537867
+    },
+    "artifacts": {
+      "glb": {
+        "format": "glb",
+        "filename": "f1c49e7d875481cc41f6c7c0c199acc2.glb",
+        "url": "./presets/flange.glb",
+        "media_type": "model/gltf-binary",
+        "size_bytes": 61704,
+        "sha256": "72902dc23e82eab2fa94d8cca7df081fc20c12b9c49b4a912ba9dec3cfc7dab3",
+        "source": "mesh"
+      },
+      "stl": {
+        "format": "stl",
+        "filename": "f1c49e7d875481cc41f6c7c0c199acc2.stl",
+        "url": "/static/models/f1c49e7d875481cc41f6c7c0c199acc2.stl",
+        "media_type": "model/stl",
+        "size_bytes": 169684,
+        "sha256": "f456e237813bb5daa2261237078f50a81363635c8cf2675bfaaf487042be08d5",
+        "source": "mesh"
+      }
+    },
+    "timings": {
+      "build_ms": 979.7662105411291,
+      "tessellate_ms": 701.7409112304449,
+      "inspect_ms": 887.935976497829,
+      "export_ms": 3.0797719955444336,
+      "total_ms": 2572.5611820816994
+    },
+    "cached": true
+  },
+  "extractor": null
+}
