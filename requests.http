@@ -1,0 +1,37 @@
+### ParametriCAD AI - REST API Requests
+@host = http://localhost:8000
+@api = {{host}}/api/v1
+
+### 1. Health Liveness
+GET {{api}}/health/live HTTP/1.1
+Accept: application/json
+
+### 2. Health Readiness
+GET {{api}}/health/ready HTTP/1.1
+Accept: application/json
+
+### 3. Catalog - List Parametric Models
+GET {{api}}/catalog HTTP/1.1
+Accept: application/json
+
+### 4. Catalog - Get Specific Model Schema
+GET {{api}}/catalog/cube HTTP/1.1
+Accept: application/json
+
+### 5. Generate Parametric Solid (Cube)
+POST {{api}}/generate HTTP/1.1
+Content-Type: application/json
+Accept: application/json
+
+{
+  "model_id": "cube",
+  "parameters": {
+    "width": 20.0,
+    "height": 20.0,
+    "depth": 20.0
+  }
+}
+
+### 6. OpenAPI JSON Schema
+GET {{host}}/openapi.json HTTP/1.1
+Accept: application/json

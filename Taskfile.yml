@@ -1,0 +1,33 @@
+version: '3'
+
+tasks:
+  dev-backend:
+    desc: "Start FastAPI development server with auto-reload"
+    cmds:
+      - uvicorn app.main:app --app-dir backend --reload --port 8000
+
+  dev-frontend:
+    desc: "Start Vite development server"
+    cmds:
+      - npm --prefix frontend run dev
+
+  test-backend:
+    desc: "Execute backend pytest suite"
+    cmds:
+      - pytest backend/tests -v
+
+  test-frontend:
+    desc: "Execute frontend vitest suite"
+    cmds:
+      - npm --prefix frontend run test:run
+
+  test:
+    desc: "Run all tests (backend and frontend)"
+    cmds:
+      - task: test-backend
+      - task: test-frontend
+
+  build:
+    desc: "Build frontend client"
+    cmds:
+      - npm --prefix frontend run build

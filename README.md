@@ -3,6 +3,9 @@
 <div align="center">
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-parametricad.naindev.com-80FF00?style=flat-square&logo=googlechrome&logoColor=black)](https://parametricad.naindev.com/)
+[![CI](https://github.com/Nain9Dev/parametricad-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Nain9Dev/parametricad-ai/actions/workflows/ci.yml)
+[![Ecosystem Status](https://img.shields.io/badge/status-100%25%20operational-success)](https://status.naindev.com)
+[![Engineering Handbook](https://img.shields.io/badge/paved%20road-3D%20CAD-blue)](https://github.com/Nain9Dev/engineering-handbook)
 [![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-1f2937?style=flat-square&logo=github&logoColor=white)](https://codespaces.new/Nain9Dev/parametricad-ai)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)

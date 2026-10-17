@@ -1,0 +1,15 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: parametricad-backend
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000,https://parametricad.naindev.com"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/live').read()"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

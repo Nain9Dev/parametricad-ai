@@ -1,0 +1,1821 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ParametriCAD AI Core",
+    "summary": "Parametric CAD generation with deterministic mesh validation.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "system"
+        ],
+        "summary": "Service health",
+        "description": "Report liveness together with the adapters this deployment is running.\n\nNaming the extractor here means a client can tell whether parameters are\nparsed deterministically or by a hosted model without making a request.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/catalog": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Buildable components and formats",
+        "description": "Describe every component, parameter, material and export format.\n\nThe document only changes when the service is redeployed, so it is safe for\na client to hold on to for a few minutes.",
+        "operationId": "catalog_api_v1_catalog_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Catalog"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/models": {
+      "post": {
+        "tags": [
+          "generation"
+        ],
+        "summary": "Generate a model from explicit parameters",
+        "description": "Build a component from a validated specification.\n\nThe CAD kernel is blocking C++ work, so it runs on a worker thread rather\nthan stalling the event loop for every other in-flight request.",
+        "operationId": "generate_from_spec_api_v1_models_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateFromSpecRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported export format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The part cannot be built as specified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Engine busy or extractor unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/generate": {
+      "post": {
+        "tags": [
+          "generation"
+        ],
+        "summary": "Generate a model from a natural-language description",
+        "description": "Extract parameters from ``prompt`` and build the resulting component.",
+        "operationId": "generate_from_prompt_api_v1_generate_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateFromPromptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported export format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The part cannot be built as specified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Engine busy or extractor unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/generate/refine": {
+      "post": {
+        "tags": [
+          "generation"
+        ],
+        "summary": "Refine an existing model from a natural-language description",
+        "description": "Modify parameters of ``current_spec`` using ``prompt`` and generate the updated component.",
+        "operationId": "refine_from_prompt_api_v1_generate_refine_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefinePromptRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Unsupported export format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The part cannot be built as specified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Engine busy or extractor unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ArtifactRef": {
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/ExportFormat"
+          },
+          "filename": {
+            "type": "string",
+            "title": "Filename"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url",
+            "description": "Path relative to the API origin."
+          },
+          "media_type": {
+            "type": "string",
+            "title": "Media Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Size Bytes"
+          },
+          "sha256": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Sha256",
+            "description": "Digest of the artifact bytes, for integrity checks and caching."
+          },
+          "source": {
+            "$ref": "#/components/schemas/ArtifactSource"
+          }
+        },
+        "type": "object",
+        "required": [
+          "format",
+          "filename",
+          "url",
+          "media_type",
+          "size_bytes",
+          "sha256",
+          "source"
+        ],
+        "title": "ArtifactRef",
+        "description": "A persisted artifact and everything a client needs to fetch or verify it."
+      },
+      "ArtifactSource": {
+        "type": "string",
+        "enum": [
+          "mesh",
+          "brep"
+        ],
+        "title": "ArtifactSource",
+        "description": "Which representation an export is derived from.\n\nMesh formats are written from the tessellated triangle mesh and inherit its\ndeflection error. B-Rep formats are written from the exact kernel solid and\ncarry full analytic precision, which is why STEP is the format to hand to a\ndownstream CAD system."
+      },
+      "BoundingBoxReport": {
+        "properties": {
+          "min": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Min"
+          },
+          "max": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Max"
+          },
+          "size": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Size"
+          },
+          "center": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Center"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "max",
+          "size",
+          "center"
+        ],
+        "title": "BoundingBoxReport",
+        "description": "Axis-aligned extents, in millimetres."
+      },
+      "CapSpec": {
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/Material",
+            "description": "Material used for the mass estimate.",
+            "default": "stainless_steel",
+            "group": "Material"
+          },
+          "kind": {
+            "type": "string",
+            "const": "cap",
+            "title": "Kind",
+            "default": "cap"
+          },
+          "outer_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Outer Diameter Mm",
+            "description": "Outside diameter of the cap base.",
+            "default": 50.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "wall_thickness_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Wall Thickness Mm",
+            "description": "Wall thickness of the cap shell.",
+            "default": 3.0,
+            "group": "Section",
+            "step": 0.1,
+            "unit": "mm"
+          },
+          "depth_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Depth Mm",
+            "description": "Total axial depth of the cap.",
+            "default": 25.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "CapSpec",
+        "description": "A domed end cap for sealing pipe ends."
+      },
+      "Catalog": {
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/ComponentDescriptor"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterOption"
+            },
+            "type": "array",
+            "title": "Materials"
+          },
+          "formats": {
+            "items": {
+              "$ref": "#/components/schemas/FormatDescriptorView"
+            },
+            "type": "array",
+            "title": "Formats"
+          },
+          "tessellation": {
+            "$ref": "#/components/schemas/TessellationSettings"
+          }
+        },
+        "type": "object",
+        "required": [
+          "components",
+          "materials",
+          "formats",
+          "tessellation"
+        ],
+        "title": "Catalog",
+        "description": "The complete capability document."
+      },
+      "ComponentDescriptor": {
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/ComponentKind"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "parameters": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterDescriptor"
+            },
+            "type": "array",
+            "title": "Parameters"
+          }
+        },
+        "type": "object",
+        "required": [
+          "kind",
+          "label",
+          "description",
+          "parameters"
+        ],
+        "title": "ComponentDescriptor",
+        "description": "A buildable component family and its parameters."
+      },
+      "ComponentKind": {
+        "type": "string",
+        "enum": [
+          "pipe",
+          "elbow",
+          "flange",
+          "plate",
+          "tee",
+          "reducer",
+          "cap"
+        ],
+        "title": "ComponentKind",
+        "description": "Buildable component families."
+      },
+      "ElbowSpec": {
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/Material",
+            "description": "Material used for the mass estimate.",
+            "default": "stainless_steel",
+            "group": "Material"
+          },
+          "kind": {
+            "type": "string",
+            "const": "elbow",
+            "title": "Kind",
+            "default": "elbow"
+          },
+          "outer_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Outer Diameter Mm",
+            "description": "Outside diameter of the tube.",
+            "default": 25.0,
+            "group": "Section",
+            "step": 0.5,
+            "unit": "mm"
+          },
+          "wall_thickness_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Wall Thickness Mm",
+            "description": "Wall thickness; must stay below the outer radius.",
+            "default": 2.5,
+            "group": "Section",
+            "step": 0.1,
+            "unit": "mm"
+          },
+          "bend_radius_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Bend Radius Mm",
+            "description": "Centreline bend radius; must exceed the outer radius.",
+            "default": 50.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "bend_angle_deg": {
+            "type": "number",
+            "maximum": 180.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Bend Angle Deg",
+            "description": "Swept angle of the bend.",
+            "default": 90.0,
+            "group": "Geometry",
+            "step": 5.0,
+            "unit": "deg"
+          },
+          "leg_length_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Leg Length Mm",
+            "description": "Straight tangent section added at each end. Zero for a bare bend.",
+            "default": 0.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ElbowSpec",
+        "description": "A swept bend, optionally extended by straight tangent legs."
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "Stable identifier; safe to branch on."
+          },
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "Human-readable summary."
+          },
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint",
+            "description": "A concrete next step the caller can take."
+          },
+          "details": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Details"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "description": "The structured part of every failure response."
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "description": "Uniform failure envelope for every 4xx and 5xx response."
+      },
+      "ExportFormat": {
+        "type": "string",
+        "enum": [
+          "glb",
+          "gltf",
+          "stl",
+          "step",
+          "dxf"
+        ],
+        "title": "ExportFormat",
+        "description": "Artifact formats the engine can emit."
+      },
+      "FlangeSpec": {
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/Material",
+            "description": "Material used for the mass estimate.",
+            "default": "stainless_steel",
+            "group": "Material"
+          },
+          "kind": {
+            "type": "string",
+            "const": "flange",
+            "title": "Kind",
+            "default": "flange"
+          },
+          "outer_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Outer Diameter Mm",
+            "description": "Outside diameter of the disc.",
+            "default": 100.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "bore_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Bore Diameter Mm",
+            "description": "Central through bore.",
+            "default": 50.0,
+            "group": "Geometry",
+            "step": 0.5,
+            "unit": "mm"
+          },
+          "thickness_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Thickness Mm",
+            "description": "Disc thickness.",
+            "default": 12.0,
+            "group": "Geometry",
+            "step": 0.5,
+            "unit": "mm"
+          },
+          "bolt_hole_count": {
+            "type": "integer",
+            "maximum": 64.0,
+            "minimum": 0.0,
+            "title": "Bolt Hole Count",
+            "description": "Number of bolt holes on the bolt circle. Zero for a plain flange.",
+            "default": 8,
+            "group": "Bolt pattern",
+            "step": 1
+          },
+          "bolt_hole_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Bolt Hole Diameter Mm",
+            "description": "Diameter of each bolt hole.",
+            "default": 10.0,
+            "group": "Bolt pattern",
+            "step": 0.5,
+            "unit": "mm"
+          },
+          "bolt_circle_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Bolt Circle Diameter Mm",
+            "description": "Diameter of the circle the bolt holes sit on.",
+            "default": 80.0,
+            "group": "Bolt pattern",
+            "step": 1.0,
+            "unit": "mm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "FlangeSpec",
+        "description": "A bored disc with an optional bolt circle."
+      },
+      "FormatDescriptorView": {
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/ExportFormat"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "extension": {
+            "type": "string",
+            "title": "Extension"
+          },
+          "media_type": {
+            "type": "string",
+            "title": "Media Type"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "format",
+          "label",
+          "description",
+          "extension",
+          "media_type",
+          "source"
+        ],
+        "title": "FormatDescriptorView",
+        "description": "An export format as presented to a client."
+      },
+      "GenerateFromPromptRequest": {
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Prompt"
+          },
+          "formats": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExportFormat"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formats"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "prompt"
+        ],
+        "title": "GenerateFromPromptRequest",
+        "description": "Natural-language generation."
+      },
+      "GenerateFromSpecRequest": {
+        "properties": {
+          "spec": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PipeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ElbowSpec"
+              },
+              {
+                "$ref": "#/components/schemas/FlangeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/PlateSpec"
+              },
+              {
+                "$ref": "#/components/schemas/TeeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ReducerSpec"
+              },
+              {
+                "$ref": "#/components/schemas/CapSpec"
+              }
+            ],
+            "title": "Spec",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "cap": "#/components/schemas/CapSpec",
+                "elbow": "#/components/schemas/ElbowSpec",
+                "flange": "#/components/schemas/FlangeSpec",
+                "pipe": "#/components/schemas/PipeSpec",
+                "plate": "#/components/schemas/PlateSpec",
+                "reducer": "#/components/schemas/ReducerSpec",
+                "tee": "#/components/schemas/TeeSpec"
+              }
+            }
+          },
+          "formats": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExportFormat"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formats",
+            "description": "Artifacts to produce. Defaults to the server-configured set."
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "spec"
+        ],
+        "title": "GenerateFromSpecRequest",
+        "description": "Direct parametric generation."
+      },
+      "GeneratedModel": {
+        "properties": {
+          "model_id": {
+            "type": "string",
+            "title": "Model Id",
+            "description": "Content address derived from the specification and the tessellation settings. Identical inputs always yield the same id, so a client can cache on it and the server can skip regeneration entirely."
+          },
+          "spec": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PipeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ElbowSpec"
+              },
+              {
+                "$ref": "#/components/schemas/FlangeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/PlateSpec"
+              },
+              {
+                "$ref": "#/components/schemas/TeeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ReducerSpec"
+              },
+              {
+                "$ref": "#/components/schemas/CapSpec"
+              }
+            ],
+            "title": "Spec",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "cap": "#/components/schemas/CapSpec",
+                "elbow": "#/components/schemas/ElbowSpec",
+                "flange": "#/components/schemas/FlangeSpec",
+                "pipe": "#/components/schemas/PipeSpec",
+                "plate": "#/components/schemas/PlateSpec",
+                "reducer": "#/components/schemas/ReducerSpec",
+                "tee": "#/components/schemas/TeeSpec"
+              }
+            }
+          },
+          "properties": {
+            "$ref": "#/components/schemas/SolidProperties"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/MeshQualityReport"
+          },
+          "artifacts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ArtifactRef"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ExportFormat"
+            },
+            "type": "object",
+            "title": "Artifacts"
+          },
+          "timings": {
+            "$ref": "#/components/schemas/GenerationTimings"
+          },
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "description": "True when the artifacts were served from a previous identical build.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "model_id",
+          "spec",
+          "properties",
+          "quality",
+          "artifacts",
+          "timings"
+        ],
+        "title": "GeneratedModel",
+        "description": "Everything produced for one accepted specification."
+      },
+      "GenerationResponse": {
+        "properties": {
+          "model": {
+            "$ref": "#/components/schemas/GeneratedModel"
+          },
+          "extractor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extractor",
+            "description": "Which backend interpreted the prompt. Null for direct parametric requests."
+          }
+        },
+        "type": "object",
+        "required": [
+          "model"
+        ],
+        "title": "GenerationResponse",
+        "description": "A generated model as returned over HTTP."
+      },
+      "GenerationTimings": {
+        "properties": {
+          "build_ms": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Build Ms"
+          },
+          "tessellate_ms": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Tessellate Ms"
+          },
+          "inspect_ms": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Inspect Ms"
+          },
+          "export_ms": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Export Ms"
+          },
+          "total_ms": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Total Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "build_ms",
+          "tessellate_ms",
+          "inspect_ms",
+          "export_ms",
+          "total_ms"
+        ],
+        "title": "GenerationTimings",
+        "description": "Wall-clock cost of each pipeline stage, in milliseconds.\n\nSurfaced to the client so a slow request can be attributed to the kernel,\nthe tessellation or the quality gate without server-side profiling."
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "geometry_kernel": {
+            "type": "string",
+            "title": "Geometry Kernel"
+          },
+          "parameter_extractor": {
+            "type": "string",
+            "title": "Parameter Extractor"
+          },
+          "kernel_capacity": {
+            "$ref": "#/components/schemas/KernelCapacity"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "service",
+          "version",
+          "geometry_kernel",
+          "parameter_extractor",
+          "kernel_capacity"
+        ],
+        "title": "HealthResponse",
+        "description": "Liveness and configuration summary."
+      },
+      "KernelCapacity": {
+        "properties": {
+          "active": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Active",
+            "description": "Pipelines currently holding an execution slot."
+          },
+          "pending": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Pending",
+            "description": "Pipelines currently queued waiting for an execution slot."
+          },
+          "max": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Max",
+            "description": "Maximum pipeline concurrency."
+          }
+        },
+        "type": "object",
+        "required": [
+          "active",
+          "pending",
+          "max"
+        ],
+        "title": "KernelCapacity",
+        "description": "Capacity gauges for in-flight generation pipelines (ADR-0004)."
+      },
+      "Material": {
+        "type": "string",
+        "enum": [
+          "stainless_steel",
+          "carbon_steel",
+          "aluminium",
+          "brass",
+          "copper",
+          "pvc",
+          "ptfe",
+          "abs",
+          "nylon"
+        ],
+        "title": "Material",
+        "description": "Materials the engine can cost and weigh.\n\nMaterial has no effect on geometry; it drives the mass estimate and is\ncarried through to the exported metadata."
+      },
+      "MeshIssue": {
+        "properties": {
+          "code": {
+            "$ref": "#/components/schemas/MeshIssueCode"
+          },
+          "severity": {
+            "$ref": "#/components/schemas/Severity"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Count",
+            "description": "Number of affected elements, when countable."
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "title": "MeshIssue",
+        "description": "A single finding, with the affected element count when one applies."
+      },
+      "MeshIssueCode": {
+        "type": "string",
+        "enum": [
+          "not_watertight",
+          "non_manifold_edges",
+          "inconsistent_winding",
+          "inverted_normals",
+          "self_intersections",
+          "self_intersection_check_truncated",
+          "degenerate_faces",
+          "duplicate_faces",
+          "unreferenced_vertices",
+          "multiple_bodies",
+          "volume_deviation",
+          "triangle_budget_exceeded",
+          "empty_mesh"
+        ],
+        "title": "MeshIssueCode",
+        "description": "Stable identifiers so clients can localise or filter without parsing text."
+      },
+      "MeshQualityReport": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/MeshQualityStatus"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/MeshIssue"
+            },
+            "type": "array",
+            "title": "Issues",
+            "default": []
+          },
+          "triangle_count": {
+            "type": "integer",
+            "title": "Triangle Count"
+          },
+          "vertex_count": {
+            "type": "integer",
+            "title": "Vertex Count"
+          },
+          "is_watertight": {
+            "type": "boolean",
+            "title": "Is Watertight"
+          },
+          "is_edge_manifold": {
+            "type": "boolean",
+            "title": "Is Edge Manifold"
+          },
+          "is_winding_consistent": {
+            "type": "boolean",
+            "title": "Is Winding Consistent"
+          },
+          "has_outward_normals": {
+            "type": "boolean",
+            "title": "Has Outward Normals"
+          },
+          "has_self_intersections": {
+            "type": "boolean",
+            "title": "Has Self Intersections"
+          },
+          "volume_mm3": {
+            "type": "number",
+            "title": "Volume Mm3"
+          },
+          "surface_area_mm2": {
+            "type": "number",
+            "title": "Surface Area Mm2"
+          },
+          "bounding_box": {
+            "$ref": "#/components/schemas/BoundingBoxReport"
+          },
+          "euler_characteristic": {
+            "type": "integer",
+            "title": "Euler Characteristic"
+          },
+          "genus": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genus",
+            "description": "Topological genus; only defined for a closed orientable surface."
+          },
+          "connected_component_count": {
+            "type": "integer",
+            "title": "Connected Component Count"
+          },
+          "degenerate_face_count": {
+            "type": "integer",
+            "title": "Degenerate Face Count"
+          },
+          "duplicate_face_count": {
+            "type": "integer",
+            "title": "Duplicate Face Count"
+          },
+          "unreferenced_vertex_count": {
+            "type": "integer",
+            "title": "Unreferenced Vertex Count"
+          },
+          "boundary_edge_count": {
+            "type": "integer",
+            "title": "Boundary Edge Count"
+          },
+          "non_manifold_edge_count": {
+            "type": "integer",
+            "title": "Non Manifold Edge Count"
+          },
+          "self_intersecting_pair_count": {
+            "type": "integer",
+            "title": "Self Intersecting Pair Count"
+          },
+          "self_intersection_check_complete": {
+            "type": "boolean",
+            "title": "Self Intersection Check Complete"
+          },
+          "reference_volume_mm3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Volume Mm3",
+            "description": "Exact solid volume reported by the CAD kernel."
+          },
+          "volume_deviation_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Volume Deviation Ratio",
+            "description": "Relative gap between the mesh volume and the kernel volume."
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "triangle_count",
+          "vertex_count",
+          "is_watertight",
+          "is_edge_manifold",
+          "is_winding_consistent",
+          "has_outward_normals",
+          "has_self_intersections",
+          "volume_mm3",
+          "surface_area_mm2",
+          "bounding_box",
+          "euler_characteristic",
+          "connected_component_count",
+          "degenerate_face_count",
+          "duplicate_face_count",
+          "unreferenced_vertex_count",
+          "boundary_edge_count",
+          "non_manifold_edge_count",
+          "self_intersecting_pair_count",
+          "self_intersection_check_complete"
+        ],
+        "title": "MeshQualityReport",
+        "description": "Complete, serialisable verdict for one tessellated solid."
+      },
+      "MeshQualityStatus": {
+        "type": "string",
+        "enum": [
+          "valid",
+          "degraded",
+          "invalid"
+        ],
+        "title": "MeshQualityStatus",
+        "description": "Overall verdict for a generated mesh."
+      },
+      "ParameterDescriptor": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "number",
+              "integer",
+              "enum"
+            ],
+            "title": "Type"
+          },
+          "group": {
+            "type": "string",
+            "title": "Group",
+            "default": "Geometry"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "default": {
+            "title": "Default"
+          },
+          "minimum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimum"
+          },
+          "maximum": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximum"
+          },
+          "exclusive_minimum": {
+            "type": "boolean",
+            "title": "Exclusive Minimum",
+            "description": "True when the minimum is a strict bound, as for a positive length.",
+            "default": false
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/ParameterOption"
+            },
+            "type": "array",
+            "title": "Options",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "label",
+          "type"
+        ],
+        "title": "ParameterDescriptor",
+        "description": "Everything a client needs to render and validate one input control."
+      },
+      "ParameterOption": {
+        "properties": {
+          "value": {
+            "type": "string",
+            "title": "Value"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "ParameterOption",
+        "description": "One choice of an enumerated parameter."
+      },
+      "PipeSpec": {
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/Material",
+            "description": "Material used for the mass estimate.",
+            "default": "stainless_steel",
+            "group": "Material"
+          },
+          "kind": {
+            "type": "string",
+            "const": "pipe",
+            "title": "Kind",
+            "default": "pipe"
+          },
+          "outer_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Outer Diameter Mm",
+            "description": "Outside diameter of the tube.",
+            "default": 25.0,
+            "group": "Section",
+            "step": 0.5,
+            "unit": "mm"
+          },
+          "wall_thickness_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Wall Thickness Mm",
+            "description": "Wall thickness; must stay below the outer radius.",
+            "default": 2.5,
+            "group": "Section",
+            "step": 0.1,
+            "unit": "mm"
+          },
+          "length_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Length Mm",
+            "description": "Length along the extrusion axis.",
+            "default": 200.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PipeSpec",
+        "description": "A straight hollow cylinder."
+      },
+      "PlateSpec": {
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/Material",
+            "description": "Material used for the mass estimate.",
+            "default": "stainless_steel",
+            "group": "Material"
+          },
+          "kind": {
+            "type": "string",
+            "const": "plate",
+            "title": "Kind",
+            "default": "plate"
+          },
+          "width_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Width Mm",
+            "description": "Extent along X.",
+            "default": 120.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "depth_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Depth Mm",
+            "description": "Extent along Y.",
+            "default": 80.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "thickness_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Thickness Mm",
+            "description": "Extent along Z.",
+            "default": 10.0,
+            "group": "Geometry",
+            "step": 0.5,
+            "unit": "mm"
+          },
+          "corner_radius_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Corner Radius Mm",
+            "description": "Fillet radius on the four vertical edges. Zero for sharp corners.",
+            "default": 8.0,
+            "group": "Features",
+            "step": 0.5,
+            "unit": "mm"
+          },
+          "center_hole_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 0.0,
+            "title": "Center Hole Diameter Mm",
+            "description": "Central through hole. Zero for a solid plate.",
+            "default": 20.0,
+            "group": "Features",
+            "step": 0.5,
+            "unit": "mm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "PlateSpec",
+        "description": "A rectangular plate with optional rounded corners and a central hole."
+      },
+      "ReducerSpec": {
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/Material",
+            "description": "Material used for the mass estimate.",
+            "default": "stainless_steel",
+            "group": "Material"
+          },
+          "kind": {
+            "type": "string",
+            "const": "reducer",
+            "title": "Kind",
+            "default": "reducer"
+          },
+          "large_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Large Diameter Mm",
+            "description": "Outside diameter of the larger end.",
+            "default": 60.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "small_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Small Diameter Mm",
+            "description": "Outside diameter of the smaller end.",
+            "default": 40.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "length_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Length Mm",
+            "description": "Total transition length along the axis.",
+            "default": 100.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "wall_thickness_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Wall Thickness Mm",
+            "description": "Wall thickness of the conical transition.",
+            "default": 3.0,
+            "group": "Section",
+            "step": 0.1,
+            "unit": "mm"
+          },
+          "is_eccentric": {
+            "type": "boolean",
+            "title": "Is Eccentric",
+            "description": "Whether the flat side aligns with the bottom edge (eccentric reducer).",
+            "default": false,
+            "group": "Features"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "ReducerSpec",
+        "description": "A straight concentric or eccentric pipe reducer."
+      },
+      "RefinePromptRequest": {
+        "properties": {
+          "current_spec": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PipeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ElbowSpec"
+              },
+              {
+                "$ref": "#/components/schemas/FlangeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/PlateSpec"
+              },
+              {
+                "$ref": "#/components/schemas/TeeSpec"
+              },
+              {
+                "$ref": "#/components/schemas/ReducerSpec"
+              },
+              {
+                "$ref": "#/components/schemas/CapSpec"
+              }
+            ],
+            "title": "Current Spec",
+            "discriminator": {
+              "propertyName": "kind",
+              "mapping": {
+                "cap": "#/components/schemas/CapSpec",
+                "elbow": "#/components/schemas/ElbowSpec",
+                "flange": "#/components/schemas/FlangeSpec",
+                "pipe": "#/components/schemas/PipeSpec",
+                "plate": "#/components/schemas/PlateSpec",
+                "reducer": "#/components/schemas/ReducerSpec",
+                "tee": "#/components/schemas/TeeSpec"
+              }
+            }
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Prompt"
+          },
+          "formats": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ExportFormat"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formats"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "current_spec",
+          "prompt"
+        ],
+        "title": "RefinePromptRequest",
+        "description": "Stateless conversational refinement."
+      },
+      "Severity": {
+        "type": "string",
+        "enum": [
+          "error",
+          "warning"
+        ],
+        "title": "Severity"
+      },
+      "SolidProperties": {
+        "properties": {
+          "volume_mm3": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Volume Mm3"
+          },
+          "surface_area_mm2": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Surface Area Mm2"
+          },
+          "mass_g": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Mass G",
+            "description": "Volume times the nominal density of the selected material."
+          },
+          "density_g_cm3": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Density G Cm3"
+          }
+        },
+        "type": "object",
+        "required": [
+          "volume_mm3",
+          "surface_area_mm2",
+          "mass_g",
+          "density_g_cm3"
+        ],
+        "title": "SolidProperties",
+        "description": "Exact mass properties taken from the B-Rep, not from the mesh."
+      },
+      "TeeSpec": {
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/Material",
+            "description": "Material used for the mass estimate.",
+            "default": "stainless_steel",
+            "group": "Material"
+          },
+          "kind": {
+            "type": "string",
+            "const": "tee",
+            "title": "Kind",
+            "default": "tee"
+          },
+          "run_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Run Diameter Mm",
+            "description": "Outside diameter of the main straight run.",
+            "default": 50.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "run_length_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Run Length Mm",
+            "description": "Total length along the main run axis.",
+            "default": 150.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "branch_diameter_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Branch Diameter Mm",
+            "description": "Outside diameter of the orthogonal branch.",
+            "default": 50.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "branch_length_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Branch Length Mm",
+            "description": "Length of the branch measured from the run centreline.",
+            "default": 75.0,
+            "group": "Geometry",
+            "step": 1.0,
+            "unit": "mm"
+          },
+          "wall_thickness_mm": {
+            "type": "number",
+            "maximum": 5000.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Wall Thickness Mm",
+            "description": "Wall thickness of the fitting.",
+            "default": 3.0,
+            "group": "Section",
+            "step": 0.1,
+            "unit": "mm"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TeeSpec",
+        "description": "An orthogonal pipe tee (equal or reducing)."
+      },
+      "TessellationSettings": {
+        "properties": {
+          "linear_deflection_mm": {
+            "type": "number",
+            "maximum": 10.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Linear Deflection Mm",
+            "description": "Largest allowed gap between a curved face and its chordal approximation. Smaller values mean more triangles.",
+            "default": 0.05
+          },
+          "angular_deflection_rad": {
+            "type": "number",
+            "maximum": 1.5,
+            "exclusiveMinimum": 0.0,
+            "title": "Angular Deflection Rad",
+            "description": "Largest allowed angle between adjacent facet normals.",
+            "default": 0.15
+          },
+          "weld_tolerance_mm": {
+            "type": "number",
+            "maximum": 1.0,
+            "exclusiveMinimum": 0.0,
+            "title": "Weld Tolerance Mm",
+            "description": "Distance under which coincident vertices from adjacent faces are merged. Without welding, a kernel tessellation is never watertight.",
+            "default": 1e-06
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "TessellationSettings",
+        "description": "Controls the fidelity of the B-Rep to mesh conversion.\n\nBoth deflections are absolute kernel inputs, which is what makes the result\nreproducible: the same solid and the same settings always yield the same\ntriangles, and therefore the same content hash."
+      }
+    }
+  }
+}
