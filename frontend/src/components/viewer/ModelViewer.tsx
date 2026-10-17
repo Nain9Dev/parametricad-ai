@@ -6,7 +6,7 @@ import { Box3, Plane, Vector3 } from 'three'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { Spinner } from '@/components/ui/Spinner'
 import { AlertIcon, CubeIcon } from '@/components/ui/Icons'
-import { CameraRig } from '@/components/viewer/CameraRig'
+import { CameraRig, type ViewOrientation } from '@/components/viewer/CameraRig'
 import { DimensionOverlay } from '@/components/viewer/DimensionOverlay'
 import { ModelObject } from '@/components/viewer/ModelObject'
 import { SectionPlaneHelper } from '@/components/viewer/SectionPlaneHelper'
@@ -20,11 +20,18 @@ interface ModelViewerProps {
   options: ViewerOptions
   /** Bumped by the toolbar to refit the camera without reloading. */
   fitToken: number
+  viewOrientation?: ViewOrientation
   /** True while a newer model is being generated for the current parameters. */
   regenerating: boolean
 }
 
-export function ModelViewer({ url, options, fitToken, regenerating }: ModelViewerProps) {
+export function ModelViewer({
+  url,
+  options,
+  fitToken,
+  viewOrientation = 'iso',
+  regenerating,
+}: ModelViewerProps) {
   const model = useGltfModel(url)
 
   const bounds = useMemo(() => {
@@ -92,6 +99,7 @@ export function ModelViewer({ url, options, fitToken, regenerating }: ModelViewe
             bounds={bounds}
             projection={options.projection}
             fitToken={fitToken}
+            viewOrientation={viewOrientation}
           />
 
           {options.grid && bounds ? <GroundGrid bounds={bounds} /> : null}
@@ -100,6 +108,8 @@ export function ModelViewer({ url, options, fitToken, regenerating }: ModelViewe
             <ModelObject
               object={model.object}
               wireframe={options.wireframe}
+              edges={options.edges}
+              shadingMode={options.shadingMode}
               clippingPlanes={clippingPlanes}
             />
           ) : null}

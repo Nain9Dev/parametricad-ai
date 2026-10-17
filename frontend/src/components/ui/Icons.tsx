@@ -114,3 +114,11 @@ export const CaliperIcon = (props: IconProps) => (
   </Icon>
 )
 
+export const EdgesIcon = (props: IconProps) => (
+  <Icon {...props}>
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </Icon>
+)
+

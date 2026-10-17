@@ -17,6 +17,7 @@ import { Skeleton, SkeletonText } from '@/components/ui/Skeleton'
 import { DownloadIcon, SparkIcon } from '@/components/ui/Icons'
 import { ModelViewer } from '@/components/viewer/ModelViewer'
 import { ViewerToolbar } from '@/components/viewer/ViewerToolbar'
+import type { ViewOrientation } from '@/components/viewer/CameraRig'
 import {
   DEFAULT_VIEWER_OPTIONS,
   type ViewerOptions,
@@ -32,7 +33,14 @@ import {
 import { useCatalog } from '@/lib/hooks/useCatalog'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useGeneration } from '@/lib/hooks/useGeneration'
-import type { Catalog, ComponentKind, ExportFormat, ParameterValue } from '@/types/api'
+import type {
+  Catalog,
+  ComponentKind,
+  ComponentSpec,
+  ExportFormat,
+  GeneratedModel,
+  ParameterValue,
+} from '@/types/api'
 
 type InputMode = 'parameters' | 'prompt'
 
@@ -75,6 +83,7 @@ export default function App() {
   const [livePreview, setLivePreview] = useState(true)
   const [viewerOptions, setViewerOptions] = useState<ViewerOptions>(DEFAULT_VIEWER_OPTIONS)
   const [fitToken, setFitToken] = useState(0)
+  const [viewOrientation, setViewOrientation] = useState<ViewOrientation>('iso')
 
   // Track last spec to avoid duplicate debounce calls after preset click
   const lastRequestedSpecKey = useRef<string | null>(null)
@@ -100,7 +109,19 @@ export default function App() {
     )
   }, [component, kind])
 
-  const { generate } = generation
+  const { generate, seedModel } = generation
+
+  // Fast-path instant load: seed bundled flange preset in <15ms before network settles
+  useEffect(() => {
+    fetch('/presets/flange.json')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { model?: GeneratedModel } | null) => {
+        if (data?.model && !generation.model) {
+          seedModel(data.model)
+        }
+      })
+      .catch(() => {})
+  }, [seedModel, generation.model])
 
   // Instant initial load: as soon as catalog is ready, generate the industrial flange preset!
   useEffect(() => {
@@ -197,6 +218,17 @@ export default function App() {
           }))
         }
         lastRequestedSpecKey.current = JSON.stringify(preset.spec)
+
+        // Fast-path: seed local preset bundle instantaneously in <10ms
+        fetch(`/presets/${preset.id}.json`)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data: { model?: GeneratedModel } | null) => {
+            if (data?.model) {
+              seedModel(data.model)
+            }
+          })
+          .catch(() => {})
+
         generate({
           source: 'spec',
           spec: preset.spec,
@@ -205,7 +237,47 @@ export default function App() {
       }
       setFitToken((token) => token + 1)
     },
-    [components, submitPrompt, generate],
+    [components, submitPrompt, generate, seedModel],
+  )
+
+  const handleExportProject = useCallback(() => {
+    if (!generation.model) return
+    const project = {
+      app: 'ParametriCAD AI',
+      version: '1.0.0',
+      exported_at: new Date().toISOString(),
+      model: generation.model,
+    }
+    const blob = new Blob([JSON.stringify(project, null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `cadproject_${generation.model.spec.kind}_${generation.model.model_id.slice(0, 8)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [generation.model])
+
+  const handleImportProject = useCallback(
+    (importedSpec: ComponentSpec) => {
+      const target = findComponent(components, importedSpec.kind)
+      if (!target) return
+      setMode('parameters')
+      setKind(importedSpec.kind)
+      setActivePresetId(null)
+      setValuesByKind((prev) => ({
+        ...prev,
+        [importedSpec.kind]: valuesFromSpec(importedSpec, target),
+      }))
+      generate({
+        source: 'spec',
+        spec: importedSpec,
+        formats: PREVIEW_FORMATS,
+      })
+      setFitToken((t) => t + 1)
+    },
+    [components, generate],
   )
 
   const refinePrompt = useCallback(
@@ -248,7 +320,11 @@ export default function App() {
     // Two layouts, not one that degrades: a pinned three-column workspace
     // where there is room for it, and a scrolling stack where there is not.
     <div className="flex min-h-screen flex-col bg-void lg:h-screen lg:overflow-hidden">
-      <AppHeader />
+      <AppHeader
+        onExportProject={handleExportProject}
+        onImportProject={handleImportProject}
+        hasModel={!!generation.model}
+      />
 
       <div className="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[17rem_minmax(0,1fr)_17rem] xl:grid-cols-[20rem_minmax(0,1fr)_21rem]">
         {/* ---------------------------------------------------------- Inputs */}
@@ -352,6 +428,11 @@ export default function App() {
               options={viewerOptions}
               onChange={setViewerOptions}
               onResetView={() => setFitToken((token) => token + 1)}
+              activeOrientation={viewOrientation}
+              onSelectOrientation={(orientation) => {
+                setViewOrientation(orientation)
+                setFitToken((token) => token + 1)
+              }}
               disabled={!previewUrl}
             />
             {model ? (
@@ -369,6 +450,7 @@ export default function App() {
               url={previewUrl}
               options={viewerOptions}
               fitToken={fitToken}
+              viewOrientation={viewOrientation}
               regenerating={busy}
             />
           </div>

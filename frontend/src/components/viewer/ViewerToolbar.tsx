@@ -3,18 +3,22 @@ import { ToggleButton } from '@/components/ui/ToggleButton'
 import {
   AxesIcon,
   CaliperIcon,
+  EdgesIcon,
   GridIcon,
   ResetIcon,
   RulerIcon,
   SectionIcon,
   WireframeIcon,
 } from '@/components/ui/Icons'
-import type { SectionAxis, ViewerOptions } from '@/components/viewer/viewerOptions'
+import type { ViewOrientation } from '@/components/viewer/CameraRig'
+import type { SectionAxis, ShadingMode, ViewerOptions } from '@/components/viewer/viewerOptions'
 
 interface ViewerToolbarProps {
   options: ViewerOptions
   onChange: (options: ViewerOptions) => void
   onResetView: () => void
+  activeOrientation?: ViewOrientation
+  onSelectOrientation?: (orientation: ViewOrientation) => void
   disabled: boolean
 }
 
@@ -22,6 +26,8 @@ export function ViewerToolbar({
   options,
   onChange,
   onResetView,
+  activeOrientation = 'iso',
+  onSelectOrientation,
   disabled,
 }: ViewerToolbarProps) {
   function set<K extends keyof ViewerOptions>(key: K, value: ViewerOptions[K]) {
@@ -30,7 +36,30 @@ export function ViewerToolbar({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
+      <div className="w-68">
+        <SegmentedControl
+          label="Surface shading"
+          size="sm"
+          value={options.shadingMode}
+          onChange={(shadingMode) => set('shadingMode', shadingMode as ShadingMode)}
+          segments={[
+            { value: 'metallic', label: 'Alloy', title: 'Machined metallic alloy' },
+            { value: 'clay', label: 'Clay', title: 'Matte inspection clay' },
+            { value: 'blueprint', label: 'Draft', title: 'Semi-transparent blueprint' },
+            { value: 'normals', label: 'Normals', title: 'Vector orientation map' },
+            { value: 'zebra', label: 'Zebra', title: 'Curvature zebra striping (G0/G1/G2 continuity)' },
+          ]}
+        />
+      </div>
+
       <div className="flex items-center gap-1">
+        <ToggleButton
+          label="Feature crease edges"
+          pressed={options.edges}
+          onToggle={(pressed) => set('edges', pressed)}
+        >
+          <EdgesIcon />
+        </ToggleButton>
         <ToggleButton
           label="Wireframe shading"
           pressed={options.wireframe}
@@ -111,37 +140,61 @@ export function ViewerToolbar({
         </div>
       )}
 
-      <div className="w-44">
-        <SegmentedControl
-          label="Camera projection"
-          size="sm"
-          value={options.projection}
-          onChange={(projection) => set('projection', projection)}
-          segments={[
-            {
-              value: 'perspective',
-              label: 'Perspective',
-              title: 'Perspective projection, for reading depth',
-            },
-            {
-              value: 'orthographic',
-              label: 'Orthographic',
-              title: 'Orthographic projection, for comparing dimensions',
-            },
-          ]}
-        />
-      </div>
+      <div className="flex items-center gap-1.5">
+        {onSelectOrientation && (
+          <div className="flex items-center gap-0.5 rounded-md border border-line bg-surface p-0.5">
+            {(['iso', 'top', 'front', 'right'] as const).map((orient) => (
+              <button
+                key={orient}
+                type="button"
+                onClick={() => onSelectOrientation(orient)}
+                disabled={disabled}
+                title={`Snap camera to ${orient.toUpperCase()} view`}
+                className={`h-6 rounded px-1.5 text-[0.625rem] font-medium uppercase transition-colors ${
+                  activeOrientation === orient
+                    ? 'bg-raised text-accent'
+                    : 'text-ink-muted hover:text-ink disabled:opacity-40'
+                }`}
+              >
+                {orient}
+              </button>
+            ))}
+          </div>
+        )}
 
-      <button
-        type="button"
-        onClick={onResetView}
-        disabled={disabled}
-        title="Refit the camera to the part"
-        className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-raised px-2 text-[0.6875rem] text-ink-muted transition-colors hover:border-line-strong hover:text-ink disabled:opacity-40"
-      >
-        <ResetIcon className="size-3.5" />
-        Fit view
-      </button>
+        <div className="w-36">
+          <SegmentedControl
+            label="Camera projection"
+            size="sm"
+            value={options.projection}
+            onChange={(projection) => set('projection', projection)}
+            segments={[
+              {
+                value: 'perspective',
+                label: 'Persp',
+                title: 'Perspective projection, for reading depth',
+              },
+              {
+                value: 'orthographic',
+                label: 'Ortho',
+                title: 'Orthographic projection, for comparing dimensions',
+              },
+            ]}
+          />
+        </div>
+
+        <button
+          type="button"
+          onClick={onResetView}
+          disabled={disabled}
+          title="Refit the camera to the part"
+          className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-raised px-2 text-[0.6875rem] text-ink-muted transition-colors hover:border-line-strong hover:text-ink disabled:opacity-40"
+        >
+          <ResetIcon className="size-3.5" />
+          Fit
+        </button>
+      </div>
     </div>
   )
 }
+

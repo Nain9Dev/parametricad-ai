@@ -6,30 +6,37 @@ import { MathUtils, Vector3 } from 'three'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 export type Projection = 'perspective' | 'orthographic'
+export type ViewOrientation = 'iso' | 'top' | 'front' | 'right'
 
 interface CameraRigProps {
   bounds: Box3 | null
   projection: Projection
   /** Bumping this refits the view without changing the model. */
   fitToken: number
+  viewOrientation?: ViewOrientation
 }
 
 const FIELD_OF_VIEW = 40
 /** Leaves a margin around the part instead of pressing it against the edges. */
 const FRAMING_MARGIN = 1.45
-/** A three-quarter view: the standard CAD read of a solid. */
-const VIEW_DIRECTION = new Vector3(1, 0.75, 1).normalize()
+
+/** Standard CAD view orientation vectors */
+export const VIEW_DIRECTIONS: Record<ViewOrientation, Vector3> = {
+  iso: new Vector3(1, 0.75, 1).normalize(),
+  top: new Vector3(0, 1, 0.0001).normalize(),
+  front: new Vector3(0, 0, 1).normalize(),
+  right: new Vector3(1, 0, 0).normalize(),
+}
 
 /**
  * Camera, controls and framing.
  *
  * Both cameras are mounted and `makeDefault` decides which one drives the
  * scene, so switching projection keeps the orbit state rather than resetting
- * the view. Near and far planes are derived from the part: these models span
- * millimetres to metres, and a fixed frustum either clips a beam or destroys
- * depth precision on a washer.
+ * the view. Supports standard CAD orthogonal orientations (Iso, Top, Front, Right)
+ * and dynamic frustum adaptation for multi-scale mechanical parts.
  */
-export function CameraRig({ bounds, projection, fitToken }: CameraRigProps) {
+export function CameraRig({ bounds, projection, fitToken, viewOrientation = 'iso' }: CameraRigProps) {
   const controls = useThree((state) => state.controls) as OrbitControlsImpl | null
   const camera = useThree((state) => state.camera)
   const size = useThree((state) => state.size)
@@ -43,14 +50,14 @@ export function CameraRig({ bounds, projection, fitToken }: CameraRigProps) {
     const extent = bounds.getSize(new Vector3())
     const radius = Math.max(extent.length() / 2, 1e-3)
 
-    // Refit only when something about the framing actually changed; otherwise
-    // every render would yank the camera back from wherever the user orbited.
-    const signature = `${projection}:${fitToken}:${center.toArray().join()}:${radius}`
+    // Refit only when something about the framing or orientation actually changed
+    const signature = `${projection}:${fitToken}:${viewOrientation}:${center.toArray().join()}:${radius}`
     if (lastFitted.current === signature) return
     lastFitted.current = signature
 
+    const direction = VIEW_DIRECTIONS[viewOrientation] || VIEW_DIRECTIONS.iso
     const distance = (radius * FRAMING_MARGIN) / Math.sin(MathUtils.degToRad(FIELD_OF_VIEW / 2))
-    camera.position.copy(center).addScaledVector(VIEW_DIRECTION, distance)
+    camera.position.copy(center).addScaledVector(direction, distance)
     camera.near = Math.max(distance - radius * 4, radius / 1000)
     camera.far = distance + radius * 12
 
@@ -65,7 +72,7 @@ export function CameraRig({ bounds, projection, fitToken }: CameraRigProps) {
     controls.target.copy(center)
     controls.update()
     invalidate()
-  }, [bounds, projection, fitToken, camera, controls, size, invalidate])
+  }, [bounds, projection, fitToken, viewOrientation, camera, controls, size, invalidate])
 
   return (
     <>

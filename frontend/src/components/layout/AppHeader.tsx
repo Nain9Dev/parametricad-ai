@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react'
 
 import { Badge } from '@/components/ui/Badge'
-import { CubeIcon } from '@/components/ui/Icons'
+import { CubeIcon, DownloadIcon } from '@/components/ui/Icons'
 import { fetchHealth, isAbortError } from '@/lib/apiClient'
-import type { HealthResponse } from '@/types/api'
+import type { ComponentSpec, HealthResponse } from '@/types/api'
 
 const EXTRACTOR_LABELS: Record<string, string> = {
   rule_based: 'Deterministic parser',
   groq: 'Groq LLM',
 }
 
+interface AppHeaderProps {
+  onExportProject?: () => void
+  onImportProject?: (spec: ComponentSpec) => void
+  hasModel?: boolean
+}
+
 /**
- * The application bar, doubling as a connection indicator.
+ * The application bar, doubling as a connection indicator and project workspace hub.
  *
- * Which extraction backend is live changes what a prompt will do, so it is
- * stated up front rather than being something to infer from the results.
+ * Provides connection status, active extraction engine details, and local project
+ * export/import capabilities for instant CAD session mobility.
  */
-export function AppHeader() {
+export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHeaderProps) {
   const [health, setHealth] = useState<HealthResponse | null>(null)
   const [reachable, setReachable] = useState<boolean | null>(null)
 
@@ -49,8 +55,52 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-2">
+        {onExportProject && hasModel && (
+          <button
+            type="button"
+            onClick={onExportProject}
+            className="hidden sm:inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-raised px-2.5 text-[0.6875rem] font-medium text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+            title="Save active CAD project to JSON"
+          >
+            <DownloadIcon className="size-3" />
+            Save Project
+          </button>
+        )}
+        {onImportProject && (
+          <label
+            className="hidden sm:inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-raised px-2.5 text-[0.6875rem] font-medium text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+            title="Open CAD project from JSON"
+          >
+            <CubeIcon className="size-3" />
+            Open Project
+            <input
+              type="file"
+              accept=".json"
+              className="sr-only"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                const reader = new FileReader()
+                reader.onload = (event) => {
+                  try {
+                    const parsed = JSON.parse(event.target?.result as string)
+                    const importedSpec = parsed.model?.spec || parsed.spec || parsed
+                    if (importedSpec && importedSpec.kind) {
+                      onImportProject(importedSpec)
+                    }
+                  } catch {
+                    // Ignore non-json files
+                  }
+                }
+                reader.readAsText(file)
+                e.target.value = ''
+              }}
+            />
+          </label>
+        )}
+
         {health ? (
-          <span className="hidden text-[0.6875rem] text-ink-faint sm:inline">
+          <span className="hidden text-[0.6875rem] text-ink-faint lg:inline">
             {EXTRACTOR_LABELS[health.parameter_extractor] ?? health.parameter_extractor}
             {' · '}
             {health.geometry_kernel}

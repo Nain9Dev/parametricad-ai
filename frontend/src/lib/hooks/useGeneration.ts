@@ -24,6 +24,7 @@ export interface GenerationController {
   extractor: string | null
   error: ApiError | null
   generate: (request: GenerationRequest) => void
+  seedModel: (model: GeneratedModel) => void
   cancel: () => void
 }
 
@@ -53,6 +54,12 @@ export function useGeneration(): GenerationController {
   const cancel = useCallback(() => {
     inFlight.current?.abort()
     inFlight.current = null
+  }, [])
+
+  const seedModel = useCallback((seed: GeneratedModel) => {
+    setModel(seed)
+    setStatus('ready')
+    setError(null)
   }, [])
 
   useEffect(() => cancel, [cancel])
@@ -108,5 +115,5 @@ export function useGeneration(): GenerationController {
     [],
   )
 
-  return { status, model, extractor, error, generate, cancel }
+  return { status, model, extractor, error, generate, seedModel, cancel }
 }
