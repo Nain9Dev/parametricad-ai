@@ -123,9 +123,9 @@ _FIELD_PATTERNS: dict[ComponentKind, tuple[tuple[str, str], ...]] = {
     ComponentKind.PLATE: (
         ("corner_radius_mm", r"\b(radio\s+de\s+esquina|radio|corner\s+radius|fillet)\b"),
         ("center_hole_diameter_mm", r"\b(agujero\s+central|taladro\s+central|center\s+hole|centre\s+hole|hole)\b"),
-        ("thickness_mm", r"\b(espesor|grosor|thickness)\b"),
-        ("width_mm", r"\b(ancho|anchura|width)\b"),
-        ("depth_mm", r"\b(fondo|profundidad|depth|alto|altura|height)\b"),
+        ("thickness_mm", r"\b(espesor|grosor|thickness|thick)\b"),
+        ("width_mm", r"\b(ancho|anchura|width|wide)\b"),
+        ("depth_mm", r"\b(fondo|profundidad|depth|deep|alto|altura|height)\b"),
     ),
     ComponentKind.TEE: (
         ("wall_thickness_mm", r"\b(espesor|grosor|pared|thickness|wall)\b"),
@@ -168,8 +168,12 @@ about which clause a number belongs to.
 
 _DIMENSION_PAIR = re.compile(
     r"(?P<first>\d+(?:[.,]\d+)?)\s*(?:mm|cm|m)?\s*[x*]\s*(?P<second>\d+(?:[.,]\d+)?)"
+    r"(?:\s*(?:mm|cm|m)?\s*[x*]\s*(?P<third>\d+(?:[.,]\d+)?))?"
 )
-"""The unlabelled ``150 x 90`` shorthand engineers use for plate outlines."""
+"""The unlabelled ``150 x 90`` shorthand engineers use for plate outlines.
+
+A third value (``150 x 90 x 6``) is the thickness.
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -277,12 +281,14 @@ def _claim_nearest(
 def _claim_dimension_pair(
     text: str, quantities: list[_Quantity], claimed: set[int]
 ) -> dict[str, float] | None:
-    """Resolve the ``150 x 90`` outline shorthand into width and depth."""
+    """Resolve the ``150 x 90 [x 6]`` outline shorthand into width, depth and thickness."""
     match = _DIMENSION_PAIR.search(text)
     if match is None:
         return None
 
     spans = {"width_mm": match.span("first"), "depth_mm": match.span("second")}
+    if match.group("third") is not None:
+        spans["thickness_mm"] = match.span("third")
     resolved: dict[str, float] = {}
     for field, (start, _end) in spans.items():
         for index, quantity in enumerate(quantities):
