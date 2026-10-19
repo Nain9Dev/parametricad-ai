@@ -10,7 +10,7 @@ import {
   SectionIcon,
   WireframeIcon,
 } from '@/components/ui/Icons'
-import type { ViewOrientation } from '@/components/viewer/CameraRig'
+import type { ViewOrientation } from '@/components/viewer/viewDirections'
 import type { SectionAxis, ShadingMode, ViewerOptions } from '@/components/viewer/viewerOptions'
 
 interface ViewerToolbarProps {

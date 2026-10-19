@@ -3,10 +3,10 @@ import { useThree } from '@react-three/fiber'
 import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei'
 import type { Box3 } from 'three'
 import { MathUtils, Vector3 } from 'three'
+import { VIEW_DIRECTIONS, type ViewOrientation } from '@/components/viewer/viewDirections'
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib'
 
 export type Projection = 'perspective' | 'orthographic'
-export type ViewOrientation = 'iso' | 'top' | 'front' | 'right'
 
 interface CameraRigProps {
   bounds: Box3 | null
@@ -19,14 +19,6 @@ interface CameraRigProps {
 const FIELD_OF_VIEW = 40
 /** Leaves a margin around the part instead of pressing it against the edges. */
 const FRAMING_MARGIN = 1.45
-
-/** Standard CAD view orientation vectors */
-export const VIEW_DIRECTIONS: Record<ViewOrientation, Vector3> = {
-  iso: new Vector3(1, 0.75, 1).normalize(),
-  top: new Vector3(0, 1, 0.0001).normalize(),
-  front: new Vector3(0, 0, 1).normalize(),
-  right: new Vector3(1, 0, 0).normalize(),
-}
 
 /**
  * Camera, controls and framing.

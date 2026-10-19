@@ -17,7 +17,7 @@ import { Skeleton, SkeletonText } from '@/components/ui/Skeleton'
 import { DownloadIcon, SparkIcon } from '@/components/ui/Icons'
 import { ModelViewer } from '@/components/viewer/ModelViewer'
 import { ViewerToolbar } from '@/components/viewer/ViewerToolbar'
-import type { ViewOrientation } from '@/components/viewer/CameraRig'
+import type { ViewOrientation } from '@/components/viewer/viewDirections'
 import {
   DEFAULT_VIEWER_OPTIONS,
   type ViewerOptions,

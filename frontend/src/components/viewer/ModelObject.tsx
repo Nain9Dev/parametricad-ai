@@ -141,7 +141,6 @@ export function ModelObject({
           const edgesGeom = new EdgesGeometry(node.geometry, 24)
           const line = new LineSegments(edgesGeom, edgeMaterial)
           line.renderOrder = 1
-          line.visible = edges
           node.add(line)
           lines.push(line)
           createdEdges.push({ parent: node, line, geom: edgesGeom })
@@ -167,7 +166,7 @@ export function ModelObject({
     for (const line of linesRef.current) {
       line.visible = edges
     }
-  }, [edges])
+  }, [edges, object, edgeMaterial])
 
   useEffect(() => {
     const replaced: unknown[] = []
