@@ -221,6 +221,19 @@ class TestFailures:
         assert error["hint"]
         assert "bore would collapse" in str(error["details"])
 
+    def test_an_unknown_route_uses_the_error_envelope(self, api_client: TestClient) -> None:
+        response = api_client.get("/api/v1/nope")
+        assert response.status_code == 404
+        assert response.json()["error"]["code"] == "not_found"
+
+    def test_a_wrong_method_uses_the_error_envelope_and_keeps_allow(
+        self, api_client: TestClient
+    ) -> None:
+        response = api_client.get("/api/v1/models")
+        assert response.status_code == 405
+        assert response.json()["error"]["code"] == "method_not_allowed"
+        assert "POST" in response.headers["allow"]
+
     def test_an_unknown_field_is_rejected(self, api_client: TestClient) -> None:
         response = api_client.post(
             "/api/v1/models", json={"spec": {"kind": "pipe", "diameter": 25}}
