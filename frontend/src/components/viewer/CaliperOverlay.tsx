@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber'
 import { Html } from '@react-three/drei'
 import { BufferGeometry, Float32BufferAttribute, Mesh, Vector2, Vector3 } from 'three'
 import type { Group } from 'three'
+import { measure, nearestVertex } from '@/components/viewer/metrology'
 
 interface CaliperOverlayProps {
   modelObject: Group | null
@@ -58,23 +59,7 @@ export function CaliperOverlay({ modelObject, enabled }: CaliperOverlayProps) {
             const vB = new Vector3().fromBufferAttribute(pos, hit.face.b).applyMatrix4(hit.object.matrixWorld)
             const vC = new Vector3().fromBufferAttribute(pos, hit.face.c).applyMatrix4(hit.object.matrixWorld)
 
-            const p = hit.point
-            let closest = vA
-            let minDist = p.distanceTo(vA)
-
-            const distB = p.distanceTo(vB)
-            if (distB < minDist) {
-              closest = vB
-              minDist = distB
-            }
-
-            const distC = p.distanceTo(vC)
-            if (distC < minDist) {
-              closest = vC
-              minDist = distC
-            }
-
-            setHoverVertex(closest)
+            setHoverVertex(nearestVertex(hit.point, [vA, vB, vC]))
             return
           }
         }
@@ -116,24 +101,7 @@ export function CaliperOverlay({ modelObject, enabled }: CaliperOverlayProps) {
     return geom
   }, [pointA, pointB])
 
-  const distance = useMemo(() => {
-    if (!pointA || !pointB) return 0
-    return pointA.distanceTo(pointB)
-  }, [pointA, pointB])
-
-  const midpoint = useMemo(() => {
-    if (!pointA || !pointB) return new Vector3()
-    return new Vector3().addVectors(pointA, pointB).multiplyScalar(0.5)
-  }, [pointA, pointB])
-
-  const delta = useMemo(() => {
-    if (!pointA || !pointB) return { dx: 0, dy: 0, dz: 0 }
-    return {
-      dx: Math.abs(pointB.x - pointA.x),
-      dy: Math.abs(pointB.y - pointA.y),
-      dz: Math.abs(pointB.z - pointA.z),
-    }
-  }, [pointA, pointB])
+  const measurement = useMemo(() => (pointA && pointB ? measure(pointA, pointB) : null), [pointA, pointB])
 
   if (!enabled) return null
 
@@ -171,12 +139,12 @@ export function CaliperOverlay({ modelObject, enabled }: CaliperOverlayProps) {
       )}
 
       {/* Caliper Measurement Tag */}
-      {pointA && pointB && (
-        <Html position={midpoint} center zIndexRange={[30, 0]} style={{ pointerEvents: 'auto' }}>
+      {measurement && (
+        <Html position={measurement.midpoint} center zIndexRange={[30, 0]} style={{ pointerEvents: 'auto' }}>
           <div className="flex flex-col items-center gap-1 rounded-md border border-amber-500/60 bg-void/90 p-2 shadow-lg backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs font-semibold text-amber-400">
-                {distance.toFixed(2)} mm
+                {measurement.distance.toFixed(2)} mm
               </span>
               <button
                 type="button"
@@ -192,9 +160,9 @@ export function CaliperOverlay({ modelObject, enabled }: CaliperOverlayProps) {
               </button>
             </div>
             <div className="flex gap-2 font-mono text-[0.5625rem] text-ink-muted">
-              <span>ΔX: {delta.dx.toFixed(1)}</span>
-              <span>ΔY: {delta.dy.toFixed(1)}</span>
-              <span>ΔZ: {delta.dz.toFixed(1)}</span>
+              <span>ΔX: {measurement.delta.dx.toFixed(1)}</span>
+              <span>ΔY: {measurement.delta.dy.toFixed(1)}</span>
+              <span>ΔZ: {measurement.delta.dz.toFixed(1)}</span>
             </div>
           </div>
         </Html>

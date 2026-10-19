@@ -13,6 +13,7 @@ from typing import Final
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.domain.errors import ErrorCode, ParametriCadError
 from app.infrastructure.api.schemas import ErrorBody, ErrorResponse
@@ -46,6 +47,11 @@ _STATUS_BY_CODE: Final[dict[ErrorCode, int]] = {
 
 _RETRY_AFTER_SECONDS: Final[str] = "5"
 
+_HTTP_ERROR_CODES: Final[dict[int, str]] = {
+    404: "not_found",
+    405: "method_not_allowed",
+}
+
 
 def _render(status_code: int, body: ErrorBody, headers: dict[str, str] | None = None) -> JSONResponse:
     return JSONResponse(
@@ -70,6 +76,18 @@ def register_error_handlers(app: FastAPI) -> None:
             else None
         )
         return _render(status_code, ErrorBody(**exc.to_payload()), headers)
+
+    @app.exception_handler(StarletteHTTPException)
+    async def _http_error(_request: Request, exc: StarletteHTTPException) -> JSONResponse:
+        """Routing failures (unknown path, wrong method) share the envelope too."""
+        return _render(
+            exc.status_code,
+            ErrorBody(
+                code=_HTTP_ERROR_CODES.get(exc.status_code, "http_error"),
+                message=str(exc.detail),
+            ),
+            dict(exc.headers) if exc.headers else None,
+        )
 
     @app.exception_handler(RequestValidationError)
     async def _request_validation(

@@ -37,13 +37,15 @@ This document tracks all tasks, their ownership tags, and verification statuses.
 | TSK-24 | `[A]` | Implement modular check runner architecture (`CheckRunner`, `BaseCheck`, `CheckRegistry`) in `domain/geometry/runner/` | Done | Verified: unit tests in `test_validation_runner.py` passing |
 | TSK-25 | `[A]` | Formalize C1–C10 check suite with dual-contract reporting emitting `validation_report.json` | Done | Verified: 10/10 standardized checks passing, fail-closed policy verified |
 | TSK-26 | `[A]` | Implement offline Golden Model regression suite and GitHub Actions workflow (`.github/workflows/regression.yml`) | Done | Verified: 9 reference parts evaluated against C1..C10 spectrum, 0 EUR execution on GitHub Actions |
+| TSK-27 | `[A]` | Clear the viewer lint warnings, test caliper and section plane geometry, and load Three.js on demand (React split into its own chunk) | Done | Verified: vitest 29/29, 0 oxlint warnings, `index.html` preloads only the runtime and React chunks (about 245 kB) while the 959 kB `three` chunk loads with the viewer |
+| TSK-28 | `[A]` | Probe the HTTP API and rule-based extractor for edge cases: plate thickness from `100x50x5` and `5 mm thick`, uniform error envelope for 404/405 | Done | Verified: failing tests first (4 RED), 356/356 backend tests passing, 0 mypy/ruff errors |
 
 ## Session Handoff State
 
-- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, TSK-16, TSK-17, TSK-18, TSK-19, TSK-20, TSK-21, TSK-22, TSK-23, TSK-24, TSK-25, and TSK-26.
-- **Verified**: Backend suite passing (347/347, including the machine-checked
+- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, TSK-16, TSK-17, TSK-18, TSK-19, TSK-20, TSK-21, TSK-22, TSK-23, TSK-24, TSK-25, TSK-26, TSK-27, and TSK-28.
+- **Verified**: Backend suite passing (356/356, including the machine-checked
   traceability gate REQ-UBI-08), zero mypy errors, zero ruff errors, frontend
-  vitest 14/14, zero oxlint errors, zero build warnings.
+  vitest 29/29, zero oxlint errors, zero build warnings.
 - **Next**: Deployment confirmation (TSK-13).
 
 - **Known limitation**: the CSP names the API origin literally. Moving the API off

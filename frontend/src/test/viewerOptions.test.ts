@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_VIEWER_OPTIONS } from '@/components/viewer/viewerOptions'
-import { VIEW_DIRECTIONS } from '@/components/viewer/CameraRig'
+import { VIEW_DIRECTIONS } from '@/components/viewer/viewDirections'
 
 // @req REQ-OPT-02
 
