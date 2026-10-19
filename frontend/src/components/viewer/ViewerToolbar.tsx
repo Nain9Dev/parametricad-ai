@@ -120,16 +120,29 @@ export function ViewerToolbar({
               ]}
             />
           </div>
-          <input
-            type="range"
-            min="-0.95"
-            max="0.95"
-            step="0.05"
-            value={options.sectionOffset}
-            onChange={(e) => set('sectionOffset', parseFloat(e.target.value))}
-            className="h-1.5 w-16 cursor-pointer appearance-none rounded bg-line accent-accent"
-            title="Adjust cutting plane position"
-          />
+          <div className="flex items-center gap-1.5">
+            <input
+              type="range"
+              min="-0.95"
+              max="0.95"
+              step="0.05"
+              value={options.sectionOffset}
+              onChange={(e) => set('sectionOffset', parseFloat(e.target.value))}
+              aria-label="Section cutting plane offset"
+              aria-valuemin={-0.95}
+              aria-valuemax={0.95}
+              aria-valuenow={options.sectionOffset}
+              className="h-1.5 w-16 cursor-pointer appearance-none rounded bg-line accent-accent"
+              title="Adjust cutting plane position (double click to reset to 0.00)"
+              onDoubleClick={() => set('sectionOffset', 0.0)}
+            />
+            <span
+              className="w-10 text-right font-mono text-[0.625rem] tabular-nums text-ink-muted"
+              title="Current cutting offset"
+            >
+              {(options.sectionOffset >= 0 ? '+' : '') + options.sectionOffset.toFixed(2)}
+            </span>
+          </div>
         </div>
       )}
 
@@ -142,13 +155,19 @@ export function ViewerToolbar({
 
       <div className="flex items-center gap-1.5">
         {onSelectOrientation && (
-          <div className="flex items-center gap-0.5 rounded-md border border-line bg-surface p-0.5">
+          <div
+            role="group"
+            aria-label="Camera orientation presets"
+            className="flex items-center gap-0.5 rounded-md border border-line bg-surface p-0.5"
+          >
             {(['iso', 'top', 'front', 'right'] as const).map((orient) => (
               <button
                 key={orient}
                 type="button"
                 onClick={() => onSelectOrientation(orient)}
                 disabled={disabled}
+                aria-pressed={activeOrientation === orient}
+                aria-label={`Snap camera to ${orient.toUpperCase()} view`}
                 title={`Snap camera to ${orient.toUpperCase()} view`}
                 className={`h-6 rounded px-1.5 text-[0.625rem] font-medium uppercase transition-colors ${
                   activeOrientation === orient
@@ -187,6 +206,7 @@ export function ViewerToolbar({
           type="button"
           onClick={onResetView}
           disabled={disabled}
+          aria-label="Fit camera to geometry bounds"
           title="Refit the camera to the part"
           className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-raised px-2 text-[0.6875rem] text-ink-muted transition-colors hover:border-line-strong hover:text-ink disabled:opacity-40"
         >
