@@ -3,7 +3,8 @@ import { fileURLToPath, URL } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
-const THREE_PACKAGES = ['/three/', '@react-three/']
+const THREE_PACKAGES = ['/three/', '@react-three/', '/three-stdlib/']
+const REACT_PACKAGES = ['/react/', '/react-dom/', '/scheduler/']
 
 /**
  * Local ports reserved for this project: 5300 (dev) and 5301 (preview).
@@ -40,8 +41,11 @@ export default defineConfig({
       output: {
         // Three.js and its React bindings dominate the bundle and change far
         // less often than the app code, so they get their own long-lived chunk
-        // that survives an application redeploy in the browser cache.
+        // that survives an application redeploy in the browser cache. React is
+        // split out first: left to the heuristics it lands in the three chunk,
+        // which then loads with the first paint instead of with the viewer.
         manualChunks(id: string) {
+          if (REACT_PACKAGES.some((pkg) => id.includes(pkg))) return 'react'
           if (THREE_PACKAGES.some((pkg) => id.includes(pkg))) return 'three'
           return undefined
         },

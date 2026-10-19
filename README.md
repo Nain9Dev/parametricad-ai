@@ -9,7 +9,7 @@
 [![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-1f2937?style=flat-square&logo=github&logoColor=white)](https://codespaces.new/Nain9Dev/parametricad-ai)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vitest Passing](https://img.shields.io/badge/Vitest-14%2F14%20Passing-80FF00?style=flat-square&logo=vitest&logoColor=white)](src/test)
+[![Vitest Passing](https://img.shields.io/badge/Vitest-29%2F29%20Passing-80FF00?style=flat-square&logo=vitest&logoColor=white)](src/test)
 [![Cost](https://img.shields.io/badge/Cost-0.00_%E2%82%AC-22c55e?style=flat-square)](https://github.com/Nain9Dev/engineering-handbook/blob/main/governance/zero-cost-philosophy.md)
 
 </div>

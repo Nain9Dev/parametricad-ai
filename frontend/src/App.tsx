@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { AppHeader } from '@/components/layout/AppHeader'
 import { ComponentPicker } from '@/components/generator/ComponentPicker'
@@ -15,7 +15,6 @@ import { Panel } from '@/components/ui/Panel'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { Skeleton, SkeletonText } from '@/components/ui/Skeleton'
 import { DownloadIcon, SparkIcon } from '@/components/ui/Icons'
-import { ModelViewer } from '@/components/viewer/ModelViewer'
 import { ViewerToolbar } from '@/components/viewer/ViewerToolbar'
 import type { ViewOrientation } from '@/components/viewer/viewDirections'
 import {
@@ -49,6 +48,11 @@ type InputMode = 'parameters' | 'prompt'
  * formats are produced on request, so dragging a slider does not pay for a
  * STEP export nobody asked for.
  */
+/** Three.js is the bulk of the bundle; the form and report render before it arrives. */
+const ModelViewer = lazy(() =>
+  import('@/components/viewer/ModelViewer').then((module) => ({ default: module.ModelViewer })),
+)
+
 const PREVIEW_FORMATS: ExportFormat[] = ['glb']
 
 /** Long enough to absorb a burst of typing, short enough to feel live. */
@@ -446,13 +450,15 @@ export default function App() {
               Without the first, the canvas has nothing to measure and collapses
               to its intrinsic 300x150. */}
           <div className="h-[55vh] min-h-[22rem] lg:h-auto lg:min-h-0 lg:flex-1">
-            <ModelViewer
-              url={previewUrl}
-              options={viewerOptions}
-              fitToken={fitToken}
-              viewOrientation={viewOrientation}
-              regenerating={busy}
-            />
+            <Suspense fallback={<Skeleton className="h-full w-full" />}>
+              <ModelViewer
+                url={previewUrl}
+                options={viewerOptions}
+                fitToken={fitToken}
+                viewOrientation={viewOrientation}
+                regenerating={busy}
+              />
+            </Suspense>
           </div>
         </main>
 
