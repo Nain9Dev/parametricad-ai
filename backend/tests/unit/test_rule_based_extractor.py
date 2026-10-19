@@ -217,6 +217,24 @@ class TestComponentFields:
         assert isinstance(spec, PlateSpec)
         assert (spec.width_mm, spec.depth_mm, spec.thickness_mm) == (150.0, 90.0, 6.0)
 
+    @pytest.mark.parametrize(
+        "prompt",
+        ["steel plate 100x50x5 mm", "plate 100 x 50 x 5", "plate 100mm x 50mm x 5mm"],
+    )
+    def test_the_three_value_outline_shorthand_includes_the_thickness(
+        self, extractor: RuleBasedParameterExtractor, prompt: str
+    ) -> None:
+        spec = extractor.extract(prompt)
+        assert isinstance(spec, PlateSpec)
+        assert (spec.width_mm, spec.depth_mm, spec.thickness_mm) == (100.0, 50.0, 5.0)
+
+    def test_dimension_adjectives_trailing_the_number_are_understood(
+        self, extractor: RuleBasedParameterExtractor
+    ) -> None:
+        spec = extractor.extract("plate 100 mm wide, 50 mm deep, 5 mm thick")
+        assert isinstance(spec, PlateSpec)
+        assert (spec.width_mm, spec.depth_mm, spec.thickness_mm) == (100.0, 50.0, 5.0)
+
 
 class TestMaterial:
     pytestmark = pytest.mark.req("REQ-EVT-02")
