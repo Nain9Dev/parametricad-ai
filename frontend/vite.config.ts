@@ -2,6 +2,9 @@ import { fileURLToPath, URL } from 'node:url'
 
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+import { pwaOptions } from './pwa.config.ts'
 
 const THREE_PACKAGES = ['/three/', '@react-three/', '/three-stdlib/']
 const REACT_PACKAGES = ['/react/', '/react-dom/', '/scheduler/']
@@ -20,7 +23,7 @@ const DEV_PORT = 5300
 const PREVIEW_PORT = 5301
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), VitePWA(pwaOptions)],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

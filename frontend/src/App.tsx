@@ -1,6 +1,14 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { AppHeader } from '@/components/layout/AppHeader'
+import { PwaStatus } from '@/components/layout/PwaStatus'
+import { WorkspaceTabs } from '@/components/layout/WorkspaceTabs'
+import {
+  workspacePanelId,
+  workspaceTabId,
+  type ReportIndicator,
+  type WorkspaceTab,
+} from '@/components/layout/workspaceSections'
 import { ComponentPicker } from '@/components/generator/ComponentPicker'
 import { ParameterForm } from '@/components/generator/ParameterForm'
 import { PromptComposer } from '@/components/generator/PromptComposer'
@@ -15,7 +23,9 @@ import { Panel } from '@/components/ui/Panel'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { Skeleton, SkeletonText } from '@/components/ui/Skeleton'
 import { DownloadIcon, SparkIcon } from '@/components/ui/Icons'
-import { ViewerToolbar } from '@/components/viewer/ViewerToolbar'
+import { ViewerToolbar, type ViewerToolbarProps } from '@/components/viewer/ViewerToolbar'
+import { ViewerNotice } from '@/components/viewer/ViewerNotice'
+import { ViewerToolbarCompact } from '@/components/viewer/ViewerToolbarCompact'
 import type { ViewOrientation } from '@/components/viewer/viewDirections'
 import {
   DEFAULT_VIEWER_OPTIONS,
@@ -32,27 +42,48 @@ import {
 import { useCatalog } from '@/lib/hooks/useCatalog'
 import { useDebouncedValue } from '@/lib/hooks/useDebouncedValue'
 import { useGeneration } from '@/lib/hooks/useGeneration'
+import { useMediaQuery } from '@/lib/hooks/useMediaQuery'
 import type {
   Catalog,
   ComponentKind,
   ComponentSpec,
   ExportFormat,
   GeneratedModel,
+  MeshQualityStatus,
   ParameterValue,
 } from '@/types/api'
 
 type InputMode = 'parameters' | 'prompt'
 
 /**
- * A preview only needs the mesh the viewer will display; the exact B-Rep
- * formats are produced on request, so dragging a slider does not pay for a
- * STEP export nobody asked for.
+ * Which part of the compact workspace is open. Parameters and Describe are one
+ * section because `InputMode` already decides between them.
  */
+type WorkspaceSection = 'presets' | 'inputs' | 'report'
+
+/**
+ * The point where the workspace becomes three pinned columns. It mirrors
+ * Tailwind's `lg` breakpoint, which the `.workspace` rules in index.css use, so
+ * script and stylesheet always agree on which layout is showing.
+ */
+const WIDE_QUERY = '(min-width: 64rem)'
+
+const QUALITY_INDICATOR: Record<MeshQualityStatus, ReportIndicator> = {
+  valid: { tone: 'valid', label: 'mesh valid' },
+  degraded: { tone: 'warn', label: 'mesh degraded' },
+  invalid: { tone: 'invalid', label: 'mesh invalid' },
+}
+
 /** Three.js is the bulk of the bundle; the form and report render before it arrives. */
 const ModelViewer = lazy(() =>
   import('@/components/viewer/ModelViewer').then((module) => ({ default: module.ModelViewer })),
 )
 
+/**
+ * A preview only needs the mesh the viewer will display; the exact B-Rep
+ * formats are produced on request, so dragging a slider does not pay for a
+ * STEP export nobody asked for.
+ */
 const PREVIEW_FORMATS: ExportFormat[] = ['glb']
 
 /** Long enough to absorb a burst of typing, short enough to feel live. */
@@ -79,6 +110,8 @@ export default function App() {
   const isCatalogReady = activeCatalog !== null
 
   const [mode, setMode] = useState<InputMode>('parameters')
+  const [section, setSection] = useState<WorkspaceSection>('presets')
+  const isCompact = !useMediaQuery(WIDE_QUERY)
   const [kind, setKind] = useState<ComponentKind>('flange')
   const [activePresetId, setActivePresetId] = useState<string | null>('flange')
   const [valuesByKind, setValuesByKind] = useState<
@@ -207,6 +240,9 @@ export default function App() {
       setActivePresetId(preset.id)
       if (preset.id === 'prompt') {
         setMode('prompt')
+        // The description field is where this preset leads; on a compact
+        // screen that means opening its tab.
+        setSection('inputs')
         setKind('pipe')
         if (preset.promptText) {
           submitPrompt(preset.promptText)
@@ -268,6 +304,7 @@ export default function App() {
       const target = findComponent(components, importedSpec.kind)
       if (!target) return
       setMode('parameters')
+      setSection('inputs')
       setKind(importedSpec.kind)
       setActivePresetId(null)
       setValuesByKind((prev) => ({
@@ -298,6 +335,15 @@ export default function App() {
     [generate, generation.model],
   )
 
+  const selectTab = useCallback((tab: WorkspaceTab) => {
+    if (tab === 'presets' || tab === 'report') {
+      setSection(tab)
+      return
+    }
+    setSection('inputs')
+    setMode(tab === 'describe' ? 'prompt' : 'parameters')
+  }, [])
+
   const generateNow = useCallback(() => {
     if (!spec) return
     generate({ source: 'spec', spec, formats: PREVIEW_FORMATS })
@@ -320,25 +366,59 @@ export default function App() {
     activeCatalog !== null &&
     activeCatalog.formats.every((descriptor) => model.artifacts[descriptor.format])
 
-  return (
-    // Two layouts, not one that degrades: a pinned three-column workspace
-    // where there is room for it, and a scrolling stack where there is not.
-    <div className="flex min-h-screen flex-col bg-void lg:h-screen lg:overflow-hidden">
-      <AppHeader
-        onExportProject={handleExportProject}
-        onImportProject={handleImportProject}
-        hasModel={!!generation.model}
-      />
+  const inputsTab: WorkspaceTab = mode === 'prompt' ? 'describe' : 'parameters'
+  const activeTab: WorkspaceTab = section === 'inputs' ? inputsTab : section
+  const reportIndicator: ReportIndicator | null = generation.error
+    ? { tone: 'invalid', label: 'error' }
+    : model
+      ? QUALITY_INDICATOR[model.quality.status]
+      : null
 
-      <div className="grid flex-1 grid-cols-1 lg:min-h-0 lg:grid-cols-[17rem_minmax(0,1fr)_17rem] xl:grid-cols-[20rem_minmax(0,1fr)_21rem]">
-        {/* ---------------------------------------------------------- Inputs */}
-        <aside className="space-y-3 border-line p-3 lg:min-h-0 lg:overflow-y-auto lg:border-r">
-          <ShowcaseBar
-            activePresetId={activePresetId}
-            onSelectPreset={handleSelectPreset}
-            busy={busy}
-          />
+  // Below 1024 px only the open section shows. The others stay mounted and are
+  // merely hidden, so a half-edited form keeps what was typed into it.
+  const hiddenUnless = (open: boolean) => (isCompact && !open ? 'hidden' : '')
 
+  // Tab panel semantics exist only while the tabs do.
+  const panelProps = (tab: WorkspaceTab) =>
+    isCompact && tab === activeTab
+      ? ({
+          role: 'tabpanel',
+          id: workspacePanelId(tab),
+          'aria-labelledby': workspaceTabId(tab),
+        } as const)
+      : {}
+
+  const toolbarProps: ViewerToolbarProps = {
+    options: viewerOptions,
+    onChange: setViewerOptions,
+    onResetView: () => setFitToken((token) => token + 1),
+    activeOrientation: viewOrientation,
+    onSelectOrientation: (orientation) => {
+      setViewOrientation(orientation)
+      setFitToken((token) => token + 1)
+    },
+    disabled: !previewUrl,
+  }
+
+  const inputsPane = (
+    <aside
+      key="inputs"
+      className="workspace-inputs grid grid-cols-[minmax(0,1fr)] content-start gap-3 border-line p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:border-r"
+    >
+      <div className={hiddenUnless(section === 'presets')} {...panelProps('presets')}>
+        <ShowcaseBar
+          activePresetId={activePresetId}
+          onSelectPreset={handleSelectPreset}
+          busy={busy}
+        />
+      </div>
+
+      <div
+        className={`grid grid-cols-[minmax(0,1fr)] gap-3 ${hiddenUnless(section === 'inputs')}`}
+        {...panelProps(inputsTab)}
+      >
+        {/* The tabs already choose between parameters and description when compact. */}
+        {isCompact ? null : (
           <SegmentedControl
             label="Input mode"
             value={mode}
@@ -348,171 +428,219 @@ export default function App() {
               { value: 'prompt', label: 'Description' },
             ]}
           />
+        )}
 
-          {!isCatalogReady && catalog.status === 'loading' ? (
-            <InputSkeleton waking={catalog.slow} />
-          ) : null}
+        {!isCatalogReady && catalog.status === 'loading' ? (
+          <InputSkeleton waking={catalog.slow} />
+        ) : null}
 
-          {!isCatalogReady && catalog.status === 'error' ? (
-            <GenerationError error={catalog.error} onRetry={catalog.retry} />
-          ) : null}
+        {!isCatalogReady && catalog.status === 'error' ? (
+          <GenerationError error={catalog.error} onRetry={catalog.retry} />
+        ) : null}
 
-          {isCatalogReady && component ? (
-            mode === 'parameters' ? (
-              <>
-                <Panel title="Component">
-                  <ComponentPicker
-                    components={components}
-                    value={kind}
-                    onChange={(newKind) => {
-                      setKind(newKind)
-                      setActivePresetId(newKind)
-                    }}
-                    disabled={busy && !livePreview}
-                  />
-                  <p className="mt-2 text-[0.6875rem] leading-snug text-ink-faint">
-                    {component.description}
-                  </p>
-                </Panel>
-
-                <Panel
-                  title="Parameters"
-                  description={`${component.parameters.length} fields from the live schema`}
-                >
-                  {values ? (
-                    <ParameterForm
-                      component={component}
-                      values={values}
-                      onChange={updateParameter}
-                    />
-                  ) : null}
-                </Panel>
-
-                <Panel bodyClassName="p-3 space-y-2">
-                  <label className="flex cursor-pointer items-center gap-2 text-xs text-ink-muted">
-                    <input
-                      type="checkbox"
-                      checked={livePreview}
-                      onChange={(event) => setLivePreview(event.target.checked)}
-                      className="size-3.5 accent-[#3d8bfd]"
-                    />
-                    Regenerate as I edit
-                  </label>
-                  {!livePreview ? (
-                    <Button
-                      variant="primary"
-                      className="w-full"
-                      busy={busy}
-                      onClick={generateNow}
-                      icon={<SparkIcon />}
-                    >
-                      Generate
-                    </Button>
-                  ) : null}
-                </Panel>
-              </>
-            ) : (
-              <Panel title="Natural language">
-                <PromptComposer
-                  onSubmit={submitPrompt}
-                  onRefine={refinePrompt}
-                  currentSpec={generation.model?.spec ?? null}
-                  busy={busy}
-                  extractor={generation.extractor}
-                />
-              </Panel>
-            )
-          ) : null}
-        </aside>
-
-        {/* ---------------------------------------------------------- Viewer */}
-        <main className="flex min-h-0 min-w-0 flex-col">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-3 py-2">
-            <ViewerToolbar
-              options={viewerOptions}
-              onChange={setViewerOptions}
-              onResetView={() => setFitToken((token) => token + 1)}
-              activeOrientation={viewOrientation}
-              onSelectOrientation={(orientation) => {
-                setViewOrientation(orientation)
-                setFitToken((token) => token + 1)
-              }}
-              disabled={!previewUrl}
-            />
-            {model ? (
-              <code className="hidden shrink-0 text-[0.625rem] text-ink-faint xl:block">
-                {model.model_id.slice(0, 12)}
-              </code>
-            ) : null}
-          </div>
-
-          {/* A definite height while stacked; the remaining space once pinned.
-              Without the first, the canvas has nothing to measure and collapses
-              to its intrinsic 300x150. */}
-          <div className="h-[55vh] min-h-[22rem] lg:h-auto lg:min-h-0 lg:flex-1">
-            <Suspense fallback={<Skeleton className="h-full w-full" />}>
-              <ModelViewer
-                url={previewUrl}
-                options={viewerOptions}
-                fitToken={fitToken}
-                viewOrientation={viewOrientation}
-                regenerating={busy}
-              />
-            </Suspense>
-          </div>
-        </main>
-
-        {/* ---------------------------------------------------------- Report */}
-        <aside className="space-y-3 border-line p-3 lg:min-h-0 lg:overflow-y-auto lg:border-l">
-          {generation.error ? (
-            <GenerationError
-              error={generation.error}
-              onRetry={mode === 'parameters' ? generateNow : undefined}
-            />
-          ) : null}
-
-          {!model && busy ? <ReportSkeleton /> : null}
-
-          {!model && !busy && !generation.error ? (
-            <Panel title="Report">
-              <p className="text-xs leading-relaxed text-ink-faint">
-                Generate a part to see its mass properties, the mesh validation
-                verdict and the downloadable artifacts.
-              </p>
-            </Panel>
-          ) : null}
-
-          {model ? (
+        {isCatalogReady && component ? (
+          mode === 'parameters' ? (
             <>
-              <Panel title="Mesh validation" description="Checked on the generated mesh">
-                <QualityReport report={model.quality} />
-              </Panel>
-
-              <Panel title="Properties" description="Measured on the exact solid">
-                <PropertiesPanel model={model} />
+              <Panel title="Component">
+                <ComponentPicker
+                  components={components}
+                  value={kind}
+                  onChange={(newKind) => {
+                    setKind(newKind)
+                    setActivePresetId(newKind)
+                  }}
+                  disabled={busy && !livePreview}
+                />
+                <p className="mt-2 text-[0.6875rem] leading-snug text-ink-faint">
+                  {component.description}
+                </p>
               </Panel>
 
               <Panel
-                title="Artifacts"
-                actions={
-                  !hasEveryFormat && activeCatalog ? (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      busy={busy}
-                      onClick={exportEverything}
-                      icon={<DownloadIcon className="size-3.5" />}
-                    >
-                      All formats
-                    </Button>
-                  ) : null
-                }
+                title="Parameters"
+                description={`${component.parameters.length} fields from the live schema`}
               >
-                <ArtifactList model={model} formats={activeCatalog?.formats ?? []} />
+                {values ? (
+                  <ParameterForm
+                    component={component}
+                    values={values}
+                    onChange={updateParameter}
+                  />
+                ) : null}
+              </Panel>
+
+              <Panel bodyClassName="p-3 space-y-2">
+                <label className="flex cursor-pointer items-center gap-2 text-xs text-ink-muted pointer-coarse:min-h-11 pointer-coarse:text-sm">
+                  <input
+                    type="checkbox"
+                    checked={livePreview}
+                    onChange={(event) => setLivePreview(event.target.checked)}
+                    className="size-3.5 accent-[#3d8bfd] pointer-coarse:size-5"
+                  />
+                  Regenerate as I edit
+                </label>
+                {!livePreview ? (
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                    busy={busy}
+                    onClick={generateNow}
+                    icon={<SparkIcon />}
+                  >
+                    Generate
+                  </Button>
+                ) : null}
               </Panel>
             </>
-          ) : null}
-        </aside>
+          ) : (
+            <Panel title="Natural language">
+              <PromptComposer
+                onSubmit={submitPrompt}
+                onRefine={refinePrompt}
+                currentSpec={generation.model?.spec ?? null}
+                busy={busy}
+                extractor={generation.extractor}
+              />
+            </Panel>
+          )
+        ) : null}
+      </div>
+    </aside>
+  )
+
+  const viewerPane = (
+    <main key="viewer" className="workspace-viewer flex min-h-0 min-w-0 flex-col">
+      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-surface px-2 py-2 sm:px-3">
+        {isCompact ? (
+          <ViewerToolbarCompact {...toolbarProps} />
+        ) : (
+          <ViewerToolbar {...toolbarProps} />
+        )}
+        {model ? (
+          <code className="hidden shrink-0 text-[0.625rem] text-ink-faint xl:block">
+            {model.model_id.slice(0, 12)}
+          </code>
+        ) : null}
+      </div>
+
+      {/* The grid row gives the viewer a definite height, so the canvas always
+          has something to measure instead of collapsing to its intrinsic size. */}
+      <div className="relative min-h-0 flex-1">
+        <Suspense fallback={<Skeleton className="h-full w-full" />}>
+          <ModelViewer
+            url={previewUrl}
+            options={viewerOptions}
+            fitToken={fitToken}
+            viewOrientation={viewOrientation}
+            regenerating={busy}
+          />
+        </Suspense>
+        {/* The full error sits in the Report, out of sight on a compact screen. */}
+        {isCompact && generation.error ? (
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-2">
+            <ViewerNotice
+              error={generation.error}
+              onRetry={mode === 'parameters' ? generateNow : undefined}
+              onDetails={() => selectTab('report')}
+            />
+          </div>
+        ) : null}
+      </div>
+    </main>
+  )
+
+  const reportPane = (
+    <aside
+      key="report"
+      className={`workspace-report border-line p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:border-l ${hiddenUnless(section === 'report')}`}
+    >
+      <div
+        className="grid grid-cols-[minmax(0,1fr)] content-start gap-3"
+        {...panelProps('report')}
+      >
+        {generation.error ? (
+          <GenerationError
+            error={generation.error}
+            onRetry={mode === 'parameters' ? generateNow : undefined}
+          />
+        ) : null}
+
+        {!model && busy ? <ReportSkeleton /> : null}
+
+        {!model && !busy && !generation.error ? (
+          <Panel title="Report">
+            <p className="text-xs leading-relaxed text-ink-faint">
+              Generate a part to see its mass properties, the mesh validation
+              verdict and the downloadable artifacts.
+            </p>
+          </Panel>
+        ) : null}
+
+        {model ? (
+          <>
+            <Panel title="Mesh validation" description="Checked on the generated mesh">
+              <QualityReport report={model.quality} />
+            </Panel>
+
+            <Panel title="Properties" description="Measured on the exact solid">
+              <PropertiesPanel model={model} />
+            </Panel>
+
+            <Panel
+              title="Artifacts"
+              actions={
+                !hasEveryFormat && activeCatalog ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    busy={busy}
+                    onClick={exportEverything}
+                    icon={<DownloadIcon className="size-3.5" />}
+                  >
+                    All formats
+                  </Button>
+                ) : null
+              }
+            >
+              <ArtifactList model={model} formats={activeCatalog?.formats ?? []} />
+            </Panel>
+          </>
+        ) : null}
+      </div>
+    </aside>
+  )
+
+  return (
+    // One tree, restyled by breakpoint (`.workspace` in index.css): three
+    // pinned columns from 1024 px up; below that the viewer stays at the top
+    // and the inputs and the report share a tabbed panel that scrolls on its
+    // own. The DOM follows the visual order in both, so keyboard and screen
+    // reader order match the screen. The canvas is not recreated when the
+    // order changes: React moves the keyed node.
+    <div className="app-shell flex h-dvh flex-col overflow-hidden bg-void">
+      <AppHeader
+        onExportProject={handleExportProject}
+        onImportProject={handleImportProject}
+        hasModel={!!generation.model}
+      />
+
+      <PwaStatus />
+
+      <div className="workspace min-h-0 flex-1">
+        {isCompact
+          ? [
+              viewerPane,
+              <WorkspaceTabs
+                key="tabs"
+                className="workspace-tabs"
+                value={activeTab}
+                onChange={selectTab}
+                reportIndicator={reportIndicator}
+              />,
+              inputsPane,
+              reportPane,
+            ]
+          : [inputsPane, viewerPane, reportPane]}
       </div>
     </div>
   )

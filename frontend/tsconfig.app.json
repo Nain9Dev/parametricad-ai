@@ -10,6 +10,7 @@
     "module": "esnext",
     "types": [
       "vite/client",
+      "vite-plugin-pwa/react",
       "node"
     ],
     "allowArbitraryExtensions": true,

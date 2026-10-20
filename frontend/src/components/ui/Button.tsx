@@ -20,9 +20,10 @@ const VARIANTS: Record<Variant, string> = {
   ghost: 'text-ink-muted hover:text-ink hover:bg-overlay disabled:text-ink-faint',
 }
 
+// A finger needs 44 px; a mouse does not, so the compact sizes stay for fine pointers.
 const SIZES: Record<Size, string> = {
-  sm: 'h-8 px-2.5 text-xs gap-1.5',
-  md: 'h-10 px-4 text-sm gap-2',
+  sm: 'h-8 px-2.5 text-xs gap-1.5 pointer-coarse:h-11',
+  md: 'h-10 px-4 text-sm gap-2 pointer-coarse:h-11',
 }
 
 export function Button({

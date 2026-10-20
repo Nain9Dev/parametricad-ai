@@ -10,6 +10,14 @@ export interface ShowcasePreset {
   promptText?: string
 }
 
+/**
+ * The one-click demos.
+ *
+ * Each specification equals the specification of the model bundled under
+ * `public/presets/`. That equality is what lets the bundle answer for the
+ * generation service while it is unreachable without showing a part the form
+ * did not ask for (ADR-0008); `presets.test.ts` keeps the two in step.
+ */
 export const SHOWCASE_PRESETS: ShowcasePreset[] = [
   {
     id: 'flange',
@@ -32,16 +40,16 @@ export const SHOWCASE_PRESETS: ShowcasePreset[] = [
     id: 'elbow',
     kind: 'elbow',
     label: 'Codo 90°',
-    subtitle: 'Radio 80mm · Ø40mm · e=3mm',
+    subtitle: 'Radio 50mm · Ø25mm · e=2.5mm',
     badge: 'Swept B-Rep',
     spec: {
       kind: 'elbow',
       material: 'stainless_steel',
-      diameter_mm: 40.0,
-      bend_radius_mm: 80.0,
-      wall_thickness_mm: 3.0,
+      outer_diameter_mm: 25.0,
+      wall_thickness_mm: 2.5,
+      bend_radius_mm: 50.0,
       bend_angle_deg: 90.0,
-      tangent_length_mm: 0.0,
+      leg_length_mm: 20.0,
     },
   },
   {
@@ -62,16 +70,16 @@ export const SHOWCASE_PRESETS: ShowcasePreset[] = [
     id: 'plate',
     kind: 'plate',
     label: 'Placa Mecanizada',
-    subtitle: '100x60mm · Taladro Ø20 · Filetes',
+    subtitle: '120x80mm · Taladro Ø20 · Filetes',
     badge: 'Prismatic',
     spec: {
       kind: 'plate',
       material: 'stainless_steel',
-      length_mm: 100.0,
-      width_mm: 60.0,
-      thickness_mm: 8.0,
-      hole_diameter_mm: 20.0,
-      corner_fillet_radius_mm: 10.0,
+      width_mm: 120.0,
+      depth_mm: 80.0,
+      thickness_mm: 10.0,
+      corner_radius_mm: 8.0,
+      center_hole_diameter_mm: 20.0,
     },
   },
   {

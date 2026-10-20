@@ -10,6 +10,11 @@
  * instead of a bare status number.
  */
 
+import {
+  bundledKindForPrompt,
+  bundledKindForSpec,
+  type BundledKind,
+} from '@/lib/bundledPresets'
 import type {
   ApiErrorResponse,
   Catalog,
@@ -94,6 +99,27 @@ async function readError(response: Response): Promise<ApiError> {
   })
 }
 
+/**
+ * The service could not be reached.
+ *
+ * When the device itself reports no connection, say that instead: it is the more
+ * useful thing to know, and it tells the user the bundled presets are still there.
+ */
+function unreachableError(): ApiError {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return new ApiError('You are offline.', {
+      code: 'offline',
+      status: 0,
+      hint: 'Generating custom parts needs a connection. The bundled presets still work.',
+    })
+  }
+  return new ApiError('Could not reach the generation service.', {
+    code: 'network_unreachable',
+    status: 0,
+    hint: 'Check that the backend is running and reachable from this origin.',
+  })
+}
+
 async function request<T>(
   path: string,
   init: RequestInit & { signal?: AbortSignal },
@@ -108,11 +134,7 @@ async function request<T>(
     // An abort is the caller's own doing, so it propagates untouched and the
     // caller can tell it apart from a real network failure.
     if (isAbort(error)) throw error
-    throw new ApiError('Could not reach the generation service.', {
-      code: 'network_unreachable',
-      status: 0,
-      hint: 'Check that the backend is running and reachable from this origin.',
-    })
+    throw unreachableError()
   }
 
   if (!response.ok) throw await readError(response)
@@ -231,93 +253,161 @@ export async function fetchCatalogWithRetry(
   }
 }
 
+/**
+ * How long the client waits for the generation service (ADR-0008).
+ *
+ * A request that a bundled model can answer races the service for four seconds,
+ * so the one-click demos stay instant while it sleeps. Any other request has no
+ * stand-in, and giving up early would only report a slow but healthy service as
+ * unreachable, so it gets twenty seconds.
+ */
+export const PRESET_RACE_TIMEOUT_MS = 4_000
+export const GENERATION_TIMEOUT_MS = 20_000
+
+function timeoutError(): ApiError {
+  return new ApiError('The generation service took too long to answer.', {
+    code: 'generation_timeout',
+    status: 0,
+    hint: 'It may be waking up. Try again in a moment.',
+  })
+}
+
+/**
+ * Run one call to the generation service under a client budget.
+ *
+ * The caller's own abort propagates untouched, so a superseded request stays
+ * distinguishable. An expired budget becomes a retryable `ApiError` rather than
+ * a bare `AbortError`, which `useGeneration` ignores and would leave the spinner
+ * running for good.
+ */
+async function callService<T>(
+  call: (signal: AbortSignal) => Promise<T>,
+  budgetMs: number,
+  caller: AbortSignal | undefined,
+): Promise<T> {
+  const controller = new AbortController()
+  const abort = () => controller.abort()
+  if (caller?.aborted) abort()
+  caller?.addEventListener('abort', abort, { once: true })
+  const timer = setTimeout(abort, budgetMs)
+
+  try {
+    return await call(controller.signal)
+  } catch (error) {
+    if (caller?.aborted) throw error
+    if (isAbort(error)) throw timeoutError()
+    throw error
+  } finally {
+    clearTimeout(timer)
+    caller?.removeEventListener('abort', abort)
+  }
+}
+
+/**
+ * Whether a failure leaves a bundled model free to answer.
+ *
+ * Only a service that could not be reached, did not answer, or broke on its own
+ * (a 5xx). A failure the service described, such as `invalid_parameters`, is its
+ * answer and has to reach the user as it is.
+ */
+function allowsBundledAnswer(error: unknown): error is ApiError {
+  return error instanceof ApiError && (error.status === 0 || error.status >= 500)
+}
+
+/** The bundled model, or the reason the service could not answer if it is missing too. */
+async function bundledAnswer(
+  kind: BundledKind,
+  signal: AbortSignal | undefined,
+  why: ApiError,
+): Promise<GenerationResponse> {
+  try {
+    return await loadPresetModel(kind, signal)
+  } catch {
+    throw why
+  }
+}
+
+function announceGeneration(kind: ComponentKind, res: GenerationResponse): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(
+    new CustomEvent('nain:telemetry', {
+      detail: {
+        type: 'Command',
+        name: `GenerateCADModel (${kind})`,
+        latencyMs: Math.round(res.model.timings.total_ms),
+        status: 200,
+        payload: {
+          kind,
+          preset: false,
+          watertight: res.model.quality.is_watertight,
+          euler: res.model.quality.euler_characteristic,
+          triangles: res.model.quality.triangle_count,
+          mass_g: Math.round(res.model.properties.mass_g * 100) / 100,
+        },
+      },
+    }),
+  )
+}
+
+/**
+ * Generate a part from a specification.
+ *
+ * If the service is unreachable, silent or failing on its own, a bundled model
+ * answers only when the specification is exactly the one it was built from;
+ * otherwise the failure is reported, so the viewer never shows a part the form
+ * did not ask for (ADR-0008, REQ-UNW-04). A failure the service described is
+ * always reported as it is (REQ-UNW-05).
+ */
 export async function generateFromSpec(
   spec: ComponentSpec,
   formats: ExportFormat[],
   signal?: AbortSignal,
 ): Promise<GenerationResponse> {
-  const remoteController = new AbortController()
-  const timeoutId = setTimeout(() => remoteController.abort(), 4000)
-
-  if (signal) {
-    signal.addEventListener('abort', () => remoteController.abort(), { once: true })
-  }
+  const bundled = bundledKindForSpec(spec)
 
   try {
-    const res = await postJson<GenerationResponse>(
-      '/api/v1/models',
-      { spec, formats },
-      remoteController.signal,
+    const res = await callService(
+      (remote) => postJson<GenerationResponse>('/api/v1/models', { spec, formats }, remote),
+      bundled ? PRESET_RACE_TIMEOUT_MS : GENERATION_TIMEOUT_MS,
+      signal,
     )
-    clearTimeout(timeoutId)
-
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(
-        new CustomEvent('nain:telemetry', {
-          detail: {
-            type: 'Command',
-            name: `GenerateCADModel (${spec.kind})`,
-            latencyMs: Math.round(res.model.timings.total_ms),
-            status: 200,
-            payload: {
-              kind: spec.kind,
-              preset: false,
-              watertight: res.model.quality.is_watertight,
-              euler: res.model.quality.euler_characteristic,
-              triangles: res.model.quality.triangle_count,
-              mass_g: Math.round(res.model.properties.mass_g * 100) / 100,
-            },
-          },
-        }),
-      )
-    }
-
+    announceGeneration(spec.kind, res)
     return res
   } catch (error) {
-    clearTimeout(timeoutId)
     if (signal?.aborted) throw error
-
-    const knownKinds: ComponentKind[] = ['flange', 'elbow', 'pipe', 'plate']
-    if (knownKinds.includes(spec.kind)) {
-      return await loadPresetModel(spec.kind, signal)
-    }
+    if (bundled && allowsBundledAnswer(error)) return bundledAnswer(bundled, signal, error)
     throw error
   }
 }
 
+/**
+ * Generate a part from a description.
+ *
+ * The same rule as `generateFromSpec`, with the showcase prompt as the one
+ * description a bundled model can answer. No kind is ever guessed from keywords:
+ * that invented a specification the user never gave.
+ */
 export async function generateFromPrompt(
   prompt: string,
   formats: ExportFormat[],
   signal?: AbortSignal,
 ): Promise<GenerationResponse> {
-  const remoteController = new AbortController()
-  const timeoutId = setTimeout(() => remoteController.abort(), 4000)
-
-  if (signal) {
-    signal.addEventListener('abort', () => remoteController.abort(), { once: true })
-  }
+  const bundled = bundledKindForPrompt(prompt)
 
   try {
-    const res = await postJson<GenerationResponse>(
-      '/api/v1/generate',
-      { prompt, formats },
-      remoteController.signal,
+    return await callService(
+      (remote) => postJson<GenerationResponse>('/api/v1/generate', { prompt, formats }, remote),
+      bundled ? PRESET_RACE_TIMEOUT_MS : GENERATION_TIMEOUT_MS,
+      signal,
     )
-    clearTimeout(timeoutId)
-    return res
   } catch (error) {
-    clearTimeout(timeoutId)
     if (signal?.aborted) throw error
-
-    const p = prompt.toLowerCase()
-    let fallbackKind: ComponentKind = 'pipe'
-    if (p.includes('flange') || p.includes('brida')) fallbackKind = 'flange'
-    else if (p.includes('elbow') || p.includes('codo')) fallbackKind = 'elbow'
-    else if (p.includes('plate') || p.includes('placa')) fallbackKind = 'plate'
-
-    const response = await loadPresetModel(fallbackKind, signal)
-    response.extractor = 'Local Instant Heuristic (24/7 Availability Fallback)'
-    return response
+    if (bundled && allowsBundledAnswer(error)) {
+      const response = await bundledAnswer(bundled, signal, error)
+      response.extractor = 'Bundled demo (24/7 availability fallback)'
+      return response
+    }
+    throw error
   }
 }
 

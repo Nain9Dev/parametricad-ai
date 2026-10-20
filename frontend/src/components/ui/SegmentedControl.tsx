@@ -25,7 +25,10 @@ export function SegmentedControl<T extends string>({
   onChange,
   size = 'md',
 }: SegmentedControlProps<T>) {
-  const height = size === 'sm' ? 'h-7 text-[0.6875rem]' : 'h-9 text-xs'
+  const height =
+    size === 'sm'
+      ? 'h-7 text-[0.6875rem] pointer-coarse:h-11'
+      : 'h-9 text-xs pointer-coarse:h-11'
 
   return (
     <div

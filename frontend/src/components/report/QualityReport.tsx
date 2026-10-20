@@ -232,14 +232,14 @@ export function QualityReport({ report }: QualityReportProps) {
         <button
           type="button"
           onClick={() => setShowSpectrum((s) => !s)}
-          className="text-[0.625rem] font-medium text-accent transition-colors hover:underline"
+          className="text-[0.625rem] font-medium text-accent transition-colors hover:underline pointer-coarse:min-h-11 pointer-coarse:text-xs"
         >
           {showSpectrum ? 'Hide C1–C10 Spectrum' : 'Inspect C1–C10 Spectrum'}
         </button>
         <button
           type="button"
           onClick={handleDownloadCertificate}
-          className="inline-flex items-center gap-1 rounded border border-line bg-surface px-2 py-1 text-[0.625rem] text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+          className="inline-flex items-center gap-1 rounded border border-line bg-surface px-2 py-1 text-[0.625rem] text-ink-muted transition-colors hover:border-line-strong hover:text-ink pointer-coarse:min-h-11 pointer-coarse:px-3 pointer-coarse:text-xs"
           title="Download ADR-0006 JSON validation certificate"
         >
           <DownloadIcon className="size-3" />

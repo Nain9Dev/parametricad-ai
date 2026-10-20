@@ -39,14 +39,17 @@ This document tracks all tasks, their ownership tags, and verification statuses.
 | TSK-26 | `[A]` | Implement offline Golden Model regression suite and GitHub Actions workflow (`.github/workflows/regression.yml`) | Done | Verified: 9 reference parts evaluated against C1..C10 spectrum, 0 EUR execution on GitHub Actions |
 | TSK-27 | `[A]` | Clear the viewer lint warnings, test caliper and section plane geometry, and load Three.js on demand (React split into its own chunk) | Done | Verified: vitest 29/29, 0 oxlint warnings, `index.html` preloads only the runtime and React chunks (about 245 kB) while the 959 kB `three` chunk loads with the viewer |
 | TSK-28 | `[A]` | Probe the HTTP API and rule-based extractor for edge cases: plate thickness from `100x50x5` and `5 mm thick`, uniform error envelope for 404/405 | Done | Verified: failing tests first (4 RED), 356/356 backend tests passing, 0 mypy/ruff errors |
+| TSK-29 | `[M]` | Review and approve ADR-0007 (installable PWA) and ADR-0008 (bundled presets answer only matching requests), including the two corrected demo cards | Done | User approved both ADRs as written on 2026-10-19 in session; both read `Accepted` |
+| TSK-32 | `[A]` | Implement spec 001, installable mobile app (`specs/001-installable-mobile-app/tasks.md`) | Done | Verified: vitest 208/208, typecheck clean, build and `npm run verify:pwa` pass, backend traceability gate green; offline start, update flow and a stopped-API edit checked against the built app; 375 px DOM audit with zero targets under 44 px. Install on a real phone is TSK-33 |
+| TSK-33 | `[M]` | Verify installation and use on an Android phone with Chrome, against production | Not started | Device checklist in `specs/001-installable-mobile-app/plan.md` section 7 |
 
 ## Session Handoff State
 
-- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, TSK-16, TSK-17, TSK-18, TSK-19, TSK-20, TSK-21, TSK-22, TSK-23, TSK-24, TSK-25, TSK-26, TSK-27, and TSK-28.
+- **Done**: TSK-01 through TSK-12, TSK-14a, TSK-14b, TSK-15, TSK-16, TSK-17, TSK-18, TSK-19, TSK-20, TSK-21, TSK-22, TSK-23, TSK-24, TSK-25, TSK-26, TSK-27, TSK-28, TSK-29, and TSK-32.
 - **Verified**: Backend suite passing (356/356, including the machine-checked
   traceability gate REQ-UBI-08), zero mypy errors, zero ruff errors, frontend
-  vitest 29/29, zero oxlint errors, zero build warnings.
-- **Next**: Deployment confirmation (TSK-13).
+  vitest 208/208 as of 2026-10-20 (spec 001 on top of the viewer and API changes), zero oxlint errors, zero build warnings.
+- **Next**: Deployment confirmation (TSK-13). Spec 001 (installable mobile app) is built (TSK-29, TSK-32); once deployed, TSK-33 checks the install on an Android phone.
 
 - **Known limitation**: the CSP names the API origin literally. Moving the API off
   `parametricad-ai.onrender.com` requires editing `frontend/vercel.json` in the same commit.

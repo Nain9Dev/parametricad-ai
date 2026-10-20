@@ -31,7 +31,7 @@ export function ComponentPicker({
             title={component.description}
             onClick={() => onChange(component.kind)}
             className={[
-              'rounded-md border px-3 py-2 text-left text-xs font-medium transition-colors',
+              'rounded-md border px-3 py-2 text-left text-xs font-medium transition-colors pointer-coarse:min-h-11',
               'disabled:cursor-not-allowed disabled:opacity-50',
               selected
                 ? 'border-accent/45 bg-accent/12 text-accent'

@@ -82,5 +82,11 @@ jobs:
       - name: Typecheck with tsc
         run: npm run typecheck
 
+      - name: Test with Vitest
+        run: npm test
+
       - name: Build production bundle
         run: npm run build
+
+      - name: Verify the PWA build
+        run: npm run verify:pwa

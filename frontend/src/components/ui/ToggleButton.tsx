@@ -17,7 +17,7 @@ export function ToggleButton({ label, pressed, onToggle, children }: ToggleButto
       title={label}
       onClick={() => onToggle(!pressed)}
       className={[
-        'inline-flex size-8 items-center justify-center rounded-md border transition-colors',
+        'inline-flex size-8 items-center justify-center rounded-md border transition-colors pointer-coarse:size-11',
         pressed
           ? 'border-accent/40 bg-accent/15 text-accent'
           : 'border-line bg-raised text-ink-faint hover:border-line-strong hover:text-ink',

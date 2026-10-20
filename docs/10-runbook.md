@@ -104,7 +104,9 @@ pytest
 cd ../frontend
 npm run lint
 npm run typecheck
+npm test
 npm run build
+npm run verify:pwa
 ```
 
 ## 4. Containerized Deployment (Docker)
@@ -148,10 +150,97 @@ stale again, check the branch first.
 - `Cache-Control: public, max-age=31536000, immutable` for `/assets/*`. Those
   filenames carry a content hash, so the bytes behind a URL never change and a
   returning visitor can skip revalidating the ~1.1 MB Three.js chunk.
+- `Cache-Control: no-cache` for `/sw.js` and `/manifest.webmanifest`, and
+  `Content-Type: application/manifest+json` for the manifest. Those two keep fixed
+  names, so a cached copy would pin an installed client to an old release
+  (section 6).
 
-Verify both after a deployment:
+Verify them after a deployment:
 
 ```bash
 curl -sI https://parametricad.naindev.com/ | grep -i content-security-policy
 curl -sI https://parametricad.naindev.com/assets/<hashed-file>.js | grep -i cache-control
+curl -sI https://parametricad.naindev.com/sw.js | grep -i cache-control
+curl -sI https://parametricad.naindev.com/manifest.webmanifest | grep -iE 'cache-control|content-type'
+```
+
+## 6. Progressive Web App
+
+The web client installs from Chrome (three-dot menu, Install app) and from the
+Install button in its header. [ADR-0007](06-decisions/ADR-0007-installable-pwa.md)
+records the design; this section is how to run, test and recover it.
+
+### What ships
+
+| File | Role |
+|---|---|
+| `frontend/public/manifest.webmanifest` | Name, colours, display mode and icons that Chrome reads before it offers installation |
+| `frontend/public/icons/` | 192 px and 512 px icons, a maskable 512 px icon, and the 180 px Apple touch icon |
+| `dist/sw.js`, `dist/workbox-*.js` | The service worker, generated at build time from `frontend/pwa.config.ts` |
+
+The worker precaches the application shell and the four bundled presets, so the
+installed app opens with no connection and shows those four parts. It caches
+nothing at runtime: no API response, no artifact, nothing from another origin.
+
+### Build and check
+
+```bash
+cd frontend
+npm run build
+npm run verify:pwa     # reads dist/sw.js: expected files precached, no runtime routes, under 3 MB
+npm run preview        # http://localhost:5301
+```
+
+`npm run dev` registers no worker, by design. Installation and offline behaviour
+exist only in the built bundle.
+
+### Testing installation
+
+**Desktop Chrome.** Open `http://localhost:5301` after `npm run preview`.
+`localhost` counts as a secure origin, so Chrome shows an Install icon in the
+address bar.
+
+**An Android phone, before a release.** Chrome installs only from HTTPS or
+`localhost`, and a phone cannot reach this machine's `localhost`, so forward the
+port over USB:
+
+1. Enable USB debugging on the phone and connect it.
+2. Open `chrome://inspect/#devices` on this machine, choose Port forwarding, and
+   map `5301` to `localhost:5301`.
+3. Run `npm run preview` and open `http://localhost:5301` in Chrome on the phone.
+
+**An Android phone, after a release.** Open `https://parametricad.naindev.com`
+and use the three-dot menu. The device checklist is in
+`specs/001-installable-mobile-app/plan.md`, section 7. Vercel preview deployments
+may sit behind a Vercel login, which would stop Chrome from installing from them
+(unverified).
+
+### Offline start without a phone
+
+Load the preview once, stop `npm run preview`, and reload the tab. The service
+worker answers, and the four presets still open. Editing a part that is not one
+of them then reports that a connection is needed.
+
+### Updates
+
+A new release downloads in the background and waits. The client shows "A new
+version is available" with Reload and Later, and the page reloads only on Reload,
+so an edit in progress is never discarded. Choosing Later leaves the new version
+to take over the next time the app is opened.
+
+### Recovering from a bad worker
+
+If a worker that reached users misbehaves, set `selfDestroying: true` in
+`frontend/pwa.config.ts` and deploy. The generated worker unregisters itself and
+deletes every cache the next time a client checks for updates. Set it back to
+`false` once clients have recovered. A client that never reconnects keeps the old
+worker until it does.
+
+### Icons
+
+The PNGs in `frontend/public/icons/` are committed. Regenerate them only when the
+mark changes, from the repository root, with Pillow installed (`pip install pillow`):
+
+```bash
+py -3 frontend/scripts/generate-pwa-icons.py
 ```

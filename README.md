@@ -9,7 +9,7 @@
 [![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-Codespaces-1f2937?style=flat-square&logo=github&logoColor=white)](https://codespaces.new/Nain9Dev/parametricad-ai)
 [![React 19](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vitest Passing](https://img.shields.io/badge/Vitest-29%2F29%20Passing-80FF00?style=flat-square&logo=vitest&logoColor=white)](src/test)
+[![Vitest Passing](https://img.shields.io/badge/Vitest-208%2F208%20Passing-80FF00?style=flat-square&logo=vitest&logoColor=white)](frontend/src)
 [![Cost](https://img.shields.io/badge/Cost-0.00_%E2%82%AC-22c55e?style=flat-square)](https://github.com/Nain9Dev/engineering-handbook/blob/main/governance/zero-cost-philosophy.md)
 
 </div>
@@ -26,6 +26,12 @@ ParametriCAD AI builds exact boundary representation (B-Rep) solids with OpenCAS
 Example prompt:
 > *pipe, diameter 25.5mm, wall 2mm, length 200mm*
 
+### Install as an app
+
+The web client is an installable Progressive Web App. On Android, open [parametricad.naindev.com](https://parametricad.naindev.com) in Chrome and choose the three-dot menu, then **Install app**, or use the **Install** button in the header. On iOS, use Share, then **Add to Home Screen**.
+
+Once installed it opens full screen and starts from the device. With no connection it still opens and shows the four bundled parts (flange, elbow, pipe and plate); generating a custom part, refining one and exporting need a connection and say so. The layout adapts from a phone held either way up to a desktop window.
+
 ---
 
 ## Spec-Driven Development (SDD)
@@ -39,11 +45,13 @@ This repository follows a strict Spec-Driven Development methodology. Every arch
 | **03 Open Questions** | [`docs/03-open-questions.md`](docs/03-open-questions.md) | Technical investigation register and future extensions |
 | **04 Architecture** | [`docs/04-architecture.md`](docs/04-architecture.md) | Hexagonal architecture specification and interaction flowcharts |
 | **05 Data Model** | [`docs/05-data-model.md`](docs/05-data-model.md) | Pydantic domain models, specifications, and Mermaid ER diagram |
-| **06 Decisions** | [`docs/06-decisions/`](docs/06-decisions/) | Architecture Decision Records (ADR-0001 to ADR-0003) |
+| **06 Decisions** | [`docs/06-decisions/`](docs/06-decisions/) | Architecture Decision Records (ADR-0001 to ADR-0008) |
 | **07 Tasks** | [`docs/07-tasks.md`](docs/07-tasks.md) | Granular task registry with ownership tags (`[A]`, `[M]`, `[H]`) |
 | **08 Blockers** | [`docs/08-blockers.md`](docs/08-blockers.md) | External dependency risks and credential tracking |
 | **09 Traceability** | [`docs/09-traceability.md`](docs/09-traceability.md) | Bi-directional matrix connecting EARS requirements to tests |
 | **10 Runbook** | [`docs/10-runbook.md`](docs/10-runbook.md) | Local environment, container execution, and deployment operations |
+
+Feature work is specified in `specs/NNN-name/` (spec, plan and tasks) before it is built. The first is [`specs/001-installable-mobile-app/`](specs/001-installable-mobile-app/spec.md).
 
 Operational guidelines for autonomous development agents are defined in [`AGENTS.md`](AGENTS.md).
 
@@ -185,9 +193,11 @@ pytest                     # 282 passing tests (unit, integration, property, tra
 
 # Frontend verification
 cd ../frontend
-npm run lint               # oxlint (43 files, 0 warnings)
+npm run lint               # oxlint
 npm run typecheck          # tsc --noEmit
+npm test                   # Vitest
 npm run build              # production bundle compilation
+npm run verify:pwa         # the built service worker lists what it must and caches nothing else
 ```
 
 ---

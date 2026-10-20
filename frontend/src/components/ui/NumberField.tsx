@@ -91,7 +91,9 @@ export function NumberField({
           id={inputId}
           type="number"
           inputMode="decimal"
-          className="numeric min-w-0 flex-1 bg-transparent px-2.5 py-1.5 text-sm text-ink outline-none disabled:text-ink-faint"
+          // On a touch screen the row reads minus, value, plus with 44 px buttons
+          // and 16 px text (iOS zooms the page on focusing anything smaller).
+          className="numeric min-w-0 flex-1 bg-transparent px-2.5 py-1.5 text-sm text-ink outline-none disabled:text-ink-faint pointer-coarse:order-2 pointer-coarse:h-11 pointer-coarse:text-base"
           value={draft}
           onChange={(event) => commit(event.target.value)}
           onBlur={() => setDraft(String(value))}
@@ -102,11 +104,21 @@ export function NumberField({
           aria-invalid={violation ? true : undefined}
           aria-describedby={violation ?? description ? messageId : undefined}
         />
-        <div className="flex flex-col border-l border-line">
-          <StepButton label={`Increase ${label}`} onClick={() => nudge(1)} disabled={disabled}>
+        <div className="flex flex-col border-l border-line pointer-coarse:contents">
+          <StepButton
+            label={`Increase ${label}`}
+            onClick={() => nudge(1)}
+            disabled={disabled}
+            touchClassName="pointer-coarse:order-3 pointer-coarse:border-l"
+          >
             +
           </StepButton>
-          <StepButton label={`Decrease ${label}`} onClick={() => nudge(-1)} disabled={disabled}>
+          <StepButton
+            label={`Decrease ${label}`}
+            onClick={() => nudge(-1)}
+            disabled={disabled}
+            touchClassName="pointer-coarse:order-1 pointer-coarse:border-r"
+          >
             -
           </StepButton>
         </div>
@@ -128,11 +140,14 @@ function StepButton({
   label,
   onClick,
   disabled,
+  touchClassName,
   children,
 }: {
   label: string
   onClick: () => void
   disabled: boolean
+  /** Where the button sits, and what separates it from the value, on a touch screen. */
+  touchClassName: string
   children: string
 }) {
   return (
@@ -142,7 +157,7 @@ function StepButton({
       tabIndex={-1}
       onClick={onClick}
       disabled={disabled}
-      className="flex h-1/2 w-7 items-center justify-center text-xs leading-none text-ink-faint transition-colors hover:bg-overlay hover:text-ink disabled:opacity-40"
+      className={`flex h-1/2 w-7 items-center justify-center border-line text-xs leading-none text-ink-faint transition-colors hover:bg-overlay hover:text-ink disabled:opacity-40 pointer-coarse:size-11 pointer-coarse:text-lg ${touchClassName}`}
     >
       {children}
     </button>

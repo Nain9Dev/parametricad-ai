@@ -2,8 +2,25 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- `viewport-fit=cover` lets the layout use env(safe-area-inset-*) around
+         notches; `resizes-content` shrinks the layout, not just the visual
+         viewport, when the soft keyboard opens, so the 3D view stays in sight
+         while a number is typed. Zoom is never disabled. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Installability: Chrome reads the manifest, iOS reads the touch icon and
+         the apple-* tags. Both capability tags are declared because Chrome now
+         asks for the unprefixed one and iOS still only honours the prefixed one. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="ParametriCAD" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <link rel="canonical" href="https://parametricad.naindev.com/" />
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#08090b" />
@@ -37,7 +54,10 @@
       content="Deterministic parametric CAD generation with topological mesh validation."
     />
     <meta name="twitter:image" content="https://parametricad.naindev.com/og-image.png" />
-    <link rel="stylesheet" href="https://brand.naindev.com/tokens.css" />
+    <!-- Only the ecosystem bar uses these tokens, and the bar is hidden below
+         640 px, so a phone should not wait on a third-party stylesheet. A
+         non-matching `media` keeps the request out of the render path. -->
+    <link rel="stylesheet" href="https://brand.naindev.com/tokens.css" media="(min-width: 640px)" />
     <script src="https://www.naindev.com/assets/js/ecosystem-bar.js?v=2.1.0" defer></script>
   </head>
   <body>

@@ -42,6 +42,28 @@
   --radius-panel: 0.625rem;
 }
 
+/*
+ * The naindev ecosystem bar is a fixed 38 px strip drawn by a third-party
+ * script (pinned in index.html). The application shell pads itself by the room
+ * the bar takes, so the bar sits above the header instead of on top of it.
+ * On a narrow screen (the strip overflows at 375 px), on a short one (38 px is
+ * a tenth of a phone held sideways), and once the app is installed, the bar is
+ * hidden and its room is released.
+ */
+:root {
+  --ecosystem-bar-height: 38px;
+}
+
+@media (width < 40rem), (height <= 34rem), (display-mode: standalone), (display-mode: minimal-ui), (display-mode: fullscreen) {
+  :root {
+    --ecosystem-bar-height: 0px;
+  }
+
+  nain-ecosystem-bar {
+    display: none;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--color-line);
@@ -61,6 +83,26 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+  }
+
+  /* A drag on the model must not pull the page to refresh or bounce the shell. */
+  html,
+  body {
+    overscroll-behavior: none;
+  }
+
+  /* Controls act on the first tap instead of waiting to see whether a second
+     one is coming; pinch-zoom of the page stays available. */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  summary,
+  label,
+  [role='tab'],
+  [role='radio'] {
+    touch-action: manipulation;
   }
 
   /* Numeric readouts are compared column to column, so they need tabular
@@ -112,6 +154,115 @@
   input[type='number'] {
     appearance: textfield;
     -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  /* The outermost box of the application. It clears the ecosystem bar and the
+     device's side safe areas, which matter on a notched phone in landscape. */
+  .app-shell {
+    padding-top: var(--ecosystem-bar-height);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /*
+   * The workspace is one grid whose areas re-flow by breakpoint, so the 3D
+   * canvas is never remounted: rotating a phone keeps the camera.
+   *
+   *   below 1024 px    viewer, tabs and panel in one column; the panel scrolls
+   *                    on its own and the page does not
+   *   short landscape  viewer on the left, tabs and panel on the right
+   *   1024 px and up   inputs | viewer | report, each pinned to the viewport
+   *
+   * The script side of the 1024 px threshold is WIDE_QUERY in App.tsx.
+   */
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(16rem, 46dvh) auto minmax(0, 1fr);
+    grid-template-areas: 'viewer' 'tabs' 'panel';
+  }
+
+  .workspace-viewer {
+    grid-area: viewer;
+  }
+
+  .workspace-tabs {
+    grid-area: tabs;
+  }
+
+  .workspace-inputs,
+  .workspace-report {
+    grid-area: panel;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  @media (orientation: landscape) and (height <= 34rem) and (width < 64rem) {
+    .workspace {
+      grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem);
+      grid-template-rows: auto minmax(0, 1fr);
+      grid-template-areas: 'viewer tabs' 'viewer panel';
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .workspace {
+      grid-template-columns: 17rem minmax(0, 1fr) 17rem;
+      grid-template-rows: minmax(0, 1fr);
+      grid-template-areas: 'inputs viewer report';
+    }
+
+    .workspace-inputs {
+      grid-area: inputs;
+    }
+
+    .workspace-report {
+      grid-area: report;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .workspace {
+      grid-template-columns: 20rem minmax(0, 1fr) 21rem;
+    }
+  }
+
+  /*
+   * A modal <dialog> anchored to the bottom edge. The browser supplies the
+   * focus trap, Escape, the inert page behind it and the return of focus.
+   */
+  .bottom-sheet {
+    margin: auto auto 0;
+    width: 100%;
+    max-width: 32rem;
+    max-height: 85dvh;
+    padding: 0 0 env(safe-area-inset-bottom);
+    overflow: hidden;
+    border: 1px solid var(--color-line-strong);
+    border-bottom: 0;
+    border-radius: 1rem 1rem 0 0;
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+  }
+
+  .bottom-sheet::backdrop {
+    background-color: rgb(0 0 0 / 0.6);
+  }
+
+  .bottom-sheet[open] {
+    animation: sheet-in 0.18s ease-out;
+  }
+
+  @keyframes sheet-in {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 }
 

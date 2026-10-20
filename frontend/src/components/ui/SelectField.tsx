@@ -36,7 +36,8 @@ export function SelectField({
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         aria-describedby={description ? descriptionId : undefined}
-        className="w-full rounded-md border border-line bg-raised px-2.5 py-1.5 text-sm text-ink outline-none focus:border-accent disabled:text-ink-faint"
+        // 16 px on a touch screen: iOS zooms the page on focusing anything smaller.
+        className="w-full rounded-md border border-line bg-raised px-2.5 py-1.5 text-sm text-ink outline-none focus:border-accent disabled:text-ink-faint pointer-coarse:h-11 pointer-coarse:text-base"
       >
         {options.map((option) => (
           <option key={option.value} value={option.value}>

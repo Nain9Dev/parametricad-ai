@@ -18,3 +18,18 @@ This document tracks unresolved engineering questions, investigation items, and 
    - *Status*: Under exploration.
    - *Context*: Running OpenCASCADE / CadQuery in the backend requires dedicated server resources.
    - *Question*: Could a WebAssembly-compiled OpenCASCADE engine (e.g. opencascade.js) be integrated for zero-backend client-side preview generation, using the backend purely for official STEP/DXF export?
+
+4. **Store Distribution of the Installed App**:
+   - *Status*: Deferred.
+   - *Context*: Spec 001 makes the web client installable from Chrome. A Trusted Web Activity could list the same PWA on Google Play, but needs a Play Console account and fee (`[H]`).
+   - *Question*: Is store presence worth the account, review cycle and signing-key custody for a portfolio demo?
+
+5. **Mobile-Native Capabilities**:
+   - *Status*: Deferred.
+   - *Context*: Out of scope for spec 001. Candidates: file handling so a saved project JSON opens the installed app, Web Share Target, app shortcuts to the four bundled parts, and manifest `screenshots` for Chrome's richer install dialog (spec 001 T-018).
+   - *Question*: Which of these are useful enough on a phone to justify the extra surface?
+
+6. **Browser-Level Verification of the PWA and the Compact Layout**:
+   - *Status*: Open.
+   - *Context*: Vitest with jsdom cannot exercise a service worker or real layout. Spec 001 verifies those by hand in a real browser and on a device.
+   - *Question*: Should a Playwright smoke suite (offline reload, manifest, 375 px layout, touch-target audit) join CI? It adds a development dependency and CI minutes, so it needs its own ADR.

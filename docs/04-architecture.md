@@ -31,6 +31,7 @@ ParametriCAD AI follows a strict **Hexagonal Architecture (Ports and Adapters)**
 flowchart TD
     subgraph Client["Client Tier"]
         UI["React 19 Three.js UI"]
+        SW["Service Worker (precache: shell + 4 bundled presets)"]
         HTTP["HTTP / REST Client"]
     end
 
@@ -61,6 +62,7 @@ flowchart TD
         LLM["GroqParameterExtractor / RuleBasedExtractor"]
     end
 
+    UI -->|same-origin assets| SW
     UI --> HTTP
     HTTP --> Router
     Router --> Deps
@@ -94,3 +96,7 @@ flowchart TD
    - Any model failing blocking invariants is denied publication when `reject_invalid_meshes` is enabled.
 3. **Deterministic Cache & Content Addressing**:
    - `model_id` is an invariant SHA-256 hash computed from canonical JSON parameter strings and tessellation deflections.
+4. **Installable Client, Bounded Caching** ([ADR-0007](06-decisions/ADR-0007-installable-pwa.md)):
+   - The web client is an installable PWA. Its service worker precaches the application shell and the four bundled presets, and caches nothing at runtime: no API response, no artifact, no cross-origin asset. HTTP requests to the API never pass through it.
+5. **Honest Fallback** ([ADR-0008](06-decisions/ADR-0008-bundled-presets-match-only.md)):
+   - A bundled preset answers for the generation service only when the request is exactly the one it was built from, and only after a transport failure, a client timeout or a 5xx. A failure the service describes always reaches the user.
