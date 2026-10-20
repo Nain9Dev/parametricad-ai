@@ -157,7 +157,7 @@ export function SectionControls({
       }
     >
       {stacked ? null : (
-        <span className="text-[0.625rem] font-medium text-ink-muted">Cut:</span>
+        <span className="text-xs font-medium text-ink-muted">Cut:</span>
       )}
       <div className={stacked ? '' : 'w-24'}>
         <SegmentedControl
@@ -195,7 +195,7 @@ export function SectionControls({
           onDoubleClick={() => patch({ options, onChange }, 'sectionOffset', 0.0)}
         />
         <span
-          className="w-10 text-right font-mono text-[0.625rem] tabular-nums text-ink-muted"
+          className="w-10 text-right font-mono text-xs tabular-nums text-ink-muted"
           title="Current cutting offset"
         >
           {(options.sectionOffset >= 0 ? '+' : '') + options.sectionOffset.toFixed(2)}
@@ -207,7 +207,7 @@ export function SectionControls({
 
 export function CaliperHint({ verb = 'Click' }: { verb?: 'Click' | 'Tap' }) {
   return (
-    <div className="flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-[0.6875rem] text-amber-400">
+    <div className="flex items-center gap-1.5 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-xs text-amber-400">
       <CaliperIcon className="size-3.5" />
       <span>{verb} 2 vertices</span>
     </div>
@@ -245,7 +245,7 @@ export function OrientationPresets({
           className={[
             size === 'lg'
               ? 'h-11 min-w-11 px-1.5 text-xs'
-              : 'h-6 px-1.5 text-[0.625rem] pointer-coarse:h-11 pointer-coarse:min-w-11 pointer-coarse:px-2',
+              : 'h-6 px-1.5 text-xs pointer-coarse:h-11 pointer-coarse:min-w-11 pointer-coarse:px-2',
             'rounded font-medium uppercase transition-colors',
             active === orient
               ? 'bg-raised text-accent'
@@ -306,7 +306,7 @@ export function FitButton({
       className={[
         size === 'lg'
           ? 'size-11 shrink-0 justify-center'
-          : 'h-7 gap-1.5 px-2 text-[0.6875rem] pointer-coarse:h-11 pointer-coarse:px-3',
+          : 'h-7 gap-1.5 px-2 text-xs pointer-coarse:h-11 pointer-coarse:px-3',
         'inline-flex items-center rounded-md border border-line bg-raised text-ink-muted transition-colors hover:border-line-strong hover:text-ink disabled:opacity-40',
       ].join(' ')}
     >

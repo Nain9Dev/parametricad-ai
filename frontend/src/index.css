@@ -22,10 +22,15 @@
 
   --color-ink: #e8ecf2;
   --color-ink-muted: #9aa5b6;
-  --color-ink-faint: #6b7688;
+  --color-ink-faint: #808b9b;
 
+  /* The accent is a text, border and focus colour on the dark surfaces. A
+     control filled with it and labelled in white would reach only 3.3:1, so
+     filled controls use a darker blue of the same hue (4.65:1, 6.0:1 on hover). */
   --color-accent: #3d8bfd;
   --color-accent-hover: #5b9dff;
+  --color-accent-fill: #086bfc;
+  --color-accent-fill-hover: #035adb;
   --color-accent-ink: #ffffff;
 
   --color-valid: #34d399;

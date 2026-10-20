@@ -81,7 +81,7 @@ export function DimensionOverlay({ bounds }: DimensionOverlayProps) {
           zIndexRange={[20, 0]}
           style={{ pointerEvents: 'none' }}
         >
-          <span className="numeric rounded border border-accent/35 bg-void/85 px-1.5 py-0.5 text-[0.625rem] whitespace-nowrap text-accent">
+          <span className="numeric rounded border border-accent/35 bg-void/85 px-1.5 py-0.5 text-xs whitespace-nowrap text-accent">
             {label.axis} {label.value.toFixed(2)} mm
           </span>
         </Html>
@@ -93,7 +93,7 @@ export function DimensionOverlay({ bounds }: DimensionOverlayProps) {
         zIndexRange={[20, 0]}
         style={{ pointerEvents: 'none' }}
       >
-        <span className="numeric rounded border border-line-strong bg-void/85 px-1.5 py-0.5 text-[0.625rem] whitespace-nowrap text-ink-muted">
+        <span className="numeric rounded border border-line-strong bg-void/85 px-1.5 py-0.5 text-xs whitespace-nowrap text-ink-muted">
           {size.x.toFixed(1)} x {size.y.toFixed(1)} x {size.z.toFixed(1)} mm
         </span>
       </Html>

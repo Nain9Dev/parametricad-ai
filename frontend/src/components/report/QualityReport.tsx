@@ -155,14 +155,14 @@ export function QualityReport({ report }: QualityReportProps) {
           )}
           {STATUS_LABEL[report.status]}
         </Badge>
-        <span className="numeric text-[0.6875rem] text-ink-faint">
+        <span className="numeric text-xs text-ink-faint">
           {formatCount(report.triangle_count)} triangles
         </span>
       </div>
 
       <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5">
         {checks.map((check) => (
-          <li key={check.label} className="flex items-center gap-1.5 text-[0.6875rem]">
+          <li key={check.label} className="flex items-center gap-1.5 text-xs">
             <span
               aria-hidden="true"
               className={`flex size-3.5 shrink-0 items-center justify-center rounded-full ${
@@ -183,7 +183,7 @@ export function QualityReport({ report }: QualityReportProps) {
         ))}
       </ul>
 
-      <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-line pt-3 text-[0.6875rem]">
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-line pt-3 text-xs">
         <Metric label="Genus" value={report.genus === null ? 'n/a' : String(report.genus)} />
         <Metric label="Euler characteristic" value={String(report.euler_characteristic)} />
         <Metric label="Bodies" value={String(report.connected_component_count)} />
@@ -205,8 +205,8 @@ export function QualityReport({ report }: QualityReportProps) {
       </dl>
 
       {report.genus !== null ? (
-        <div className="rounded border border-line bg-raised/50 p-2 text-[0.625rem]">
-          <div className="flex items-center justify-between">
+        <div className="rounded border border-line bg-raised/50 p-2 text-xs">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5">
             <span className="font-mono font-medium text-ink-muted">Euler-Poincaré Invariant</span>
             <span
               className={
@@ -220,26 +220,26 @@ export function QualityReport({ report }: QualityReportProps) {
                 : 'χ Non-standard'}
             </span>
           </div>
-          <div className="mt-1 flex justify-between font-mono text-[0.5625rem] text-ink-faint">
-            <span>χ = {report.euler_characteristic}</span>
-            <span>Genus g = {report.genus}</span>
-            <span>Bodies B = {report.connected_component_count}</span>
+          <div className="mt-1 flex flex-wrap justify-between gap-x-3 gap-y-0.5 font-mono text-xs text-ink-faint">
+            <span className="whitespace-nowrap">χ = {report.euler_characteristic}</span>
+            <span className="whitespace-nowrap">Genus g = {report.genus}</span>
+            <span className="whitespace-nowrap">Bodies B = {report.connected_component_count}</span>
           </div>
         </div>
       ) : null}
 
-      <div className="flex items-center justify-between border-t border-line pt-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-t border-line pt-2">
         <button
           type="button"
           onClick={() => setShowSpectrum((s) => !s)}
-          className="text-[0.625rem] font-medium text-accent transition-colors hover:underline pointer-coarse:min-h-11 pointer-coarse:text-xs"
+          className="whitespace-nowrap text-xs font-medium text-accent transition-colors hover:underline pointer-coarse:min-h-11"
         >
           {showSpectrum ? 'Hide C1–C10 Spectrum' : 'Inspect C1–C10 Spectrum'}
         </button>
         <button
           type="button"
           onClick={handleDownloadCertificate}
-          className="inline-flex items-center gap-1 rounded border border-line bg-surface px-2 py-1 text-[0.625rem] text-ink-muted transition-colors hover:border-line-strong hover:text-ink pointer-coarse:min-h-11 pointer-coarse:px-3 pointer-coarse:text-xs"
+          className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-line bg-surface px-2 py-1 text-xs text-ink-muted transition-colors hover:border-line-strong hover:text-ink pointer-coarse:min-h-11 pointer-coarse:px-3"
           title="Download ADR-0006 JSON validation certificate"
         >
           <DownloadIcon className="size-3" />
@@ -248,8 +248,8 @@ export function QualityReport({ report }: QualityReportProps) {
       </div>
 
       {showSpectrum ? (
-        <div className="space-y-1.5 rounded-md border border-line bg-raised/40 p-2 text-[0.625rem]">
-          <p className="font-mono text-[0.625rem] font-semibold text-ink-muted">
+        <div className="space-y-1.5 rounded-md border border-line bg-raised/40 p-2 text-xs">
+          <p className="font-mono text-xs font-semibold text-ink-muted">
             ADR-0006 Deterministic C1–C10 Verification
           </p>
           <ul className="space-y-1">
@@ -260,18 +260,18 @@ export function QualityReport({ report }: QualityReportProps) {
               >
                 <div className="flex items-center gap-1.5 min-w-0">
                   <span
-                    className={`font-mono font-bold shrink-0 text-[0.5625rem] ${
+                    className={`font-mono font-bold shrink-0 text-xs ${
                       check.passed ? 'text-valid' : 'text-invalid'
                     }`}
                   >
                     {check.code}
                   </span>
-                  <span className="truncate text-ink-muted" title={check.detail}>
+                  <span className="min-w-0 text-ink-muted" title={check.detail}>
                     {check.title}
                   </span>
                 </div>
                 <span
-                  className={`shrink-0 font-mono text-[0.5625rem] font-medium ${
+                  className={`shrink-0 font-mono text-xs font-medium ${
                     check.passed ? 'text-valid' : 'text-invalid'
                   }`}
                 >
@@ -288,7 +288,7 @@ export function QualityReport({ report }: QualityReportProps) {
           {report.issues.map((issue) => (
             <li
               key={issue.code}
-              className={`flex gap-2 rounded border px-2 py-1.5 text-[0.6875rem] leading-snug ${
+              className={`flex gap-2 rounded border px-2 py-1.5 text-xs leading-snug ${
                 issue.severity === 'error'
                   ? 'border-invalid/30 bg-invalid/8 text-invalid'
                   : 'border-warn/30 bg-warn/8 text-warn'
@@ -320,7 +320,7 @@ function Metric({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-2" title={hint}>
-      <dt className="truncate text-ink-faint">{label}</dt>
+      <dt className="min-w-0 text-ink-faint">{label}</dt>
       <dd className="numeric shrink-0 text-ink-muted">{value}</dd>
     </div>
   )

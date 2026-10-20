@@ -7,68 +7,83 @@ interface ShowcaseBarProps {
   busy?: boolean
 }
 
+const ICONS: Record<string, string> = {
+  flange: '🔩',
+  elbow: '↩️',
+  pipe: '📏',
+  plate: '🔲',
+  prompt: '✨',
+}
+
+/**
+ * The one-click demo parts (REQ-UBI-18: a card shows its content in full).
+ *
+ * One column in a narrow container and two in a container of 28 rem or more, so
+ * the 20 rem desktop column and a phone show a list and a tablet panel shows a
+ * grid. The badge follows the title and drops under it when the line is short;
+ * the subtitle wraps instead of being clipped.
+ */
 export function ShowcaseBar({ activePresetId, onSelectPreset, busy }: ShowcaseBarProps) {
   return (
-    <div className="rounded-panel border border-line bg-surface p-3 space-y-2.5">
-      <div className="flex items-center justify-between gap-2">
+    <div className="@container space-y-2.5 rounded-panel border border-line bg-surface p-3">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
         <div className="flex items-center gap-1.5">
           <span className="size-2 rounded-full bg-valid animate-pulse" aria-hidden="true" />
-          <span className="text-[0.6875rem] font-semibold uppercase tracking-wider text-ink">
+          <span className="text-xs font-semibold uppercase tracking-wider text-ink">
             Demos 1-Clic · 24/7 Activo
           </span>
         </div>
-        <span className="rounded bg-raised px-1.5 py-0.5 text-[0.625rem] font-mono text-valid">
+        <span className="rounded bg-raised px-1.5 py-0.5 font-mono text-xs text-valid">
           0s latencia
         </span>
       </div>
 
-      <p className="text-[0.6875rem] leading-snug text-ink-muted">
+      <p className="text-xs leading-snug text-ink-muted">
         Carga instantánea de sólidos B-Rep teselados con OpenCASCADE y validados determinísticamente:
       </p>
 
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-2">
+      <ul role="list" aria-label="Demo parts" className="grid gap-1.5 @md:grid-cols-2">
         {SHOWCASE_PRESETS.map((preset) => {
           const isActive = activePresetId === preset.id
           return (
-            <button
-              key={preset.id}
-              type="button"
-              disabled={busy}
-              onClick={() => onSelectPreset(preset)}
-              className={`flex flex-col items-start rounded-md border p-2 text-left transition-all cursor-pointer ${
-                isActive
-                  ? 'border-accent bg-accent/10 shadow-[0_0_12px_rgba(61,139,253,0.25)] ring-1 ring-accent'
-                  : 'border-line bg-raised hover:border-line-strong hover:bg-overlay'
-              } disabled:cursor-not-allowed disabled:opacity-50`}
-            >
-              <div className="flex w-full items-center justify-between gap-1">
-                <span className="text-xs font-medium text-ink flex items-center gap-1">
-                  {preset.id === 'flange' && '🔩'}
-                  {preset.id === 'elbow' && '↩️'}
-                  {preset.id === 'pipe' && '📏'}
-                  {preset.id === 'plate' && '🔲'}
-                  {preset.id === 'prompt' && '✨'}
-                  <span>{preset.label}</span>
+            <li key={preset.id} className="flex">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => onSelectPreset(preset)}
+                className={`flex w-full cursor-pointer items-start gap-2.5 rounded-md border p-2.5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isActive
+                    ? 'border-accent bg-accent/10 shadow-[0_0_12px_rgba(61,139,253,0.25)] ring-1 ring-accent'
+                    : 'border-line bg-raised hover:border-line-strong hover:bg-overlay'
+                }`}
+              >
+                <span aria-hidden="true" className="mt-0.5 text-base leading-none">
+                  {ICONS[preset.id]}
                 </span>
-                {preset.badge ? (
-                  <span
-                    className={`rounded px-1 py-0.2 text-[0.5625rem] font-mono uppercase ${
-                      isActive
-                        ? 'bg-accent text-white font-semibold'
-                        : 'bg-void text-ink-faint'
-                    }`}
-                  >
-                    {preset.badge}
+                <span className="min-w-0 flex-1">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-sm font-medium text-ink">{preset.label}</span>
+                    {preset.badge ? (
+                      <span
+                        className={`rounded px-1.5 py-0.5 font-mono text-xs uppercase ${
+                          isActive
+                            ? 'bg-accent-fill font-semibold text-white'
+                            : 'bg-void text-ink-faint'
+                        }`}
+                      >
+                        {preset.badge}
+                      </span>
+                    ) : null}
                   </span>
-                ) : null}
-              </div>
-              <span className="mt-0.5 text-[0.625rem] leading-tight text-ink-faint line-clamp-1">
-                {preset.subtitle}
-              </span>
-            </button>
+                  <span className="mt-0.5 block text-xs leading-snug text-ink-faint">
+                    {preset.subtitle}
+                  </span>
+                </span>
+              </button>
+            </li>
           )
         })}
-      </div>
+      </ul>
     </div>
   )
 }

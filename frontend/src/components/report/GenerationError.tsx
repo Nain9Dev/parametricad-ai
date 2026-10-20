@@ -39,7 +39,7 @@ export function GenerationError({ error, onRetry }: GenerationErrorProps) {
       {violations.length > 0 ? (
         <ul className="space-y-1 border-t border-invalid/20 pt-2.5">
           {violations.map((violation, index) => (
-            <li key={`${violation.field}-${index}`} className="text-[0.6875rem] leading-snug">
+            <li key={`${violation.field}-${index}`} className="text-xs leading-snug">
               <span className="font-medium text-invalid">
                 {humaniseFieldName(lastSegment(violation.field))}
               </span>
@@ -50,7 +50,7 @@ export function GenerationError({ error, onRetry }: GenerationErrorProps) {
       ) : null}
 
       <div className="flex items-center justify-between gap-2 border-t border-invalid/20 pt-2.5">
-        <code className="text-[0.625rem] text-ink-faint">{error.code}</code>
+        <code className="text-xs text-ink-faint">{error.code}</code>
         {onRetry && error.isRetryable ? (
           <Button size="sm" variant="secondary" onClick={onRetry} icon={<ResetIcon className="size-3.5" />}>
             Retry

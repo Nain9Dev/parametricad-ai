@@ -32,15 +32,15 @@ export function ArtifactList({ model, formats }: ArtifactListProps) {
             <DownloadIcon className="size-4 shrink-0 text-ink-faint transition-colors group-hover:text-accent" />
             <span className="min-w-0 flex-1">
               <span className="block text-xs font-medium text-ink">{descriptor.label}</span>
-              <span className="block truncate text-[0.6875rem] text-ink-faint">
+              <span className="block text-xs text-ink-faint">
                 {descriptor.description}
               </span>
             </span>
             <span className="shrink-0 text-right">
-              <span className="numeric block text-[0.6875rem] text-ink-muted">
+              <span className="numeric block text-xs text-ink-muted">
                 {formatBytes(artifact.size_bytes)}
               </span>
-              <span className="block text-[0.625rem] text-ink-faint uppercase">
+              <span className="block text-xs text-ink-faint uppercase">
                 {/* Exact geometry and a tessellated approximation are not
                     interchangeable, and the difference has to be visible at the
                     point of download. */}

@@ -32,7 +32,7 @@ export function InstallButton({ canInstall, showIosHint, onInstall }: InstallBut
         aria-haspopup={canInstall ? undefined : 'dialog'}
         onClick={canInstall ? onInstall : () => setHintOpen(true)}
         // Icon alone below 640 px, where the header has no room for the word.
-        className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border border-accent/40 bg-accent/12 px-2.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20 sm:h-7 sm:text-[0.6875rem] pointer-coarse:h-11"
+        className="inline-flex h-11 min-w-11 items-center justify-center gap-1.5 rounded-md border border-accent/40 bg-accent/12 px-2.5 text-xs font-medium text-accent transition-colors hover:bg-accent/20 sm:h-7 pointer-coarse:h-11"
       >
         <DownloadIcon className="size-4 sm:size-3" />
         <span className="hidden sm:inline">Install</span>

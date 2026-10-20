@@ -27,7 +27,7 @@ export function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   const height =
     size === 'sm'
-      ? 'h-7 text-[0.6875rem] pointer-coarse:h-11'
+      ? 'h-7 text-xs pointer-coarse:h-11'
       : 'h-9 text-xs pointer-coarse:h-11'
 
   return (
@@ -50,7 +50,7 @@ export function SegmentedControl<T extends string>({
               'flex-1 rounded font-medium transition-colors',
               height,
               selected
-                ? 'bg-accent text-accent-ink'
+                ? 'bg-accent-fill text-accent-ink'
                 : 'text-ink-muted hover:bg-overlay hover:text-ink',
             ].join(' ')}
           >

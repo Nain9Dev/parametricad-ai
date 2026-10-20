@@ -447,7 +447,7 @@ export default function App() {
                   }}
                   disabled={busy && !livePreview}
                 />
-                <p className="mt-2 text-[0.6875rem] leading-snug text-ink-faint">
+                <p className="mt-2 text-xs leading-snug text-ink-faint">
                   {component.description}
                 </p>
               </Panel>
@@ -513,7 +513,7 @@ export default function App() {
           <ViewerToolbar {...toolbarProps} />
         )}
         {model ? (
-          <code className="hidden shrink-0 text-[0.625rem] text-ink-faint xl:block">
+          <code className="hidden shrink-0 text-xs text-ink-faint xl:block">
             {model.model_id.slice(0, 12)}
           </code>
         ) : null}
@@ -650,7 +650,7 @@ function InputSkeleton({ waking }: { waking: boolean }) {
       {waking ? (
         <p
           role="status"
-          className="rounded-panel border border-line bg-surface px-3 py-2.5 text-[0.6875rem] leading-relaxed text-ink-muted"
+          className="rounded-panel border border-line bg-surface px-3 py-2.5 text-xs leading-relaxed text-ink-muted"
         >
           Waking the generation service. It sleeps while unused, so the first
           request can take up to a minute.

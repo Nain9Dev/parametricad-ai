@@ -46,7 +46,7 @@ export function SelectField({
         ))}
       </select>
       {description ? (
-        <p id={descriptionId} className="text-[0.6875rem] text-ink-faint">
+        <p id={descriptionId} className="text-xs text-ink-faint">
           {description}
         </p>
       ) : null}

@@ -301,6 +301,7 @@ replaced by stubs, and every request to the generation service is aborted.
 | `update.spec.ts` | a second release is announced and waits; the old version, and an edit in progress, stay until Reload; Reload then loads the new version, in a tab that started under the worker and in one opened on the first visit and never reloaded; Later leaves them | REQ-EVT-07 |
 | `layout.spec.ts` | at 320, 360, 375, 812 x 375, 768 x 1 024 and 1 280 x 800: no overflow, the viewer visible, tabs and toolbar fit, the header not covered by the bar | REQ-UBI-12, REQ-UBI-14, REQ-EVT-06 |
 | `touch.spec.ts` | with touch on, no control under 44 px on the four tabs or in the View sheet | REQ-UBI-13, REQ-EVT-06 |
+| `legibility.spec.ts` | at the six viewports of `layout.spec.ts`, in every tab, in the Description mode and in the View sheet: no text under 12 px, none under AA contrast, and each showcase card holds its title, badge and subtitle in full | REQ-UBI-16, REQ-UBI-17, REQ-UBI-18 |
 | `fallback.spec.ts` | with the service unreachable, an edit keeps the previous model and shows the connection notice; a bundled specification is still answered | REQ-UNW-04 |
 
 Still manual, on the phone (section 6): a real install prompt and Chrome's menu

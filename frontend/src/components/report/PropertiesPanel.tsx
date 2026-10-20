@@ -41,15 +41,15 @@ export function PropertiesPanel({ model }: PropertiesPanelProps) {
 
       <div className="border-t border-line pt-3">
         <div className="mb-1.5 flex items-center justify-between">
-          <p className="text-[0.6875rem] font-semibold tracking-wider text-ink-faint uppercase">
+          <p className="text-xs font-semibold tracking-wider text-ink-faint uppercase">
             Pipeline
           </p>
-          <span className="numeric text-[0.6875rem] text-ink-muted">
+          <span className="numeric text-xs text-ink-muted">
             {model.cached ? 'served from cache' : formatDuration(timings.total_ms)}
           </span>
         </div>
         {model.cached ? (
-          <p className="text-[0.6875rem] text-ink-faint">
+          <p className="text-xs text-ink-faint">
             These parameters were built before, so the stored artifacts were reused.
           </p>
         ) : (
@@ -75,7 +75,7 @@ function StageBars({ timings }: { timings: GeneratedModel['timings'] }) {
   return (
     <ul className="space-y-1">
       {stages.map((stage) => (
-        <li key={stage.label} className="flex items-center gap-2 text-[0.6875rem]">
+        <li key={stage.label} className="flex items-center gap-2 text-xs">
           <span className="w-16 shrink-0 text-ink-faint">{stage.label}</span>
           <span className="h-1 flex-1 overflow-hidden rounded-full bg-line">
             <span

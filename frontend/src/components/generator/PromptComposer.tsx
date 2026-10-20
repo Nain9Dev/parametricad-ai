@@ -89,7 +89,7 @@ export function PromptComposer({
           }}
           className="w-full resize-y rounded-md border border-line bg-raised px-2.5 py-2 text-sm text-ink placeholder:text-ink-faint focus:border-accent focus:outline-none pointer-coarse:text-base"
         />
-        <div className="flex items-center justify-between text-[0.6875rem] text-ink-faint">
+        <div className="flex items-center justify-between text-xs text-ink-faint">
           <span>Ctrl + Enter to {currentSpec ? 'refine / generate' : 'generate'}</span>
           <span className="numeric">
             {trimmed.length}/{MAX_LENGTH}
@@ -123,7 +123,7 @@ export function PromptComposer({
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-[0.6875rem] font-semibold tracking-wider text-ink-faint uppercase">
+        <p className="text-xs font-semibold tracking-wider text-ink-faint uppercase">
           {currentSpec ? 'Refinement Examples' : 'Examples'}
         </p>
         <ul className="space-y-1">
@@ -132,7 +132,7 @@ export function PromptComposer({
               <button
                 type="button"
                 onClick={() => setPrompt(example)}
-                className="w-full rounded border border-transparent px-2 py-1.5 text-left text-[0.6875rem] leading-snug text-ink-faint transition-colors hover:border-line hover:bg-raised hover:text-ink-muted pointer-coarse:min-h-11 pointer-coarse:text-xs"
+                className="w-full rounded border border-transparent px-2 py-1.5 text-left text-xs leading-snug text-ink-faint transition-colors hover:border-line hover:bg-raised hover:text-ink-muted pointer-coarse:min-h-11"
               >
                 {example}
               </button>
@@ -142,7 +142,7 @@ export function PromptComposer({
       </div>
 
       {extractor ? (
-        <p className="text-[0.6875rem] text-ink-faint">
+        <p className="text-xs text-ink-faint">
           Interpreted by the{' '}
           <span className="text-ink-muted">
             {extractor === 'rule_based' ? 'deterministic parser' : extractor}

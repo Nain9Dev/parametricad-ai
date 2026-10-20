@@ -27,7 +27,7 @@ export function ParameterForm({
     <div className="space-y-5">
       {groupParameters(component).map((group) => (
         <fieldset key={group.name} className="space-y-3" disabled={disabled}>
-          <legend className="text-[0.6875rem] font-semibold tracking-wider text-ink-faint uppercase">
+          <legend className="text-xs font-semibold tracking-wider text-ink-faint uppercase">
             {group.name}
           </legend>
           <div className="space-y-3">

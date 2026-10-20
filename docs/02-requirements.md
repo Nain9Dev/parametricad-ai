@@ -19,6 +19,9 @@ This document details functional and non-functional requirements formulated in E
 - **REQ-UBI-13**: The system shall give every interactive control a touch target of at least 44 CSS px on coarse-pointer devices, keep pinch-zoom enabled, and keep its content clear of the device safe-area insets. (frontend)
 - **REQ-UBI-14**: The system shall reserve the height of the naindev ecosystem bar wherever the bar is displayed so that it never covers the application header, and shall hide the bar below 640 px, on short viewports and in the installed application. (frontend)
 - **REQ-UBI-15**: The system shall define each showcase preset with a specification identical to the specification of its bundled model, so that the preset card, the form and the viewer describe the same part. (frontend)
+- **REQ-UBI-16**: The system shall render every text of the interface with a contrast ratio of at least 4.5:1 against its background, or 3:1 for large text, including secondary text and text on a filled accent control, so that it stays readable for users with low vision. (frontend)
+- **REQ-UBI-17**: The system shall not render any text of the interface smaller than 12 CSS px, so that it stays legible on a phone held at arm's length. (frontend)
+- **REQ-UBI-18**: The system shall show the full title, subtitle and badge of each showcase card inside its card, without clipping or overlap, at every viewport width from 320 px up. (frontend)
 
 ## 2. Event-Driven Requirements
 

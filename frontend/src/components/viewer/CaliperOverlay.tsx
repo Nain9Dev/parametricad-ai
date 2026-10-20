@@ -153,13 +153,13 @@ export function CaliperOverlay({ modelObject, enabled }: CaliperOverlayProps) {
                   setPointA(null)
                   setPointB(null)
                 }}
-                className="rounded px-1 text-[0.625rem] text-ink-muted hover:bg-raised hover:text-ink"
+                className="rounded px-1 text-xs text-ink-muted hover:bg-raised hover:text-ink"
                 title="Clear measurement"
               >
                 Clear
               </button>
             </div>
-            <div className="flex gap-2 font-mono text-[0.5625rem] text-ink-muted">
+            <div className="flex gap-2 font-mono text-xs text-ink-muted">
               <span>ΔX: {measurement.delta.dx.toFixed(1)}</span>
               <span>ΔY: {measurement.delta.dy.toFixed(1)}</span>
               <span>ΔZ: {measurement.delta.dz.toFixed(1)}</span>

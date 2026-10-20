@@ -30,6 +30,16 @@ This document tracks unresolved engineering questions, investigation items, and 
    - *Question*: Which of these are useful enough on a phone to justify the extra surface?
 
 6. **Browser-Level Verification of the PWA and the Compact Layout**:
-   - *Status*: Resolved. ADR-0009 (accepted 2026-10-20) adopted Chromium-only Playwright specs in a dedicated CI job; they live in `frontend/e2e/` (TSK-31). The first run of the job on a hosted runner is still to come.
+   - *Status*: Resolved. ADR-0009 (accepted 2026-10-20) adopted Chromium-only Playwright specs in a dedicated CI job; they live in `frontend/e2e/` (TSK-31). The first hosted run (2026-10-20) proved WebGL there and found a defect in the client, which TSK-34 fixed; the run after the fix is green.
    - *Context*: Vitest with jsdom cannot exercise a service worker or real layout. Spec 001 verifies those by hand in a real browser and on a device.
    - *Question*: Should a Playwright smoke suite (offline reload, manifest, 375 px layout, touch-target audit) join CI? It adds a development dependency and CI minutes, so it needs its own ADR.
+
+7. **Interface Language**:
+   - *Status*: Open.
+   - *Context*: The interface chrome is in English (tabs, panels, buttons, errors) and the page declares `lang="en"`, while the showcase cards and their banner are in Spanish ("Demos 1-Clic · 24/7 Activo", "0s latencia", "Brida 8 Pernos"). Spec 002 leaves the copy untouched.
+   - *Question*: Should the whole interface be English, Spanish, or switchable between the two?
+
+8. **Drawn Icons for the Showcase Cards**:
+   - *Status*: Deferred.
+   - *Context*: The cards use emoji, which look different on every system and clash with the technical tone of the rest of the interface. Spec 002 leaves them as they are.
+   - *Question*: Is a small drawn icon set (flange, elbow, pipe, plate, description) worth making to replace them?

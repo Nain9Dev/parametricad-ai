@@ -77,7 +77,7 @@ export function NumberField({
         <label htmlFor={inputId} className="text-xs font-medium text-ink-muted">
           {label}
         </label>
-        {unit ? <span className="text-[0.6875rem] text-ink-faint">{unit}</span> : null}
+        {unit ? <span className="text-xs text-ink-faint">{unit}</span> : null}
       </div>
 
       <div
@@ -127,7 +127,7 @@ export function NumberField({
       {violation ?? description ? (
         <p
           id={messageId}
-          className={`text-[0.6875rem] ${violation ? 'text-invalid' : 'text-ink-faint'}`}
+          className={`text-xs ${violation ? 'text-invalid' : 'text-ink-faint'}`}
         >
           {violation ?? description}
         </p>

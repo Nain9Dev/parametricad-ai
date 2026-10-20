@@ -47,7 +47,7 @@ export function ViewOptionsSheet({ open, onClose, options, onChange }: ViewOptio
 function SheetSection({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="space-y-2">
-      <h3 className="text-[0.6875rem] font-semibold tracking-wider text-ink-faint uppercase">
+      <h3 className="text-xs font-semibold tracking-wider text-ink-faint uppercase">
         {title}
       </h3>
       {children}

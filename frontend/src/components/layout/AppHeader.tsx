@@ -60,7 +60,7 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
         </span>
         <div className="min-w-0 leading-tight">
           <h1 className="text-sm font-semibold tracking-tight text-ink">ParametriCAD</h1>
-          <p className="hidden text-[0.625rem] text-ink-faint sm:block">
+          <p className="hidden text-xs text-ink-faint sm:block">
             Parametric CAD generation with mesh validation
           </p>
         </div>
@@ -78,7 +78,7 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
           <button
             type="button"
             onClick={onExportProject}
-            className="hidden sm:inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-raised px-2.5 text-[0.6875rem] font-medium text-ink-muted transition-colors hover:border-line-strong hover:text-ink pointer-coarse:h-11"
+            className="hidden sm:inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-raised px-2.5 text-xs font-medium text-ink-muted transition-colors hover:border-line-strong hover:text-ink pointer-coarse:h-11"
             title="Save active CAD project to JSON"
           >
             <DownloadIcon className="size-3" />
@@ -87,7 +87,7 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
         )}
         {onImportProject && (
           <label
-            className="hidden sm:inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-raised px-2.5 text-[0.6875rem] font-medium text-ink-muted transition-colors hover:border-line-strong hover:text-ink pointer-coarse:h-11"
+            className="hidden sm:inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-md border border-line bg-raised px-2.5 text-xs font-medium text-ink-muted transition-colors hover:border-line-strong hover:text-ink pointer-coarse:h-11"
             title="Open CAD project from JSON"
           >
             <CubeIcon className="size-3" />
@@ -118,7 +118,7 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
         ) : null}
 
         {health ? (
-          <span className="hidden text-[0.6875rem] text-ink-faint lg:inline">
+          <span className="hidden text-xs text-ink-faint lg:inline">
             {EXTRACTOR_LABELS[health.parameter_extractor] ?? health.parameter_extractor}
             {' · '}
             {health.geometry_kernel}
