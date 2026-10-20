@@ -1,6 +1,6 @@
 # ADR-0010: The update prompt across tabs
 
-- **Status**: Proposed. The user chose Option B in session on 2026-10-20 and asked for it to be built (TSK-37); the user moves the ADR to `Accepted` (TSK-36)
+- **Status**: Accepted. The user chose Option B in session on 2026-10-20, asked for it to be built (TSK-37) and approved the ADR as written the same day (TSK-36)
 - **Date**: 2026-10-20
 - **Resolves**: A defect found while fixing the first-visit Reload (TSK-35): accepting an update in one tab reloads every other tab of the same browser by itself, and with it any edit in progress there
 - **Relates to**: REQ-EVT-07 (the requirement the defect breaks); ADR-0007, decision 4 (update policy), which this amends; ADR-0009 (the browser tests that show it)

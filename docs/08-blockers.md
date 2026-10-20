@@ -10,7 +10,7 @@ Spec 001 (installable mobile app): ADR-0007 and ADR-0008 were accepted on 2026-1
 
 ADR-0009 (browser-level tests with Playwright) was accepted on 2026-10-20 (TSK-30), so nothing waits on a decision. TSK-31 (the dependency, the specs, the `ci.yml` job) is done and green on Windows and on Linux under WSL. The first run of the `e2e` job on a GitHub-hosted runner (2026-10-20) proved WebGL there and failed once on a race in the application, which TSK-34 fixed; the run after the fix is green. No account, key or paid service is needed.
 
-ADR-0010 (the update prompt across tabs) is Proposed (2026-10-20). The user chose Option B in session and TSK-37 built it, so nothing waits on a decision; the ADR stays `Proposed` until the user sets it to `Accepted` (TSK-36). No account, key or paid service is needed.
+ADR-0010 (the update prompt across tabs) was accepted on 2026-10-20 (TSK-36: the user chose Option B and approved it as written) and TSK-37 built it, so nothing waits on a decision. No account, key or paid service is needed.
 
 ## External Dependencies Required
 
