@@ -1,4 +1,5 @@
 import { renderHook } from '@testing-library/react'
+import type { RegisterSWOptions } from 'virtual:pwa-register/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { usePwaUpdate } from '@/lib/hooks/usePwaUpdate'
@@ -11,22 +12,33 @@ const registration = vi.hoisted(() => ({
   setNeedRefresh: vi.fn(),
   setOfflineReady: vi.fn(),
   updateServiceWorker: vi.fn(() => Promise.resolve()),
+  /** What the hook handed the plugin, which acts on it from then on. */
+  options: undefined as RegisterSWOptions | undefined,
 }))
 
 vi.mock('virtual:pwa-register/react', () => ({
-  useRegisterSW: () => ({
-    needRefresh: [registration.needRefresh, registration.setNeedRefresh],
-    offlineReady: [registration.offlineReady, registration.setOfflineReady],
-    updateServiceWorker: registration.updateServiceWorker,
-  }),
+  useRegisterSW: (options?: RegisterSWOptions) => {
+    registration.options = options
+    return {
+      needRefresh: [registration.needRefresh, registration.setNeedRefresh],
+      offlineReady: [registration.offlineReady, registration.setOfflineReady],
+      updateServiceWorker: registration.updateServiceWorker,
+    }
+  },
 }))
 
 const reload = vi.fn()
 let serviceWorker: EventTarget
 
+/** The plugin reports the page's registration once it has registered. */
+function register(waiting: ServiceWorker | null): void {
+  registration.options?.onRegisteredSW?.('/sw.js', { waiting } as ServiceWorkerRegistration)
+}
+
 beforeEach(() => {
   registration.needRefresh = false
   registration.offlineReady = false
+  registration.options = undefined
   registration.setNeedRefresh.mockClear()
   registration.setOfflineReady.mockClear()
   registration.updateServiceWorker.mockClear()
@@ -131,6 +143,76 @@ describe('usePwaUpdate', () => {
     expect(() => result.current.applyUpdate()).not.toThrow()
 
     expect(registration.updateServiceWorker).toHaveBeenCalledTimes(1)
+  })
+
+  // Several tabs share one worker. Every tab that has seen the waiting version asks
+  // the plugin to reload it as soon as control changes, whichever tab accepted
+  // (workbox-window `controlling` with `isUpdate`), and the plugin does so with the
+  // function it was handed, or with `location.reload` when it was handed none.
+  it('hands the plugin a reload that does nothing, so a tab whose user did not accept is never reloaded', () => {
+    renderHook(() => usePwaUpdate())
+
+    expect(registration.options?.onNeedReload).toBeTypeOf('function')
+    registration.options?.onNeedReload?.()
+
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('waits for the change of control while a version is still waiting', () => {
+    const { result } = renderHook(() => usePwaUpdate())
+    register({} as ServiceWorker)
+
+    result.current.applyUpdate()
+    expect(registration.updateServiceWorker).toHaveBeenCalledTimes(1)
+    expect(reload).not.toHaveBeenCalled()
+
+    serviceWorker.dispatchEvent(new Event('controllerchange'))
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  // Another tab accepted first: the new worker is in charge here too, no version
+  // waits any more, and no further change of control is coming to reload for.
+  it('reloads at once when the user accepts after another tab has applied the version', () => {
+    const { result } = renderHook(() => usePwaUpdate())
+    register(null)
+
+    result.current.applyUpdate()
+
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
+  // A tab that was left behind runs old code under the new worker, whether it was
+  // ever asked, or chose Later. It is told, and left as it is until its user decides.
+  it('offers the version again when another tab puts it in charge', () => {
+    Object.assign(serviceWorker, { controller: {} })
+    renderHook(() => usePwaUpdate())
+
+    serviceWorker.dispatchEvent(new Event('controllerchange'))
+
+    expect(registration.setNeedRefresh).toHaveBeenCalledWith(true)
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it('does not take the first worker of a first visit for a new version', () => {
+    // No worker controls the page yet, so the first one to claim it is the install.
+    renderHook(() => usePwaUpdate())
+
+    serviceWorker.dispatchEvent(new Event('controllerchange'))
+    expect(registration.setNeedRefresh).not.toHaveBeenCalled()
+
+    // The next change of control is a new version.
+    serviceWorker.dispatchEvent(new Event('controllerchange'))
+    expect(registration.setNeedRefresh).toHaveBeenCalledWith(true)
+  })
+
+  it('stops listening for changes of control when the page goes away', () => {
+    Object.assign(serviceWorker, { controller: {} })
+    const { unmount } = renderHook(() => usePwaUpdate())
+
+    unmount()
+    serviceWorker.dispatchEvent(new Event('controllerchange'))
+
+    expect(registration.setNeedRefresh).not.toHaveBeenCalled()
   })
 
   it('hands out callbacks that stay the same between renders', () => {

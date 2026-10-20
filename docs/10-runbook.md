@@ -245,6 +245,17 @@ so an edit in progress is never discarded. Choosing Later leaves the new version
 to take over the next time the app is opened. `e2e/update.spec.ts` stages this
 with two builds (section 7).
 
+The tabs of one browser share one worker, so Reload in one tab puts the new
+version in charge of all of them ([ADR-0010](06-decisions/ADR-0010-update-prompt-across-tabs.md)).
+Only the tab where it was chosen reloads. The others keep the page they have, and
+the edit in it, under the new worker: their banner stays, or comes back if the user
+had chosen Later, and Reload there reloads that tab at once, since no version waits
+any more. Such a tab holds old code until it reloads. Today that costs nothing the
+user can see, because the viewer, the only lazy chunk, loads when the app opens. A
+lazy chunk added later would be missing from the new precache, and most likely
+from the host after a deploy, so adding one means checking what a tab left behind
+does.
+
 ### Recovering from a bad worker
 
 If a worker that reached users misbehaves, set `selfDestroying: true` in
@@ -298,7 +309,7 @@ replaced by stubs, and every request to the generation service is aborted.
 | `webgl-probe.spec.ts` | WebGL2 works and the viewer draws the first part; every other spec waits for it | precondition |
 | `worker.spec.ts` | the manifest is served as `application/manifest+json` and Chrome accepts it; the worker controls the page after one load; Cache Storage holds the shell and the presets and nothing from another origin | REQ-UBI-10, REQ-UBI-11, REQ-EVT-07 |
 | `offline.spec.ts` | with the network off, a reload is answered by the worker and all four presets open with their own bounding boxes; the Offline badge follows the connection | REQ-UBI-11, REQ-STA-04 |
-| `update.spec.ts` | a second release is announced and waits; the old version, and an edit in progress, stay until Reload; Reload then loads the new version, in a tab that started under the worker and in one opened on the first visit and never reloaded; Later leaves them | REQ-EVT-07 |
+| `update.spec.ts` | a second release is announced and waits; the old version, and an edit in progress, stay until Reload; Reload then loads the new version, in a tab that started under the worker and in one opened on the first visit and never reloaded; Later leaves them; with two tabs open, Reload in one reloads only that tab, the other keeps its edit and its banner and can then reload itself, and a tab that chose Later is offered the version again | REQ-EVT-07 |
 | `layout.spec.ts` | at 320, 360, 375, 812 x 375, 768 x 1 024 and 1 280 x 800: no overflow, the viewer visible, tabs and toolbar fit, the header not covered by the bar | REQ-UBI-12, REQ-UBI-14, REQ-EVT-06 |
 | `touch.spec.ts` | with touch on, no control under 44 px on the four tabs or in the View sheet | REQ-UBI-13, REQ-EVT-06 |
 | `legibility.spec.ts` | at the six viewports of `layout.spec.ts`, in every tab, in the Description mode and in the View sheet: no text under 12 px, none under AA contrast, and each showcase card holds its title, badge and subtitle in full | REQ-UBI-16, REQ-UBI-17, REQ-UBI-18 |
@@ -325,6 +336,14 @@ the page when it started; `workbox-window` does not count such a page as one tha
 can be updated, which is why `usePwaUpdate` reloads on the next change of
 controller itself. Both put the second release behind the page.
 
+The two-tab tests open a second page in the same browser context, so both pages
+share the worker and both start under it. They put an edit in the second page,
+deploy the second release, wait until both offer it and press Reload in the
+first. Playwright counts the second page's loads, and the count survives a reload
+where anything stored in the page would not. The test waits two seconds before it
+looks, because a reload that nobody asked for starts within moments of the change
+of control.
+
 ### Reading a failure
 
 ```bash
@@ -346,7 +365,15 @@ suite again; a failure that is gone from the next run cannot be diagnosed.
   available. Try the full Chromium instead of the shell (`channel: 'chromium'` in
   `playwright.config.ts`), and record what the probe's attached renderer string says.
 - **`EADDRINUSE` or "already used" on 5301.** Something owns the port (section 1).
-  Stop it; do not move the suite to another port.
+  Find out what before stopping it: on 2026-10-20 several sessions on one machine
+  started the suite at the same time and each run met another's preview. Wait for
+  the other run to end, or stop a server whose test run is gone. Do not move the
+  suite to another port.
+- **"Reload did not load the page again" in `update.spec.ts`.** The message carries
+  the worker's state. `waiting: 'installed'` means the new worker never took over;
+  `waiting: null` with `controllerChanges: 1` means control moved and the page did
+  not reload. Seen twice and not explained (ADR-0009, "Seen twice, not explained"):
+  copy the report before the next run replaces the traces.
 - **Under WSL with `networkingMode=mirrored`** a connection to a closed loopback
   port hangs until the TCP timeout instead of being refused, so Playwright's check
   that 5301 is free costs about two minutes before the server starts (seen on

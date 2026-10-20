@@ -11,8 +11,9 @@ const OFFLINE_READY_MS = 6_000
  * What the service worker has to tell the user.
  *
  * A waiting version is announced and applied only when the user chooses Reload,
- * so a reload never discards an edit in progress. It stays until answered. The
- * "ready offline" notice is news, not a decision, and leaves on its own.
+ * so a reload never discards an edit in progress. It stays until answered, and
+ * comes back if another tab applies the version first (ADR-0010). The "ready
+ * offline" notice is news, not a decision, and leaves on its own.
  */
 export function PwaStatus() {
   const { updateReady, offlineReady, applyUpdate, dismissUpdate, dismissOfflineReady } =
