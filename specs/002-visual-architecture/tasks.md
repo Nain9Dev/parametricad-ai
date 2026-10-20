@@ -18,5 +18,6 @@ Tags: `[A]` the assistant alone, `[M]` mixed, `[H]` the user alone. Each task ha
 
 - **Done**: T-001 to T-008.
 - **Verified (2026-10-20)**: the three guards failed on `main` for the reasons in the spec's evidence (7 unit failures; the browser spec failed at all six viewports, with 134 findings at 320 px) and pass now. vitest 250 of 250 across 33 files; `tsc`, `tsc -p e2e` and oxlint clean; `npm run build` and `verify:pwa` pass (23 files precached); `npm run test:e2e` 34 of 34 in two runs with `CI=true`. Screenshots reviewed at 1 440, 1 280, 1 024, 768, 375, 320 and 812 x 375 px. At 1 024 px the 17 rem columns crowded the mesh validation card, which now wraps instead of breaking or clipping.
-- **Not verified**: how it looks on a real phone, and the duration of the browser job on a hosted runner (the spec asks for about two minutes; the suite is 34 tests now).
+- **Verified on GitHub (`2549519`)**: Frontend CI, Backend CI and Browser tests are green; the browser job took 1 min 37 s with 34 of 34 passing in 59 s, inside the two minutes the spec asks for.
+- **Not verified**: how it looks on a real phone.
 - **Next**: T-009, the user's look at the result; D1 to D3 stand unless vetoed. Then the open questions on language and icons in `docs/03-open-questions.md`.
