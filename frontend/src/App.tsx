@@ -36,6 +36,7 @@ import {
   buildSpec,
   defaultValues,
   findComponent,
+  serializeSpec,
   valuesFromSpec,
   type ParameterValues,
 } from '@/lib/catalog'
@@ -168,12 +169,10 @@ export default function App() {
     initialGenerated.current = true
     const target = findComponent(activeCatalog.components, 'flange')
     if (target) {
-      setValuesByKind((prev) => ({
-        ...prev,
-        flange: valuesFromSpec(defaultPreset.spec, target),
-      }))
+      const initialValues = valuesFromSpec(defaultPreset.spec, target)
+      setValuesByKind((prev) => ({ ...prev, flange: initialValues }))
+      lastRequestedSpecKey.current = serializeSpec('flange', initialValues)
     }
-    lastRequestedSpecKey.current = JSON.stringify(defaultPreset.spec)
     generate({
       source: 'spec',
       spec: defaultPreset.spec,
@@ -188,7 +187,7 @@ export default function App() {
 
   // Debouncing the serialised spec rather than the object compares by value: a
   // re-render that produces an equal spec must not count as a change.
-  const specKey = spec ? JSON.stringify(spec) : null
+  const specKey = values ? serializeSpec(kind, values) : null
   const debouncedSpecKey = useDebouncedValue(specKey, PREVIEW_DEBOUNCE_MS)
 
   useEffect(() => {
@@ -252,12 +251,10 @@ export default function App() {
         setKind(preset.kind)
         const target = findComponent(components, preset.kind)
         if (target) {
-          setValuesByKind((prev) => ({
-            ...prev,
-            [preset.kind]: valuesFromSpec(preset.spec, target),
-          }))
+          const presetValues = valuesFromSpec(preset.spec, target)
+          setValuesByKind((prev) => ({ ...prev, [preset.kind]: presetValues }))
+          lastRequestedSpecKey.current = serializeSpec(preset.kind, presetValues)
         }
-        lastRequestedSpecKey.current = JSON.stringify(preset.spec)
 
         // Fast-path: seed local preset bundle instantaneously in <10ms
         fetch(`/presets/${preset.id}.json`)
@@ -307,10 +304,9 @@ export default function App() {
       setSection('inputs')
       setKind(importedSpec.kind)
       setActivePresetId(null)
-      setValuesByKind((prev) => ({
-        ...prev,
-        [importedSpec.kind]: valuesFromSpec(importedSpec, target),
-      }))
+      const importedValues = valuesFromSpec(importedSpec, target)
+      setValuesByKind((prev) => ({ ...prev, [importedSpec.kind]: importedValues }))
+      lastRequestedSpecKey.current = serializeSpec(importedSpec.kind, importedValues)
       generate({
         source: 'spec',
         spec: importedSpec,

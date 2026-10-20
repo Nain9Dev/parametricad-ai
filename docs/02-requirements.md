@@ -29,6 +29,7 @@ This document details functional and non-functional requirements formulated in E
 - **REQ-EVT-05**: When a refinement request with `current_spec` and `prompt` is received at `/api/v1/generate/refine`, the system shall apply relative and absolute parameter adjustments onto `current_spec`, re-validate fabricability invariants, and generate the updated solid without server-side session persistence.
 - **REQ-EVT-06**: When the browser reports that the application can be installed, the web client shall offer an Install control in the header that opens the browser's install prompt, and shall remove it once the application is installed or the prompt has been used; on iOS Safari, which reports nothing, the control shall explain Add to Home Screen instead. (frontend)
 - **REQ-EVT-07**: When the service worker has downloaded a new version of the application, the web client shall announce it and apply it only when the user accepts, so that an automatic reload never discards edits in progress. (frontend)
+- **REQ-EVT-08**: When the page loads, the user picks a showcase card or the user opens a project file, the web client shall send one generation request for that model and shall not send a second one for the same values when the parameter form settles on them, so that the cards are not locked again and the service does the work once. (frontend)
 
 ## 3. State-Driven Requirements
 

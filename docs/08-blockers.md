@@ -8,7 +8,7 @@ None currently blocking automated local testing or compilation.
 
 Spec 001 (installable mobile app): ADR-0007 and ADR-0008 were accepted on 2026-10-19 (TSK-29), so nothing waits on a decision. Verifying the install on a real phone (TSK-33) waits only on the user's device: production has served the build since 2026-10-20. No account, key or paid service is needed.
 
-ADR-0009 (browser-level tests with Playwright) was accepted on 2026-10-20 (TSK-30), so nothing waits on a decision. TSK-31 (the dependency, the specs, the `ci.yml` job) is done and green on Windows and on Linux under WSL; the first run of the `e2e` job on a GitHub-hosted runner, which settles WebGL there, waits for the change to be pushed. No account, key or paid service is needed.
+ADR-0009 (browser-level tests with Playwright) was accepted on 2026-10-20 (TSK-30), so nothing waits on a decision. TSK-31 (the dependency, the specs, the `ci.yml` job) is done and green on Windows and on Linux under WSL. The first run of the `e2e` job on a GitHub-hosted runner (2026-10-20) proved WebGL there and failed once on a race in the application, which TSK-34 fixes; the fix waits for its own push. No account, key or paid service is needed.
 
 ## External Dependencies Required
 
@@ -35,5 +35,5 @@ ADR-0009 (browser-level tests with Playwright) was accepted on 2026-10-20 (TSK-3
    - *What*: `npx playwright install --only-shell chromium`, about 120 MiB from `cdn.playwright.dev`, into the browser cache (`PLAYWRIGHT_BROWSERS_PATH` when set, otherwise `%LOCALAPPDATA%\ms-playwright` or `~/.cache/ms-playwright`), never into the repository. The CI job adds `--with-deps`, which installs OS packages with `apt-get`. No account, key or paid service; GitHub-hosted runners are free for this public repository.
    - *Env var*: none required; `PLAYWRIGHT_BROWSERS_PATH` is optional.
    - *Unblocks*: `npm run test:e2e` locally and the `e2e` CI job.
-   - *Ready when*: the WebGL probe spec passes. It does locally (2026-10-20: headless shell 156.0.8078.4, software WebGL2 through SwiftShader); the first run of the `e2e` job on a hosted runner is still to come.
-   - *Caveat, unverified*: WebGL through SwiftShader on the hosted runner (ADR-0009, decision 7).
+   - *Ready when*: the WebGL probe spec passes. It does locally (2026-10-20: headless shell 156.0.8078.4, software WebGL2 through SwiftShader) and on the first hosted run (2026-10-20, 1.4 s).
+   - *Caveat, confirmed on 2026-10-20*: WebGL through SwiftShader works on the hosted runner (ADR-0009, decision 7).

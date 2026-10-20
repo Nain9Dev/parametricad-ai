@@ -339,7 +339,9 @@ npx playwright show-trace node_modules/.cache/parametricad-e2e/results/<test>/tr
 A failing test keeps its trace and a screenshot. In CI the `e2e` job uploads the
 HTML report as the `playwright-report` artifact for seven days, but only when the
 job fails. On CI a test that passes only on its retry fails the run
-(`failOnFlakyTests`): treat it as a defect, not as noise.
+(`failOnFlakyTests`): treat it as a defect, not as noise. Every run replaces the
+report and clears the traces, so copy `report/` somewhere else before running the
+suite again; a failure that is gone from the next run cannot be diagnosed.
 
 ### When something else fails first
 

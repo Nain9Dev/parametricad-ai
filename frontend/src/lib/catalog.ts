@@ -37,6 +37,20 @@ export function buildSpec(kind: ComponentKind, values: ParameterValues): Compone
 }
 
 /**
+ * The text a request is remembered and compared by.
+ *
+ * The live preview sends a request when the form settles on values that were not
+ * sent yet, and it decides that by comparing text. A specification read from a
+ * showcase card lists its fields in another order than the form does, so the
+ * card's own text never matched the form's and every load and every card was
+ * followed by the same request again. Whatever remembers a request on the form's
+ * behalf builds its text here, from the values the form will hold.
+ */
+export function serializeSpec(kind: ComponentKind, values: ParameterValues): string {
+  return JSON.stringify(buildSpec(kind, values))
+}
+
+/**
  * Read a returned specification back into form state.
  *
  * Used after a prompt: the extracted parameters populate the form so the part
