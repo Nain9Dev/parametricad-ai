@@ -10,7 +10,7 @@ on the same machine without either of them moving.
 | Port | Process | Fixed in |
 |---|---|---|
 | **5300** | Vite development server | `frontend/vite.config.ts` (`server.strictPort`) |
-| **5301** | Vite preview server | `frontend/vite.config.ts` (`preview.strictPort`) |
+| **5301** | Vite preview server, and the browser tests (section 7) | `frontend/vite.config.ts` (`preview.strictPort`), `frontend/e2e/support/env.ts` |
 | **8130** | Uvicorn API server | `docs/10-runbook.md`, `frontend/.env.example` |
 
 Two rules make the reservation hold:
@@ -104,9 +104,11 @@ pytest
 cd ../frontend
 npm run lint
 npm run typecheck
+npm run typecheck:e2e
 npm test
 npm run build
 npm run verify:pwa
+npm run test:e2e   # headless Chromium; install it once and keep port 5301 free (section 7)
 ```
 
 ## 4. Containerized Deployment (Docker)
@@ -131,14 +133,27 @@ curl http://127.0.0.1:8130/health
 
 | Surface | Host | Source | Notes |
 |---|---|---|---|
-| Web client | Vercel (project `nain-dev/parametricad-ai`) | `frontend/` from branch `main` | `VITE_API_URL` is set in the project's environment variables |
+| Web client | Vercel (project `nain-dev/parametricad-ai`) | `frontend/`; production builds from branch `master`, every other branch gets a preview | `VITE_API_URL` is set in the project's environment variables |
 | API | Render | `backend/Dockerfile` | Suspends when idle on the free tier; the first request after a pause pays the cold start |
 
-The Vercel project's production branch is **`main`** as of Sept 30, 2026. It had
-been left pointing at the vestigial `master` alias created when the remote's
-default branch migrated to `main`, so production kept serving the Sep 7 build
-while `main` pushes only produced previews. If the production URL ever goes
-stale again, check the branch first.
+Production builds from **`master`**, not `main`. Observed on Oct 20, 2026 through
+the GitHub Deployments API: a push of `main` produced a `Preview` deployment of
+`74fe8c4`, and fast-forwarding `master` to that same commit produced the
+`Production` one. A note dated Sept 30 had recorded the production branch as
+`main`; the behaviour contradicts it, so read Settings, Git, Production Branch in
+the Vercel project before relying on either. Preview deployments sit behind a
+Vercel login, so a phone cannot install from them (section 6).
+
+To release the web client, publish `main`, then fast-forward `master` to it:
+
+```bash
+git push origin main
+git push origin main:master    # no force: refused unless it fast-forwards
+```
+
+Setting the production branch to `main` in the Vercel project (TSK-15) removes the
+second push, and this paragraph with it. If the production URL ever goes stale,
+check the branch first.
 
 ### Response headers
 
@@ -212,21 +227,31 @@ port over USB:
 **An Android phone, after a release.** Open `https://parametricad.naindev.com`
 and use the three-dot menu. The device checklist is in
 `specs/001-installable-mobile-app/plan.md`, section 7. Vercel preview deployments
-may sit behind a Vercel login, which would stop Chrome from installing from them
-(unverified).
+sit behind a Vercel login (confirmed on Oct 20, 2026), so Chrome cannot install
+from them: use production or the USB route above.
 
 ### Offline start without a phone
 
 Load the preview once, stop `npm run preview`, and reload the tab. The service
 worker answers, and the four presets still open. Editing a part that is not one
-of them then reports that a connection is needed.
+of them then reports that a connection is needed. `npm run test:e2e` runs this
+check, and the update check below, without anyone stopping a server (section 7).
 
 ### Updates
 
 A new release downloads in the background and waits. The client shows "A new
 version is available" with Reload and Later, and the page reloads only on Reload,
 so an edit in progress is never discarded. Choosing Later leaves the new version
-to take over the next time the app is opened.
+to take over the next time the app is opened. `e2e/update.spec.ts` stages this
+with two builds (section 7).
+
+**Known limitation.** If the tab was opened before any worker controlled it (the
+very first visit), choosing Reload activates the new worker but does not reload
+the page: the banner stays and the tab keeps running the old code until it is
+reloaded by hand. `workbox-window` marks such a page as not being an update, and
+the PWA plugin reloads only for an update. Observed on 2026-10-20 with a scratch
+experiment (no reload, one controller change, banner still shown); not fixed yet,
+and the update spec starts from a returning visit for that reason.
 
 ### Recovering from a bad worker
 
@@ -244,3 +269,91 @@ mark changes, from the repository root, with Pillow installed (`pip install pill
 ```bash
 py -3 frontend/scripts/generate-pwa-icons.py
 ```
+
+## 7. Browser Tests
+
+[ADR-0009](06-decisions/ADR-0009-playwright-browser-tests.md) adds Playwright
+specs in `frontend/e2e/` for what jsdom cannot run: the service worker, the
+offline start, the update prompt, the layout at phone widths and the touch
+targets. Vitest stays the runner for everything under `frontend/src/`.
+
+### Running them
+
+```bash
+cd frontend
+npx playwright install --only-shell chromium   # once per machine; a revision already there is skipped
+npm run test:e2e
+```
+
+`npm run test:e2e` builds two production bundles, serves one of them with
+`vite preview` on `127.0.0.1:5301` and drives headless Chromium against it. It
+needs no backend and no internet: the ecosystem bar and its stylesheet are
+replaced by stubs, and every request to the generation service is aborted.
+
+- **Port 5301 must be free** (section 1). The run fails instead of adopting a
+  preview that is already running, because the update spec rewrites what is served.
+- **The browser** lives in `PLAYWRIGHT_BROWSERS_PATH` when that variable is set,
+  and otherwise in `%LOCALAPPDATA%\ms-playwright` (Windows) or
+  `~/.cache/ms-playwright` (Linux). On Linux add `--with-deps` to install the
+  system packages too. `--headed` needs the full Chromium: `npx playwright install chromium`.
+- **Everything the run generates** (bundles, report, traces) is under
+  `frontend/node_modules/.cache/parametricad-e2e/`, which git ignores.
+
+### What each spec proves
+
+| Spec | Proves | Requirements |
+|---|---|---|
+| `webgl-probe.spec.ts` | WebGL2 works and the viewer draws the first part; every other spec waits for it | precondition |
+| `worker.spec.ts` | the manifest is served as `application/manifest+json` and Chrome accepts it; the worker controls the page after one load; Cache Storage holds the shell and the presets and nothing from another origin | REQ-UBI-10, REQ-UBI-11, REQ-EVT-07 |
+| `offline.spec.ts` | with the network off, a reload is answered by the worker and all four presets open with their own bounding boxes; the Offline badge follows the connection | REQ-UBI-11, REQ-STA-04 |
+| `update.spec.ts` | a second release is announced and waits; the old version, and an edit in progress, stay until Reload; Later leaves them | REQ-EVT-07 |
+| `layout.spec.ts` | at 320, 360, 375, 812 x 375, 768 x 1 024 and 1 280 x 800: no overflow, the viewer visible, tabs and toolbar fit, the header not covered by the bar | REQ-UBI-12, REQ-UBI-14, REQ-EVT-06 |
+| `touch.spec.ts` | with touch on, no control under 44 px on the four tabs or in the View sheet | REQ-UBI-13, REQ-EVT-06 |
+| `fallback.spec.ts` | with the service unreachable, an edit keeps the previous model and shows the connection notice; a bundled specification is still answered | REQ-UNW-04 |
+
+Still manual, on the phone (section 6): a real install prompt and Chrome's menu
+entry, standalone display and the bar hidden once installed, the soft keyboard,
+and iOS Add to Home Screen. Headless Chromium never fires `beforeinstallprompt`,
+so the specs send the event by hand; that only proves the Install control reacts
+to it.
+
+### How the update spec stages a release
+
+`serve.mjs` builds the application twice. The two bundles differ only in the
+address of the generation service baked into them (`http://api-a.e2e.invalid` and
+`http://api-b.e2e.invalid`, hosts that never resolve), which is enough for the
+service worker to see a new release. `e2e/support/bundles.ts` copies one bundle
+over the directory `vite preview` serves, which it reads again on every request.
+Playwright cannot route the browser's check of `sw.js`, so replacing the files is
+the only way to stage an update. The spec opens the first release twice, so the
+page starts under the worker the way a returning visitor's does, and puts the
+second release behind it.
+
+### Reading a failure
+
+```bash
+npx playwright show-report node_modules/.cache/parametricad-e2e/report
+npx playwright show-trace node_modules/.cache/parametricad-e2e/results/<test>/trace.zip
+```
+
+A failing test keeps its trace and a screenshot. In CI the `e2e` job uploads the
+HTML report as the `playwright-report` artifact for seven days, but only when the
+job fails. On CI a test that passes only on its retry fails the run
+(`failOnFlakyTests`): treat it as a defect, not as noise.
+
+### When something else fails first
+
+- **The probe fails.** The machine has no WebGL2 in headless Chromium. Playwright
+  already passes `--enable-unsafe-swiftshader`, so software rendering should be
+  available. Try the full Chromium instead of the shell (`channel: 'chromium'` in
+  `playwright.config.ts`), and record what the probe's attached renderer string says.
+- **`EADDRINUSE` or "already used" on 5301.** Something owns the port (section 1).
+  Stop it; do not move the suite to another port.
+- **Under WSL with `networkingMode=mirrored`** a connection to a closed loopback
+  port hangs until the TCP timeout instead of being refused, so Playwright's check
+  that 5301 is free costs about two minutes before the server starts (seen on
+  2026-10-20). The suite then runs as usual; Windows and the hosted runner are not affected.
+- **A Playwright bump.** The release brings a new Chromium revision. Install it
+  (`npx playwright install --only-shell chromium`), run the suite, and read a
+  failure as a browser change before assuming a bug. Old revisions can be deleted
+  from the browser cache.

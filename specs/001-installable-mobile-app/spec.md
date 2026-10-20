@@ -83,7 +83,7 @@ Assumed defaults, open to veto: the update banner asks before reloading; the ins
 |---|---|---|
 | A1 | Chrome's install prompt still needs a service worker `fetch` handler, and the menu install does not (Chrome 108 and later). | Per Chrome documentation updated 2023-12-05; confirm on the device. |
 | A2 | `interactive-widget=resizes-content` keeps the viewer visible above the soft keyboard while a field is edited. | Unverified; confirm on the device. |
-| A3 | Vercel preview deployments may sit behind Vercel Authentication, which would block installing from a preview URL. | Unverified; the device check uses production or USB port forwarding. |
+| A3 | Vercel preview deployments may sit behind Vercel Authentication, which would block installing from a preview URL. | Confirmed on 2026-10-20: a preview deployment answers behind a Vercel login. The device check uses production or USB port forwarding. |
 | A4 | `vite-plugin-pwa` 2.0.0 supports Vite 8. | Verified: the package declares `vite ^8.0.0` as a peer. |
 | R1 | A stale service worker can pin an old shell. | Mitigated by the prompt-based update, `no-cache` on `sw.js`, cache cleanup and the kill switch in the runbook. |
 | R2 | Rotating the phone resizes the canvas. | Check that the canvas redraws without a blank frame or a camera reset. |

@@ -136,7 +136,7 @@ Order: tests first for every task (red, then green). `npm test` is added to CI, 
 
 ## 8. Rollout and rollback
 
-1. Merge to `main`; Vercel deploys production (`parametricad.naindev.com`).
+1. Push `main`, then fast-forward `master` to it (`git push origin main:master`); Vercel builds production (`parametricad.naindev.com`) from `master` (`docs/10-runbook.md` section 5).
 2. `curl -sI` the site, `/sw.js` and `/manifest.webmanifest` for the headers.
 3. Run the device checklist against production.
 4. Rollback: Vercel Instant Rollback or a revert. If a bad worker reached clients, set `selfDestroying: true` in `pwa.config.ts` and deploy: the generated worker unregisters itself and deletes every cache. Documented in `docs/10-runbook.md`.

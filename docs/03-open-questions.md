@@ -30,6 +30,6 @@ This document tracks unresolved engineering questions, investigation items, and 
    - *Question*: Which of these are useful enough on a phone to justify the extra surface?
 
 6. **Browser-Level Verification of the PWA and the Compact Layout**:
-   - *Status*: Open.
+   - *Status*: Resolved. ADR-0009 (accepted 2026-10-20) adopted Chromium-only Playwright specs in a dedicated CI job; they live in `frontend/e2e/` (TSK-31). The first run of the job on a hosted runner is still to come.
    - *Context*: Vitest with jsdom cannot exercise a service worker or real layout. Spec 001 verifies those by hand in a real browser and on a device.
    - *Question*: Should a Playwright smoke suite (offline reload, manifest, 375 px layout, touch-target audit) join CI? It adds a development dependency and CI minutes, so it needs its own ADR.

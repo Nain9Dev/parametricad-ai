@@ -90,3 +90,55 @@ jobs:
 
       - name: Verify the PWA build
         run: npm run verify:pwa
+
+  # Browser-level tests (ADR-0009): the production build in headless Chromium,
+  # for what jsdom cannot run (service worker, offline start, update prompt,
+  # layout and touch targets). It builds its own bundles, so it needs nothing
+  # from the job above and runs beside it. Actions are pinned by commit SHA.
+  e2e:
+    name: Browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck the browser tests
+        run: npm run typecheck:e2e
+
+      # The headless shell is all the suite drives. The browser is downloaded on
+      # every run: Playwright advises against caching it, and the system
+      # packages that --with-deps installs cannot be cached anyway.
+      - name: Install Chromium
+        run: npx playwright install --with-deps --only-shell chromium
+
+      - name: Run the browser tests
+        run: npm run test:e2e
+
+      - name: Upload the report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: playwright-report
+          path: frontend/node_modules/.cache/parametricad-e2e/report
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
