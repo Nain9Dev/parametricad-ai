@@ -14,6 +14,14 @@ export interface PwaUpdateController {
 }
 
 /**
+ * Reload the page. Always the same function, so listening with it twice (Reload
+ * chosen twice) still reloads once.
+ */
+function reloadPage(): void {
+  window.location.reload()
+}
+
+/**
  * Registers the service worker and reports its life cycle (ADR-0007).
  *
  * A new version waits until `applyUpdate` is called: reloading on its own would
@@ -29,6 +37,15 @@ export function usePwaUpdate(): PwaUpdateController {
   } = useRegisterSW()
 
   const applyUpdate = useCallback(() => {
+    // The plugin reloads only a page that a worker already controlled when it
+    // registered (workbox-window `isUpdate`). A tab opened before any worker
+    // existed would take the new worker and keep running the old code, whose lazy
+    // chunks may be gone. The user has accepted, so reload once control changes,
+    // whatever the plugin counts. Where it reloads too, the second request
+    // replaces the first and the page still loads once.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('controllerchange', reloadPage, { once: true })
+    }
     void updateServiceWorker(true)
   }, [updateServiceWorker])
   const dismissUpdate = useCallback(() => setUpdateReady(false), [setUpdateReady])

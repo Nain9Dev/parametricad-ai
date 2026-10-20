@@ -245,14 +245,6 @@ so an edit in progress is never discarded. Choosing Later leaves the new version
 to take over the next time the app is opened. `e2e/update.spec.ts` stages this
 with two builds (section 7).
 
-**Known limitation.** If the tab was opened before any worker controlled it (the
-very first visit), choosing Reload activates the new worker but does not reload
-the page: the banner stays and the tab keeps running the old code until it is
-reloaded by hand. `workbox-window` marks such a page as not being an update, and
-the PWA plugin reloads only for an update. Observed on 2026-10-20 with a scratch
-experiment (no reload, one controller change, banner still shown); not fixed yet,
-and the update spec starts from a returning visit for that reason.
-
 ### Recovering from a bad worker
 
 If a worker that reached users misbehaves, set `selfDestroying: true` in
@@ -306,7 +298,7 @@ replaced by stubs, and every request to the generation service is aborted.
 | `webgl-probe.spec.ts` | WebGL2 works and the viewer draws the first part; every other spec waits for it | precondition |
 | `worker.spec.ts` | the manifest is served as `application/manifest+json` and Chrome accepts it; the worker controls the page after one load; Cache Storage holds the shell and the presets and nothing from another origin | REQ-UBI-10, REQ-UBI-11, REQ-EVT-07 |
 | `offline.spec.ts` | with the network off, a reload is answered by the worker and all four presets open with their own bounding boxes; the Offline badge follows the connection | REQ-UBI-11, REQ-STA-04 |
-| `update.spec.ts` | a second release is announced and waits; the old version, and an edit in progress, stay until Reload; Later leaves them | REQ-EVT-07 |
+| `update.spec.ts` | a second release is announced and waits; the old version, and an edit in progress, stay until Reload; Reload then loads the new version, in a tab that started under the worker and in one opened on the first visit and never reloaded; Later leaves them | REQ-EVT-07 |
 | `layout.spec.ts` | at 320, 360, 375, 812 x 375, 768 x 1 024 and 1 280 x 800: no overflow, the viewer visible, tabs and toolbar fit, the header not covered by the bar | REQ-UBI-12, REQ-UBI-14, REQ-EVT-06 |
 | `touch.spec.ts` | with touch on, no control under 44 px on the four tabs or in the View sheet | REQ-UBI-13, REQ-EVT-06 |
 | `fallback.spec.ts` | with the service unreachable, an edit keeps the previous model and shows the connection notice; a bundled specification is still answered | REQ-UNW-04 |
@@ -325,9 +317,12 @@ address of the generation service baked into them (`http://api-a.e2e.invalid` an
 service worker to see a new release. `e2e/support/bundles.ts` copies one bundle
 over the directory `vite preview` serves, which it reads again on every request.
 Playwright cannot route the browser's check of `sw.js`, so replacing the files is
-the only way to stage an update. The spec opens the first release twice, so the
-page starts under the worker the way a returning visitor's does, and puts the
-second release behind it.
+the only way to stage an update. The Reload test runs for two kinds of tab. A
+returning visit opens the first release twice, so the page starts under the
+worker. A first visit opens it once and never reloads, so no worker controlled
+the page when it started; `workbox-window` does not count such a page as one that
+can be updated, which is why `usePwaUpdate` reloads on the next change of
+controller itself. Both put the second release behind the page.
 
 ### Reading a failure
 
