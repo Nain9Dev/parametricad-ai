@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/Badge'
 import { CubeIcon, DownloadIcon } from '@/components/ui/Icons'
 import { fetchHealth, isAbortError } from '@/lib/apiClient'
 import { useInstallPrompt } from '@/lib/hooks/useInstallPrompt'
+import { useLocale } from '@/lib/hooks/useLocale'
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus'
 import { readProjectFile } from '@/lib/projectFile'
 import type { ComponentSpec, HealthResponse } from '@/types/api'
@@ -35,6 +36,7 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
   const [reachable, setReachable] = useState<boolean | null>(null)
   const online = useOnlineStatus()
   const install = useInstallPrompt()
+  const { locale, setLocale, t } = useLocale()
 
   useEffect(() => {
     const controller = new AbortController()
@@ -61,12 +63,46 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
         <div className="min-w-0 leading-tight">
           <h1 className="text-sm font-semibold tracking-tight text-ink">ParametriCAD</h1>
           <p className="hidden text-xs text-ink-faint sm:block">
-            Parametric CAD generation with mesh validation
+            {t('header.subtitle')}
           </p>
         </div>
       </div>
 
       <div className="flex items-center gap-2">
+        <div
+          role="group"
+          aria-label={locale === 'en' ? 'Language selector' : 'Selector de idioma'}
+          className="inline-flex items-center rounded-md border border-line bg-surface-alt/70 p-0.5 text-xs font-semibold"
+        >
+          <button
+            type="button"
+            onClick={() => setLocale('es')}
+            className={`rounded px-1.5 py-0.5 text-xs font-mono transition-colors ${
+              locale === 'es'
+                ? 'bg-accent/15 text-accent font-bold'
+                : 'text-ink-muted hover:text-ink'
+            }`}
+            aria-pressed={locale === 'es'}
+            title="Español (por defecto)"
+          >
+            ES
+          </button>
+          <span className="text-ink-faint" aria-hidden="true">/</span>
+          <button
+            type="button"
+            onClick={() => setLocale('en')}
+            className={`rounded px-1.5 py-0.5 text-xs font-mono transition-colors ${
+              locale === 'en'
+                ? 'bg-accent/15 text-accent font-bold'
+                : 'text-ink-muted hover:text-ink'
+            }`}
+            aria-pressed={locale === 'en'}
+            title="English"
+          >
+            EN
+          </button>
+        </div>
+
         <InstallButton
           canInstall={install.canInstall}
           showIosHint={install.showIosHint}
