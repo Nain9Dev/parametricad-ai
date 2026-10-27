@@ -1,10 +1,11 @@
 // @req REQ-UBI-12
 // @req REQ-UBI-14
 // @req REQ-EVT-06
-import type { Locator } from '@playwright/test'
+// @req REQ-UBI-19
+import type { Locator, Page } from '@playwright/test'
 
 import { expect, test } from './support/fixtures.ts'
-import { offerInstallation, openApp } from './support/app.ts'
+import { offerInstallation, openApp, tab } from './support/app.ts'
 import { findClippedByViewportEdge } from './support/audit.ts'
 
 interface ViewportCase {
@@ -36,6 +37,11 @@ async function boxOf(locator: Locator): Promise<Box> {
   const box = await locator.boundingBox()
   if (!box) throw new Error(`${String(locator)} is not drawn`)
   return { left: box.x, top: box.y, right: box.x + box.width, bottom: box.y + box.height }
+}
+
+/** The verdict chip over the viewer (REQ-UBI-19); the card in the report is not a button. */
+function verdictChip(page: Page): Locator {
+  return page.getByRole('main').getByRole('button', { name: /^Valid/ })
 }
 
 /** True when the point at the middle of `locator` belongs to `locator` (or inside it). */
@@ -104,6 +110,10 @@ for (const viewport of CASES) {
         const report = await boxOf(page.getByRole('complementary').last())
         expect(inputs.right).toBeLessThanOrEqual(viewer.left + 0.5)
         expect(viewer.right).toBeLessThanOrEqual(report.left + 0.5)
+
+        // The verdict is read from the Mesh validation card; no chip repeats it.
+        await expect(page.getByRole('heading', { name: 'Mesh validation' })).toBeVisible()
+        await expect(verdictChip(page)).toHaveCount(0)
       })
     } else {
       test('the four tabs are there and the compact toolbar fits', async ({ page }) => {
@@ -142,6 +152,30 @@ for (const viewport of CASES) {
           await row.evaluate((element) => element.scrollWidth <= element.clientWidth),
           'the toolbar row is not scrolling sideways',
         ).toBe(true)
+      })
+
+      test('the verdict of the first part is drawn over the viewer and opens the Report tab', async ({
+        page,
+      }) => {
+        await openApp(page)
+
+        const chip = verdictChip(page)
+        await expect(chip).toBeVisible()
+        await expect(chip).toContainText('3,392 triangles')
+
+        // Inside the canvas, in its lower half, clear of its centre and of the
+        // progress pill drawn at the top while a part is being generated.
+        const canvas = await boxOf(page.locator('main canvas'))
+        const box = await boxOf(chip)
+        expect(box.left).toBeGreaterThanOrEqual(canvas.left)
+        expect(box.right).toBeLessThanOrEqual(canvas.right)
+        expect(box.bottom).toBeLessThanOrEqual(canvas.bottom)
+        expect(box.top, 'the chip leaves the centre of the canvas clear').toBeGreaterThan(
+          (canvas.top + canvas.bottom) / 2,
+        )
+
+        await chip.click()
+        await expect(tab(page, /^Report/)).toHaveAttribute('aria-selected', 'true')
       })
     }
   })

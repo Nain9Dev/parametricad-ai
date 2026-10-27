@@ -26,6 +26,7 @@ import { DownloadIcon, SparkIcon } from '@/components/ui/Icons'
 import { ViewerToolbar, type ViewerToolbarProps } from '@/components/viewer/ViewerToolbar'
 import { ViewerNotice } from '@/components/viewer/ViewerNotice'
 import { ViewerToolbarCompact } from '@/components/viewer/ViewerToolbarCompact'
+import { ViewerVerdict } from '@/components/viewer/ViewerVerdict'
 import type { ViewOrientation } from '@/components/viewer/viewDirections'
 import {
   DEFAULT_VIEWER_OPTIONS,
@@ -539,6 +540,15 @@ export default function App() {
               onRetry={mode === 'parameters' ? generateNow : undefined}
               onDetails={() => selectTab('report')}
             />
+          </div>
+        ) : null}
+        {/* So does the verdict: on a compact screen it is said over the viewer
+            (REQ-UBI-19), in the lower left corner, away from the progress pill
+            at the top and the gizmo on the right, and not while a failure is
+            being reported. */}
+        {isCompact && !generation.error && model ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex p-2">
+            <ViewerVerdict report={model.quality} onDetails={() => selectTab('report')} />
           </div>
         ) : null}
       </div>
