@@ -165,6 +165,11 @@ for (const viewport of CASES) {
 
         // Inside the canvas, in its lower half, clear of its centre and of the
         // progress pill drawn at the top while a part is being generated.
+        // The renderer resizes the canvas after the first paint, so wait until
+        // it has settled to the size of the viewer before comparing.
+        await expect
+          .poll(async () => (await boxOf(page.locator('main canvas'))).bottom - (await boxOf(chip)).bottom)
+          .toBeGreaterThanOrEqual(0)
         const canvas = await boxOf(page.locator('main canvas'))
         const box = await boxOf(chip)
         expect(box.left).toBeGreaterThanOrEqual(canvas.left)
