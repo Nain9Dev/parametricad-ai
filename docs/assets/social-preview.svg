@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&amp;family=Urbanist:wght@600;800;900&amp;display=swap');
+      .txt-brand { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.32em; text-transform: uppercase; }
+      .txt-title { font-family: 'Urbanist', system-ui, sans-serif; font-weight: 900; }
+      .txt-mono { font-family: 'IBM Plex Mono', monospace; }
+    </style>
+    <pattern id="og_grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0F2243" stroke-width="1" />
+    </pattern>
+    <pattern id="og_grid_major" width="200" height="200" patternUnits="userSpaceOnUse">
+      <path d="M 200 0 L 0 0 0 200" fill="none" stroke="#1B3B6F" stroke-width="1.5" />
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="640" fill="#060D1A" />
+  <rect width="1280" height="640" fill="url(#og_grid)" opacity="0.6" />
+  <rect width="1280" height="640" fill="url(#og_grid_major)" opacity="0.8" />
+  <rect x="24" y="24" width="1232" height="592" fill="none" stroke="#1E3A8A" stroke-width="2" rx="8" />
+
+  <!-- Top Metadata Bar -->
+  <line x1="24" y1="70" x2="1256" y2="70" stroke="#0F2243" stroke-width="1" stroke-dasharray="4 4" />
+  <text x="48" y="52" class="txt-brand" font-size="12" font-weight="700" fill="#80FF00">NAINDEV ARCHITECTURAL SHOWCASE // PRODUCTION SPEC</text>
+  <text x="960" y="52" class="txt-mono" font-size="12" fill="#94A3B8">ENDPOINT: https://parametricad.naindev.com</text>
+
+  <!-- Central Logo & Hierarchy -->
+  
+    <g transform="translate(100, 130) scale(0.5)">
+      <defs>
+        <mask id="cut_100_130">
+          <rect x="0" y="0" width="440" height="440" fill="white" />
+          <polygon points="60,60 160,60 340,340 240,340" fill="none" stroke="black" stroke-width="24" stroke-linejoin="miter" />
+        </mask>
+      </defs>
+      <g mask="url(#cut_100_130)">
+        <rect x="60" y="60" width="100" height="280" fill="#38BDF8" rx="8" />
+        <rect x="240" y="60" width="100" height="280" fill="#38BDF8" rx="8" />
+      </g>
+      <polygon points="60,60 160,60 340,340 240,340" fill="#80FF00" stroke-linejoin="miter" />
+    </g>
+    
+
+  <g transform="translate(360, 150)">
+    <rect x="0" y="0" width="180" height="28" fill="#002B66" stroke="#80FF00" stroke-width="1" rx="4" />
+    <text x="14" y="19" class="txt-brand" font-size="10" font-weight="700" fill="#80FF00">ENTERPRISE SYSTEM</text>
+
+    <text x="0" y="90" class="txt-title" font-size="64" fill="#FFFFFF">ParametriCAD AI</text>
+    <text x="0" y="140" class="txt-mono" font-size="19" fill="#94A3B8">Deterministic CAD Engine & 3D WebGL Viewer with Exact Mesh Invariants</text>
+    <text x="0" y="180" class="txt-mono" font-size="15" font-weight="600" fill="#80FF00">STACK: Python 3.12 · OpenCASCADE · FastAPI · Three.js · Vue 3 · 0.00 €</text>
+  </g>
+
+  <!-- Technical Reticle Callout -->
+  <g transform="translate(1040, 170)">
+    <circle cx="80" cy="80" r="70" fill="none" stroke="#1B3B6F" stroke-width="1.5" stroke-dasharray="4 4" />
+    <line x1="80" y1="10" x2="80" y2="150" stroke="#1B3B6F" stroke-width="1" />
+    <line x1="10" y1="80" x2="150" y2="80" stroke="#1B3B6F" stroke-width="1" />
+    <line x1="80" y1="80" x2="135" y2="25" stroke="#80FF00" stroke-width="2.5" />
+    <text x="95" y="50" class="txt-mono" font-size="13" font-weight="700" fill="#80FF00">52.0°</text>
+  </g>
+
+  <!-- Lower Metric Cards -->
+  
+        <g transform="translate(100, 460)">
+          <rect x="0" y="0" width="330" height="70" fill="#0A1629" stroke="#1E3A8A" stroke-width="1.5" rx="6" />
+          <rect x="6" y="6" width="330" height="70" fill="none" stroke="#000000" stroke-width="1.5" rx="6" />
+          <circle cx="24" cy="35" r="5" fill="#80FF00" />
+          <text x="40" y="40" font-family="'IBM Plex Mono', monospace" font-size="14" font-weight="600" fill="#FFFFFF">Zero Self-Intersections</text>
+        </g>
+        
+        <g transform="translate(460, 460)">
+          <rect x="0" y="0" width="330" height="70" fill="#0A1629" stroke="#1E3A8A" stroke-width="1.5" rx="6" />
+          <rect x="6" y="6" width="330" height="70" fill="none" stroke="#000000" stroke-width="1.5" rx="6" />
+          <circle cx="24" cy="35" r="5" fill="#80FF00" />
+          <text x="40" y="40" font-family="'IBM Plex Mono', monospace" font-size="14" font-weight="600" fill="#FFFFFF">2-Manifold Watertight</text>
+        </g>
+        
+        <g transform="translate(820, 460)">
+          <rect x="0" y="0" width="330" height="70" fill="#0A1629" stroke="#1E3A8A" stroke-width="1.5" rx="6" />
+          <rect x="6" y="6" width="330" height="70" fill="none" stroke="#000000" stroke-width="1.5" rx="6" />
+          <circle cx="24" cy="35" r="5" fill="#80FF00" />
+          <text x="40" y="40" font-family="'IBM Plex Mono', monospace" font-size="14" font-weight="600" fill="#FFFFFF">SHA-256 Addressed</text>
+        </g>
+        
+
+  <!-- Footer Brand Baseline -->
+  <line x1="24" y1="560" x2="1256" y2="560" stroke="#0F2243" stroke-width="1" stroke-dasharray="4 4" />
+  <text x="48" y="590" class="txt-mono" font-size="12" fill="#94A3B8">NainDev Full Stack Architecture // 0.00 EUR Operating Footprint // Tested &amp; Audited</text>
+  <text x="1020" y="590" class="txt-mono" font-size="12" font-weight="700" fill="#80FF00">status.naindev.com 100% OK</text>
+</svg>

@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 360" width="1280" height="360">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&amp;family=Urbanist:wght@600;800;900&amp;display=swap');
+      .txt-brand { font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.32em; text-transform: uppercase; }
+      .txt-title { font-family: 'Urbanist', system-ui, sans-serif; font-weight: 900; }
+      .txt-mono { font-family: 'IBM Plex Mono', monospace; }
+    </style>
+    <pattern id="grid_dark" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0F2243" stroke-width="1" />
+    </pattern>
+    <pattern id="grid_major_dark" width="200" height="200" patternUnits="userSpaceOnUse">
+      <path d="M 200 0 L 0 0 0 200" fill="none" stroke="#1B3B6F" stroke-width="1.5" />
+    </pattern>
+  </defs>
+
+  <!-- Background Canvas -->
+  <rect width="1280" height="360" fill="#060D1A" />
+  <rect width="1280" height="360" fill="url(#grid_dark)" opacity="0.6" />
+  <rect width="1280" height="360" fill="url(#grid_major_dark)" opacity="0.8" />
+  <rect x="16" y="16" width="1248" height="328" fill="none" stroke="#1E3A8A" stroke-width="2" rx="4" />
+
+  <!-- Technical Cotas & Dimensions -->
+  <line x1="16" y1="36" x2="1264" y2="36" stroke="#0F2243" stroke-width="1" stroke-dasharray="4 4" />
+  <text x="32" y="29" class="txt-brand" font-size="10" font-weight="700" fill="#80FF00">NAINDEV ARCHITECTURAL BLUEPRINT // SPEC-1.5 // 52.0°</text>
+  <text x="1100" y="29" class="txt-mono" font-size="10" fill="#94A3B8">SEC: parametricad.naindev.com</text>
+
+  <!-- Left Content: Logo & Title -->
+  
+    <g transform="translate(64, 60) scale(0.36363636363636365)">
+      <defs>
+        <mask id="cut_64_60">
+          <rect x="0" y="0" width="440" height="440" fill="white" />
+          <polygon points="60,60 160,60 340,340 240,340" fill="none" stroke="black" stroke-width="24" stroke-linejoin="miter" />
+        </mask>
+      </defs>
+      <g mask="url(#cut_64_60)">
+        <rect x="60" y="60" width="100" height="280" fill="#38BDF8" rx="8" />
+        <rect x="240" y="60" width="100" height="280" fill="#38BDF8" rx="8" />
+      </g>
+      <polygon points="60,60 160,60 340,340 240,340" fill="#80FF00" stroke-linejoin="miter" />
+    </g>
+    
+
+  <g transform="translate(250, 75)">
+    <!-- Category Pill -->
+    <rect x="0" y="0" width="140" height="24" fill="#002B66" rx="4" />
+    <text x="10" y="16" class="txt-brand" font-size="9" font-weight="700" fill="#80FF00">ENTERPRISE SUITE</text>
+
+    <!-- Main Project Name -->
+    <text x="0" y="70" class="txt-title" font-size="52" fill="#FFFFFF">ParametriCAD AI</text>
+
+    <!-- Value Proposition -->
+    <text x="0" y="105" class="txt-mono" font-size="16" font-weight="400" fill="#94A3B8">Deterministic CAD Engine & 3D WebGL Viewer with Exact Mesh Invariants</text>
+
+    <!-- Stack Footprint -->
+    <text x="0" y="132" class="txt-mono" font-size="13" font-weight="600" fill="#80FF00">STACK: Python 3.12 · OpenCASCADE · FastAPI · Three.js · Vue 3 · 0.00 €</text>
+  </g>
+
+  <!-- Technical Angle Callout & Grid Reticle -->
+  <g transform="translate(1080, 80)">
+    <circle cx="90" cy="90" r="70" fill="none" stroke="#1B3B6F" stroke-width="1.5" stroke-dasharray="3 3" />
+    <line x1="90" y1="20" x2="90" y2="160" stroke="#1B3B6F" stroke-width="1" />
+    <line x1="20" y1="90" x2="160" y2="90" stroke="#1B3B6F" stroke-width="1" />
+    <line x1="90" y1="90" x2="145" y2="35" stroke="#80FF00" stroke-width="2" />
+    <text x="105" y="60" class="txt-mono" font-size="11" font-weight="700" fill="#80FF00">52.0°</text>
+    <text x="55" y="175" class="txt-mono" font-size="9" fill="#94A3B8">COTAS: 14% ATOM</text>
+  </g>
+
+  <!-- Metrics Bar -->
+  
+        <g transform="translate(64, 285)">
+          <rect x="0" y="0" width="220" height="42" fill="#0A1629" stroke="#1E3A8A" stroke-width="1.5" rx="4" />
+          <rect x="4" y="4" width="220" height="42" fill="none" stroke="#000000" stroke-width="1.5" rx="4" />
+          <circle cx="16" cy="21" r="4" fill="#80FF00" />
+          <text x="28" y="25" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="600" fill="#FFFFFF">Zero Self-Intersections</text>
+        </g>
+        
+        <g transform="translate(304, 285)">
+          <rect x="0" y="0" width="220" height="42" fill="#0A1629" stroke="#1E3A8A" stroke-width="1.5" rx="4" />
+          <rect x="4" y="4" width="220" height="42" fill="none" stroke="#000000" stroke-width="1.5" rx="4" />
+          <circle cx="16" cy="21" r="4" fill="#80FF00" />
+          <text x="28" y="25" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="600" fill="#FFFFFF">2-Manifold Watertight</text>
+        </g>
+        
+        <g transform="translate(544, 285)">
+          <rect x="0" y="0" width="220" height="42" fill="#0A1629" stroke="#1E3A8A" stroke-width="1.5" rx="4" />
+          <rect x="4" y="4" width="220" height="42" fill="none" stroke="#000000" stroke-width="1.5" rx="4" />
+          <circle cx="16" cy="21" r="4" fill="#80FF00" />
+          <text x="28" y="25" font-family="'IBM Plex Mono', monospace" font-size="11" font-weight="600" fill="#FFFFFF">SHA-256 Addressed</text>
+        </g>
+        
+
+  <!-- Live Link Callout -->
+  <g transform="translate(860, 285)">
+    <rect x="0" y="0" width="356" height="42" fill="#002B66" stroke="#80FF00" stroke-width="1.5" rx="4" />
+    <rect x="4" y="4" width="356" height="42" fill="none" stroke="#000000" stroke-width="1.5" rx="4" />
+    <text x="24" y="26" class="txt-mono" font-size="12" font-weight="700" fill="#FFFFFF">LIVE DEMO 24/7 // parametricad.naindev.com ↗</text>
+  </g>
+</svg>

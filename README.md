@@ -1,6 +1,15 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/banner-light.svg">
+  <img alt="ParametriCAD AI Architectural Blueprint" src="docs/assets/banner-dark.svg" width="100%">
+</picture>
+
 # ParametriCAD AI
 
 <div align="center">
+
+[![Language: English](https://img.shields.io/badge/Language-English-blue.svg)](#)
+[![Versión en Español](https://img.shields.io/badge/Versión-Español-red.svg)](README.es.md)
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-parametricad.naindev.com-80FF00?style=flat-square&logo=googlechrome&logoColor=black)](https://parametricad.naindev.com/)
 [![CI](https://github.com/Nain9Dev/parametricad-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Nain9Dev/parametricad-ai/actions/workflows/ci.yml)
