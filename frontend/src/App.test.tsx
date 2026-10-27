@@ -1,15 +1,17 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import App from '@/App'
+import { ApiError } from '@/lib/apiClient'
 import { SHOWCASE_PRESETS } from '@/lib/presets'
 import { restoreMatchMedia, stubMatchMedia } from '@/test/media'
 import type { GeneratedModel } from '@/types/api'
 
 // @req REQ-EVT-08
+// @req REQ-UBI-19
 
 const { generateFromSpec } = vi.hoisted(() => ({ generateFromSpec: vi.fn() }))
 
@@ -130,5 +132,45 @@ describe('REQ-EVT-08: one generation request per load and per showcase card', ()
     await settle()
 
     expect(generateFromSpec).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('REQ-UBI-19: the validation verdict is in the first view at every width', () => {
+  /** The chip over the viewer; the Mesh validation card in the report is not a button. */
+  function verdictChip(): HTMLElement | null {
+    return within(screen.getByRole('main')).queryByRole('button', { name: /^Valid/ })
+  }
+
+  it('on a phone, the verdict is drawn over the viewer and opens the Report tab', async () => {
+    stubMatchMedia([])
+    render(<App />)
+    await settle()
+
+    const chip = verdictChip()
+    expect(chip).not.toBeNull()
+    expect(chip).toHaveTextContent('3,392 triangles')
+
+    fireEvent.click(chip as HTMLElement)
+    expect(screen.getByRole('tab', { name: /^Report/ })).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('on a desktop, the Mesh validation card is beside the viewer and there is no chip', async () => {
+    render(<App />)
+    await settle()
+
+    expect(verdictChip()).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Mesh validation' })).toBeInTheDocument()
+  })
+
+  it('on a phone, a failed request shows the error strip in place of the verdict', async () => {
+    stubMatchMedia([])
+    generateFromSpec.mockRejectedValue(
+      new ApiError('You are offline.', { code: 'offline', status: 0 }),
+    )
+    render(<App />)
+    await settle()
+
+    expect(within(screen.getByRole('main')).getByRole('alert')).toHaveTextContent('You are offline.')
+    expect(verdictChip()).toBeNull()
   })
 })

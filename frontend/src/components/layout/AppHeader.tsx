@@ -77,7 +77,7 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
           <button
             type="button"
             onClick={() => setLocale('es')}
-            className={`rounded px-1.5 py-0.5 text-xs font-mono transition-colors ${
+            className={`rounded px-1.5 py-0.5 text-xs font-mono transition-colors pointer-coarse:min-h-11 pointer-coarse:min-w-11 ${
               locale === 'es'
                 ? 'bg-accent/15 text-accent font-bold'
                 : 'text-ink-muted hover:text-ink'
@@ -91,7 +91,7 @@ export function AppHeader({ onExportProject, onImportProject, hasModel }: AppHea
           <button
             type="button"
             onClick={() => setLocale('en')}
-            className={`rounded px-1.5 py-0.5 text-xs font-mono transition-colors ${
+            className={`rounded px-1.5 py-0.5 text-xs font-mono transition-colors pointer-coarse:min-h-11 pointer-coarse:min-w-11 ${
               locale === 'en'
                 ? 'bg-accent/15 text-accent font-bold'
                 : 'text-ink-muted hover:text-ink'

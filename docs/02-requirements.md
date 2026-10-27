@@ -22,6 +22,7 @@ This document details functional and non-functional requirements formulated in E
 - **REQ-UBI-16**: The system shall render every text of the interface with a contrast ratio of at least 4.5:1 against its background, or 3:1 for large text, including secondary text and text on a filled accent control, so that it stays readable for users with low vision. (frontend)
 - **REQ-UBI-17**: The system shall not render any text of the interface smaller than 12 CSS px, so that it stays legible on a phone held at arm's length. (frontend)
 - **REQ-UBI-18**: The system shall show the full title, subtitle and badge of each showcase card inside its card, without clipping or overlap, at every viewport width from 320 px up. (frontend)
+- **REQ-UBI-19**: The system shall show the mesh validation verdict of the displayed model, with its triangle count, inside the first view at every viewport width, including the compact layout where the report sits in a tab, and shall lead from it to the full report, so that a visitor sees that the part was validated without opening anything. (frontend)
 
 ## 2. Event-Driven Requirements
 

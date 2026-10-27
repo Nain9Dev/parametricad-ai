@@ -43,3 +43,8 @@ This document tracks unresolved engineering questions, investigation items, and 
    - *Status*: Deferred.
    - *Context*: The cards use emoji, which look different on every system and clash with the technical tone of the rest of the interface. Spec 002 leaves them as they are.
    - *Question*: Is a small drawn icon set (flange, elbow, pipe, plate, description) worth making to replace them?
+
+9. **First Paint of the Viewer on a Phone**:
+   - *Status*: Open.
+   - *Context*: The bundled flange answers in milliseconds, but the canvas stays black until the Three.js chunk (about 959 kB, loaded on demand since TSK-27) has arrived and compiled. Measured on 2026-10-27: "Model ready." 1.6 s after navigation on the dev server at 375 x 812; several seconds on production in an emulated phone over a real connection. Spec `next-first-view-verdict` puts the verdict in that first view but does not shorten the wait.
+   - *Question*: Is a lighter placeholder (a still render of the bundled part, or a skeleton that says the viewer is loading) worth it on phones, or is a smaller viewer bundle the better fix?
