@@ -1,0 +1,7 @@
+# ParametriCAD AI
+
+> Parametric CAD generation with deterministic geometry and topological mesh validation: build pipes, elbows, flanges and plates, then export GLB, STEP, STL and DXF.
+
+- [Live demo](https://parametricad.naindev.com/): interactive 3D workspace with four bundled presets, installable as an app
+- [Source code](https://github.com/Nain9Dev/parametricad-ai): FastAPI backend, CadQuery kernel adapter, React and three.js client
+- [NainDev](https://www.naindev.com/): the author's main site and project ecosystem

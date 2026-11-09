@@ -23,6 +23,8 @@ This document details functional and non-functional requirements formulated in E
 - **REQ-UBI-17**: The system shall not render any text of the interface smaller than 12 CSS px, so that it stays legible on a phone held at arm's length. (frontend)
 - **REQ-UBI-18**: The system shall show the full title, subtitle and badge of each showcase card inside its card, without clipping or overlap, at every viewport width from 320 px up. (frontend)
 - **REQ-UBI-19**: The system shall show the mesh validation verdict of the displayed model, with its triangle count, inside the first view at every viewport width, including the compact layout where the report sits in a tab, and shall lead from it to the full report, so that a visitor sees that the part was validated without opening anything. (frontend)
+- **REQ-UBI-20**: The system shall carry in the static `index.html`, before any script runs, one canonical link equal to `https://parametricad.naindev.com/`, a title of 30 to 65 characters, one meta description of 70 to 160 characters, Open Graph tags whose `og:url` equals the canonical and whose image is a served 1200 by 630 file, a `summary_large_image` Twitter card, a `rel="author"` link to `https://www.naindev.com/`, and one `SoftwareApplication` JSON-LD block whose author is `https://www.naindev.com/#person`. (frontend)
+- **REQ-UBI-21**: The system shall serve `robots.txt` (allow all, advertising the sitemap), `sitemap.xml` (the canonical root) and `llms.txt` (Markdown, H1 first) as real files from the site root, and the service worker shall never answer a navigation to them with the app shell. (frontend)
 
 ## 2. Event-Driven Requirements
 
