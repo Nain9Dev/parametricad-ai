@@ -31,7 +31,14 @@ export const pwaOptions: Partial<VitePWAOptions> = {
     navigateFallback: '/index.html',
     // The generation API is cross-origin today. Keeping these paths out of the
     // fallback means a future same-origin API is never answered with the shell.
-    navigateFallbackDenylist: [/^\/api\//, /^\/static\//, /^\/health/],
+    // The crawl files are real files, so an installed client that opens one
+    // gets that file, not the app.
+    navigateFallbackDenylist: [
+      /^\/api\//,
+      /^\/static\//,
+      /^\/health/,
+      /^\/(?:robots\.txt|sitemap\.xml|llms\.txt)$/,
+    ],
     cleanupOutdatedCaches: true,
     clientsClaim: true,
     // Nothing is cached at runtime: no API response, no artifact, no third-party
