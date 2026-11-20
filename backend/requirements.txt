@@ -7,7 +7,7 @@ pydantic-settings>=2.5
 
 # Geometry: CadQuery brings the OpenCASCADE kernel, trimesh handles the mesh
 # transport formats, numpy backs the pure analysis in the domain layer.
-cadquery>=2.5
+cadquery>=2.8.0
 trimesh>=4.5
 numpy>=1.26
 
